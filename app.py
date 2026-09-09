@@ -5,7 +5,8 @@ import re
 import os
 import sys
 import time
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 from streamlit_drawable_canvas import st_canvas
 
 # --- RENDER / SAYFA AYARI ---
@@ -15,6 +16,53 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+# --- MODERN TASARIM VE ÖZEL CSS ---
+st.markdown("""
+<style>
+    /* Ana Arka Plan ve Tipografi */
+    .main {
+        background-color: #f8fafc;
+    }
+    
+    /* Kart Yapıları */
+    .custom-card {
+        background-color: #ffffff;
+        border: 1px solid #e2e8f0;
+        padding: 25px;
+        border-radius: 14px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        margin-bottom: 20px;
+    }
+
+    /* Buton Stilleri */
+    .stButton>button {
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.2s ease-in-out;
+    }
+    
+    .stButton>button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.15);
+    }
+
+    /* Metrik Kartları */
+    div[data-testid="stMetric"] {
+        background-color: #ffffff;
+        border: 1px solid #e2e8f0;
+        padding: 16px;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+    }
+    
+    /* Başlık Düzenlemeleri */
+    h1, h2, h3 {
+        color: #1e293b;
+        font-family: 'Segoe UI', sans-serif;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 # --- MEB MÜFREDATI ---
 MUGREDAT = {
@@ -105,8 +153,6 @@ if "user_answers" not in st.session_state:
     st.session_state.user_answers = {}
 if "quiz_submitted" not in st.session_state:
     st.session_state.quiz_submitted = False
-if "exam_started" not in st.session_state:
-    st.session_state.exam_started = False
 if "start_time" not in st.session_state:
     st.session_state.start_time = None
 if "total_duration" not in st.session_state:
@@ -115,38 +161,41 @@ if "current_question" not in st.session_state:
     st.session_state.current_question = 0
 
 # --- KENAR ÇUBUĞU (PARAMETRELER) ---
-st.sidebar.title("🔮 Sınav Parametreleri")
+with st.sidebar:
+    st.markdown("### 🔮 Sınav Parametreleri")
+    st.markdown("---")
 
-if not API_KEYS or "buraya_gercek" in API_KEYS[0]:
-    st.sidebar.warning("⚠️ `.streamlit/secrets.toml` dosyasına geçerli Gemini API anahtarınızı ekleyin.")
-
-secili_sinif = st.sidebar.selectbox("Eğitim Seviyesi:", list(MUGREDAT.keys()))
-sinav_turu = st.sidebar.selectbox("Sınav Türü:", [
-    "Konu Tarama Soruları",
-    "Yeni Nesil ve Karma Soru Çeşitleri",
-    "Genel Değerlendirme Soruları",
-    "LGS Hazırlık Soruları"
-])
-
-mevcut_dersler = list(MUGREDAT.get(secili_sinif, {}).keys())
-secili_dersler = st.sidebar.multiselect("📚 Dersler:", mevcut_dersler, default=mevcut_dersler[:1])
-
-tum_uniteler = []
-if secili_dersler:
-    for d in secili_dersler:
-        for u in MUGREDAT[secili_sinif].get(d, []):
-            tum_uniteler.append(f"[{d}] {u}")
-
-secili_uniteler = st.sidebar.multiselect("📖 Üniteler ve Konular:", tum_uniteler)
-soru_sayisi = st.sidebar.slider("🔢 Soru Sayısı:", 1, 120, 3)
-
-if st.sidebar.button("🚀 Soru Üretimini Başlat", use_container_width=True):
     if not API_KEYS or "buraya_gercek" in API_KEYS[0]:
-        st.sidebar.error("Geçerli bir API anahtarı bulunamadı! Lütfen `.streamlit/secrets.toml` dosyasını kontrol edin.")
-    elif not secili_dersler:
-        st.sidebar.error("Lütfen en az bir ders seçiniz!")
-    else:
-        prompt = f"""
+        st.warning("⚠️ `.streamlit/secrets.toml` dosyasına geçerli Gemini API anahtarınızı ekleyin.")
+
+    secili_sinif = st.selectbox("Eğitim Seviyesi:", list(MUGREDAT.keys()))
+    sinav_turu = st.selectbox("Sınav Türü:", [
+        "Konu Tarama Soruları",
+        "Yeni Nesil ve Karma Soru Çeşitleri",
+        "Genel Değerlendirme Soruları",
+        "LGS Hazırlık Soruları"
+    ])
+
+    mevcut_dersler = list(MUGREDAT.get(secili_sinif, {}).keys())
+    secili_dersler = st.multiselect("📚 Dersler:", mevcut_dersler, default=mevcut_dersler[:1])
+
+    tum_uniteler = []
+    if secili_dersler:
+        for d in secili_dersler:
+            for u in MUGREDAT[secili_sinif].get(d, []):
+                tum_uniteler.append(f"[{d}] {u}")
+
+    secili_uniteler = st.multiselect("📖 Üniteler ve Konular:", tum_uniteler)
+    soru_sayisi = st.slider("🔢 Soru Sayısı:", 1, 30, 3)
+
+    st.markdown("---")
+    if st.button("🚀 Soru Üretimini Başlat", use_container_width=True, type="primary"):
+        if not API_KEYS or "buraya_gercek" in API_KEYS[0]:
+            st.error("Geçerli bir API anahtarı bulunamadı!")
+        elif not secili_dersler:
+            st.error("Lütfen en az bir ders seçiniz!")
+        else:
+            prompt = f"""
 Sen MEB müfredatına ve kazanımlarına tam hakim, alanında uzman profesyonel bir soru hazırlama yapay zekasısın.
 {secili_sinif} seviyesinde, {sinav_turu} kapsamında, seçilen dersler ve üniteler doğrultusunda tam {soru_sayisi} adet son derece nitelikli, özgün, mantık hatası içermeyen ve gerçek sınav kalitesinde çoktan seçmeli soru üret.
 Seçilen Dersler: {", ".join(secili_dersler)}
@@ -164,152 +213,114 @@ Yanıtı kesinlikle ve sadece şu JSON formatında ver (başka hiçbir markdown 
   }}
 ]
 """
-        basarili = False
-        quiz_data = []
-        hata_mesaji = None
+            basarili = False
+            quiz_data = []
+            hata_mesaji = None
 
-        with st.spinner("⏳ Yapay zeka soruları ve çözümleri hazırlıyor, lütfen bekleyin..."):
-            for _ in range(max(1, len(api_manager.keys))):
-                current_key = api_manager.get_next_key()
-                if not current_key:
-                    hata_mesaji = "API anahtarı okunamadı."
-                    break
-                try:
-                    genai.configure(api_key=current_key)
-                    model = genai.GenerativeModel(
-                        model_name="gemini-3.6-flash",
-                        generation_config={"temperature": 0.7, "response_mime_type": "application/json"}
-                    )
-                    response = model.generate_content(prompt)
-                    if response and response.text:
-                        raw_text = response.text.strip()
-                        match = re.search(r'(\[.*\]|\{.*\})', raw_text, re.DOTALL)
-                        if match:
-                            raw_text = match.group(1)
-                        parsed = json.loads(raw_text)
+            with st.spinner("⏳ Yapay zeka soruları ve çözümleri hazırlıyor..."):
+                for _ in range(max(1, len(api_manager.keys))):
+                    current_key = api_manager.get_next_key()
+                    if not current_key:
+                        hata_mesaji = "API anahtarı okunamadı."
+                        break
+                    try:
+                        client = genai.Client(api_key=current_key)
+                        response = client.models.generate_content(
+                            model='gemini-3.6-flash',
+                            contents=prompt,
+                            config=types.GenerateContentConfig(
+                                temperature=0.7,
+                                response_mime_type="application/json"
+                            )
+                        )
+                        if response and response.text:
+                            raw_text = response.text.strip()
+                            match = re.search(r'(\[.*\]|\{.*\})', raw_text, re.DOTALL)
+                            if match:
+                                raw_text = match.group(1)
+                            parsed = json.loads(raw_text)
 
-                        if isinstance(parsed, dict):
-                            quiz_data = [parsed]
-                        elif isinstance(parsed, list):
-                            quiz_data = parsed
+                            if isinstance(parsed, dict):
+                                quiz_data = [parsed]
+                            elif isinstance(parsed, list):
+                                quiz_data = parsed
 
-                        if quiz_data:
-                            for idx, item in enumerate(quiz_data):
-                                item["soru_no"] = idx + 1
-                                if "ders" not in item:
-                                    item["ders"] = secili_dersler[0]
-                            basarili = True
-                            break
-                except Exception as e:
-                    hata_mesaji = str(e)
+                            if quiz_data:
+                                for idx, item in enumerate(quiz_data):
+                                    item["soru_no"] = idx + 1
+                                    if "ders" not in item:
+                                        item["ders"] = secili_dersler[0]
+                                basarili = True
+                                break
+                    except Exception as e:
+                        hata_mesaji = str(e)
 
-        if basarili and quiz_data:
-            st.session_state.quiz_data = quiz_data
-            st.session_state.user_answers = {}
-            st.session_state.quiz_submitted = False
-            st.session_state.exam_started = False
-            st.session_state.start_time = None
-            st.session_state.total_duration = None
-            st.session_state.current_question = 0
-            st.success(f"{len(quiz_data)} adet soru başarıyla üretildi!")
-            st.rerun()
-        else:
-            st.error(f"Sorular üretilirken hata oluştu: {hata_mesaji}")
+            if basarili and quiz_data:
+                st.session_state.quiz_data = quiz_data
+                st.session_state.user_answers = {}
+                st.session_state.quiz_submitted = False
+                st.session_state.start_time = time.time()
+                st.session_state.total_duration = None
+                st.session_state.current_question = 0
+                st.success(f"{len(quiz_data)} soru başarıyla üretildi!")
+                st.rerun()
+            else:
+                st.error(f"Hata oluştu: {hata_mesaji}")
 
 # --- ANA İÇERİK EKRANI ---
 st.title("🎓 Soru Fabrikası & Tablet Sınav Modülü")
+st.markdown("---")
 
 if st.session_state.quiz_data is None:
-    st.info("Sol taraftaki panelden ayarlarınızı yapıp **'Soru Üretimini Başlat'** butonuna tıklayarak sorularınızı oluşturabilirsiniz.")
-
-elif not st.session_state.exam_started:
-    # --- MODERN SINAV BAŞLANGIÇ EKRANI ---
+    st.info("Sol taraftaki panelden ayarlarınızı yapıp **'Soru Üretimini Başlat'** butonuna tıklayarak sınava başlayabilirsiniz.")
+elif not st.session_state.quiz_submitted:
     quiz_data = st.session_state.quiz_data
     toplam_soru = len(quiz_data)
-    toplam_sure_saniye = toplam_soru * 80
-    toplam_dakika = toplam_sure_saniye // 60
-    kalan_saniye_mod = toplam_sure_saniye % 60
+    curr_idx = st.session_state.current_question
 
-    st.markdown("""
-        <div style="padding: 30px; border-radius: 16px; background: linear-gradient(135deg, #4F46E5 0%, #3B82F6 100%); color: white; text-align: center; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);">
-            <h1 style="margin: 0; font-size: 2.2rem; font-weight: 700;">🎯 Sınavınız Hazır!</h1>
-            <p style="font-size: 1.1rem; margin-top: 10px; opacity: 0.9;">Müfredata uygun sorular başarıyla üretildi. Soru başına 80 saniye tanınmaktadır.</p>
-        </div>
-    """, unsafe_allow_html=True)
-
-    c1, c2, c3 = st.columns(3)
-    c1.metric("📚 Toplam Soru", toplam_soru)
-    c2.metric("⏱️ Soru Başına Süre", "80 Saniye")
-    c3.metric("⏳ Toplam Süre", f"{toplam_dakika} Dakika {kalan_saniye_mod} Saniye")
+    # --- SAYAÇ VE İLERLEME GÖSTERGESİ ---
+    if st.session_state.start_time:
+        gecen_sn = int(time.time() - st.session_state.start_time)
+        dakika = gecen_sn // 60
+        saniye = gecen_sn % 60
+        col_time, col_progress = st.columns([1, 3])
+        with col_time:
+            st.metric(label="⏱️ Geçen Süre", value=f"{dakika:02d}:{saniye:02d}")
+        with col_progress:
+            st.write(f"**Soru {curr_idx + 1} / {toplam_soru}**")
+            st.progress((curr_idx + 1) / toplam_soru)
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # Modern ve büyük başlat butonu
-    _, col_btn, _ = st.columns([1, 2, 1])
-    with col_btn:
-        if st.button("🚀 Sınavı Şimdi Başlat", type="primary", use_container_width=True):
-            st.session_state.exam_started = True
-            st.session_state.start_time = time.time()
-            st.rerun()
-
-elif not st.session_state.quiz_submitted:
-    # --- AKTİF SINAV VE GERİ SAYIM EKRANI ---
-    quiz_data = st.session_state.quiz_data
-    toplam_soru = len(quiz_data)
-    toplam_sure_sn = toplam_soru * 80
-    curr_idx = st.session_state.current_question
-
-    # Geriye doğru sayım hesaplaması
-    gecen_sn = int(time.time() - st.session_state.start_time)
-    kalan_sn = toplam_sure_sn - gecen_sn
-
-    if kalan_sn <= 0:
-        st.session_state.quiz_submitted = True
-        st.session_state.total_duration = f"{toplam_sure_sn // 60:02d}:{toplam_sure_sn % 60:02d}"
-        st.warning("⏱️ Sınav süreniz dolmuştur! Sınavınız otomatik olarak tamamlandı.")
-        st.rerun()
-
-    dakika = kalan_sn // 60
-    saniye = kalan_sn % 60
-
-    col_time, col_progress = st.columns([1, 3])
-    with col_time:
-        if kalan_sn < 30:
-            st.markdown(f"<div style='padding: 8px; background-color: #fee2e2; color: #991b1b; border-radius: 8px; text-align: center; font-weight: bold; font-size: 1.1rem;'>⚠️ Kalan: {dakika:02d}:{saniye:02d}</div>", unsafe_allow_html=True)
-        else:
-            st.metric(label="⏳ Kalan Süre", value=f"{dakika:02d}:{saniye:02d}")
-            
-    with col_progress:
-        st.write(f"**Soru {curr_idx + 1} / {toplam_soru}**")
-        st.progress((curr_idx + 1) / toplam_soru)
-
-    st.markdown("---")
-
-    # --- TEK SORU GÖSTERİMİ ---
+    # --- TEK SORU GÖSTERİMİ (KART İÇİNDE) ---
     q = quiz_data[curr_idx]
-    st.markdown(f"### Soru {curr_idx + 1} *({q.get('ders', 'Genel')})*")
-    st.write(temizle_latex_metin(q.get("soru_metni", "")))
+    
+    with st.container(border=True):
+        st.markdown(f"### Soru {curr_idx + 1} &nbsp;&nbsp;|&nbsp;&nbsp; *{q.get('ders', 'Genel')}*")
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.write(temizle_latex_metin(q.get("soru_metni", "")))
+        st.markdown("<br>", unsafe_allow_html=True)
 
-    secenekler = q.get("secenekler", {})
-    keys_list = sorted(secenekler.keys())
-    options_list = [f"{k}) {temizle_latex_metin(secenekler[k])}" for k in keys_list]
+        secenekler = q.get("secenekler", {})
+        keys_list = sorted(secenekler.keys())
+        options_list = [f"{k}) {temizle_latex_metin(secenekler[k])}" for k in keys_list]
 
-    kayitli_cevap = st.session_state.user_answers.get(curr_idx, None)
-    default_idx = keys_list.index(kayitli_cevap) if kayitli_cevap in keys_list else None
+        kayitli_cevap = st.session_state.user_answers.get(curr_idx, None)
+        default_idx = keys_list.index(kayitli_cevap) if kayitli_cevap in keys_list else None
 
-    secim = st.radio(
-        label="Cevabınızı seçin:",
-        options=options_list,
-        index=default_idx,
-        key=f"radio_soru_{curr_idx}"
-    )
+        secim = st.radio(
+            label="Cevabınızı seçin:",
+            options=options_list,
+            index=default_idx,
+            key=f"radio_soru_{curr_idx}"
+        )
 
-    if secim:
-        secilen_harf = secim.split(")")[0].strip()
-        st.session_state.user_answers[curr_idx] = secilen_harf
+        if secim:
+            secilen_harf = secim.split(")")[0].strip()
+            st.session_state.user_answers[curr_idx] = secilen_harf
 
     # Karalama / Çözüm Tahtası
-    with st.expander("✍️ Çözüm / Karalama Tahtası"):
+    with st.expander("✍️ Çözüm / Karalama Tahtası (Aç / Kapat)"):
         col1, col2 = st.columns([2, 1])
         with col1:
             pen_color = st.color_picker("Kalem Rengi", "#4F46E5", key=f"color_{curr_idx}")
@@ -321,13 +332,13 @@ elif not st.session_state.quiz_submitted:
             stroke_width=pen_width,
             stroke_color=pen_color,
             background_color="#FFFFFF",
-            height=220,
-            width=650,
+            height=240,
+            width=700,
             drawing_mode="freedraw",
             key=f"canvas_{curr_idx}",
         )
 
-    st.markdown("---")
+    st.markdown("<br>", unsafe_allow_html=True)
 
     # --- GEZİNME BUTONLARI ---
     col_prev, col_spacer, col_next = st.columns([1, 2, 1])
@@ -344,8 +355,9 @@ elif not st.session_state.quiz_submitted:
                 st.rerun()
         else:
             if st.button("📊 Sınavı Tamamla", type="primary", use_container_width=True):
-                gecen = int(time.time() - st.session_state.start_time)
-                st.session_state.total_duration = f"{gecen // 60:02d}:{gecen % 60:02d}"
+                if st.session_state.start_time:
+                    gecen = int(time.time() - st.session_state.start_time)
+                    st.session_state.total_duration = f"{gecen // 60:02d}:{gecen % 60:02d}"
                 st.session_state.quiz_submitted = True
                 st.rerun()
 
@@ -368,6 +380,7 @@ else:
 
     st.balloons()
     st.subheader("🎯 Sınav Sonuç Karnesi")
+    st.markdown("<br>", unsafe_allow_html=True)
 
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("✅ Doğru", dogru_sayisi)
@@ -383,18 +396,21 @@ else:
         ogrenci = st.session_state.user_answers.get(idx, "Boş")
 
         renk = "🟢" if ogrenci == dogru else ("⚪" if ogrenci == "Boş" else "🔴")
-        with st.expander(f"{renk} Soru {idx + 1}: Senin Cevabın: {ogrenci} | Doğru Cevap: {dogru}"):
-            st.write(temizle_latex_metin(q.get("soru_metni", "")))
-            secenekler = q.get("secenekler", {})
-            for k in sorted(secenekler.keys()):
-                st.write(f"**{k})** {temizle_latex_metin(secenekler[k])}")
-            st.markdown(f"**💡 Çözüm Açıklaması:** {temizle_latex_metin(q.get('cozum_aciklamasi', 'Açıklama bulunamadı.'))}")
+        with st.container(border=True):
+            with st.expander(f"{renk} Soru {idx + 1} | Senin Cevabın: **{ogrenci}** — Doğru Cevap: **{dogru}**"):
+                st.write(temizle_latex_metin(q.get("soru_metni", "")))
+                st.markdown("<br>", unsafe_allow_html=True)
+                secenekler = q.get("secenekler", {})
+                for k in sorted(secenekler.keys()):
+                    st.write(f"**{k})** {temizle_latex_metin(secenekler[k])}")
+                st.markdown("---")
+                st.markdown(f"**💡 Çözüm Açıklaması:** {temizle_latex_metin(q.get('cozum_aciklamasi', 'Açıklama bulunamadı.'))}")
 
-    if st.button("🔄 Yeni Sınav Başlat", use_container_width=True):
+    st.markdown("<br>", unsafe_allow_html=True)
+    if st.button("🔄 Yeni Sınav Başlat", use_container_width=True, type="primary"):
         st.session_state.quiz_data = None
         st.session_state.user_answers = {}
         st.session_state.quiz_submitted = False
-        st.session_state.exam_started = False
         st.session_state.start_time = None
         st.session_state.total_duration = None
         st.session_state.current_question = 0
