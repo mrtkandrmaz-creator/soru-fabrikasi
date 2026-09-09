@@ -136,7 +136,7 @@ if secili_dersler:
             tum_uniteler.append(f"[{d}] {u}")
 
 secili_uniteler = st.sidebar.multiselect("📖 Üniteler ve Konular:", tum_uniteler)
-soru_sayisi = st.sidebar.slider("🔢 Soru Sayısı:", 1, 30, 3)
+soru_sayisi = st.sidebar.slider("🔢 Soru Sayısı:", 1, 120, 3)
 
 if st.sidebar.button("🚀 Soru Üretimini Başlat", use_container_width=True):
     if not API_KEYS or "buraya_gercek" in API_KEYS[0]:
