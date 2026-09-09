@@ -168,7 +168,7 @@ if "current_question" not in st.session_state:
 
 # --- KENAR ÇUBUĞU (PARAMETRELER) ---
 with st.sidebar:
-    st.markdown("### 🔮 Sınav Parametreleri")
+    st.markdown("### 🔮 Sınav Fabrikası Soru Paneli")
     st.markdown("---")
 
     if not API_KEYS or "buraya_gercek" in API_KEYS[0]:
