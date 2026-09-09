@@ -67,10 +67,11 @@ MUGREDAT = {
     }
 }
 
-# --- API ANAHTARLARI VE YÜK DENGELEME ---
-API_KEYS = [
-    "AIzaSy... (kendi çalışan anahtarınızı buraya yazabilirsiniz)"
-]
+# --- GÜVENLİ API ANAHTARI YÖNETİMİ (ST.SECRETS) ---
+try:
+    API_KEYS = list(st.secrets.get("API_KEYS", []))
+except Exception:
+    API_KEYS = []
 
 class APIKeyManager:
     def __init__(self, keys):
@@ -106,6 +107,10 @@ if "start_time" not in st.session_state:
 # --- KENAR ÇUBUĞU (PARAMETRELER) ---
 st.sidebar.title("🔮 Sınav Parametreleri")
 
+# API Anahtarı Durum Uyarısı
+if not API_KEYS or "buraya_gercek" in API_KEYS[0]:
+    st.sidebar.warning("⚠️ Lütfen `.streamlit/secrets.toml` dosyasına geçerli Gemini API anahtarınızı ekleyin.")
+
 secili_sinif = st.sidebar.selectbox("Eğitim Seviyesi:", list(MUGREDAT.keys()))
 sinav_turu = st.sidebar.selectbox("Sınav Türü:", [
     "Konu Tarama Soruları",
@@ -124,10 +129,12 @@ if secili_dersler:
             tum_uniteler.append(f"[{d}] {u}")
 
 secili_uniteler = st.sidebar.multiselect("📖 Üniteler ve Konular:", tum_uniteler)
-soru_sayisi = st.sidebar.slider("🔢 Soru Sayısı:", 1, 30, 3)
+soru_sayisi = st.sidebar.slider("🔢 Soru Sayısı:", 1, 100, 3)
 
 if st.sidebar.button("🚀 Soru Üretimini Başlat", use_container_width=True):
-    if not secili_dersler:
+    if not API_KEYS or "buraya_gercek" in API_KEYS[0]:
+        st.sidebar.error("Geçerli bir API anahtarı bulunamadı! Lütfen secrets.toml dosyanızı kontrol edin.")
+    elif not secili_dersler:
         st.sidebar.error("Lütfen en az bir ders seçiniz!")
     else:
         prompt = f"""
@@ -156,7 +163,7 @@ if st.sidebar.button("🚀 Soru Üretimini Başlat", use_container_width=True):
         with st.spinner("⏳ Yapay zeka soruları ve çözümleri hazırlıyor, lütfen bekleyin..."):
             for _ in range(max(1, len(API_KEYS))):
                 current_key = api_manager.get_next_key()
-                if not current_key or "AIzaSy..." in current_key:
+                if not current_key:
                     break
                 try:
                     genai.configure(api_key=current_key)
@@ -188,7 +195,7 @@ if st.sidebar.button("🚀 Soru Üretimini Başlat", use_container_width=True):
             st.session_state.start_time = time.time()
             st.success(f"{len(quiz_data)} adet soru başarıyla üretildi!")
         else:
-            st.error("Lütfen kod içerisindeki `API_KEYS` listesine geçerli Gemini API anahtarınızı ekleyin.")
+            st.error("Sorular üretilirken bir hata oluştu. Lütfen API anahtarınızı ve internet bağlantınızı kontrol edin.")
 
 # --- ANA İÇERİK EKRANI ---
 st.title("🎓 Soru Fabrikası & Tablet Sınav Modülü")
