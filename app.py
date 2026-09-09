@@ -178,6 +178,8 @@ if "current_question" not in st.session_state:
     st.session_state.current_question = 0
 if "performance_history" not in st.session_state:
     st.session_state.performance_history = []
+if "yanlis_sorular_arsivi" not in st.session_state:
+    st.session_state.yanlis_sorular_arsivi = []
 
 # --- KENAR ÇUBUĞU (PARAMETRELER) ---
 with st.sidebar:
@@ -192,7 +194,8 @@ with st.sidebar:
         "Konu Tarama Soruları",
         "Yeni Nesil ve Karma Soru Çeşitleri",
         "Genel Değerlendirme Soruları",
-        "LGS Hazırlık Soruları"
+        "LGS Hazırlık Soruları",
+        "Yanlışlardan Üretilen Sorular"
     ])
 
     # Soru Zorluk Seviyesi Filtresi
@@ -217,12 +220,25 @@ with st.sidebar:
         elif not secili_dersler:
             st.error("Lütfen en az bir ders seçiniz!")
         else:
+            # Yanlışlardan üretilen sorular için ek bağlam hazırlığı
+            ek_baglam = ""
+            if sinav_turu == "Yanlışlardan Üretilen Sorular":
+                ilgili_yanlislar = [y for y in st.session_state.yanlis_sorular_arsivi if not secili_dersler or y['ders'] in secili_dersler]
+                if ilgili_yanlislar:
+                    ek_baglam = "Öğrencinin geçmişte hata yaptığı ve pekiştirmesi gereken benzer soru örnekleri şunlardır:\n"
+                    for y in ilgili_yanlislar[-5:]:
+                        ek_baglam += f"- Soru Metni: {y['soru_metni']} | Doğru Çözüm: {y['cozum']}\n"
+                    ek_baglam += "Lütfen bu hatalı yapılan konuları ve kavramları pekiştirecek, benzer mantıkta ama farklı özgün sorular üret.\n"
+                else:
+                    ek_baglam = "Öğrencinin henüz kayıtlı yanlış çözümü bulunmuyor. Bu nedenle seçilen ünitelerden standart kapsamlı ve pekiştirici sorular üret.\n"
+
             prompt = f"""
 Sen MEB müfredatına ve kazanımlarına tam hakim, alanında uzman profesyonel bir soru hazırlama yapay zekasısın.
 {secili_sinif} seviyesinde, {sinav_turu} kapsamında, seçilen dersler ve üniteler doğrultusunda tam {soru_sayisi} adet son derece nitelikli, özgün, mantık hatası içermeyen ve gerçek sınav kalitesinde çoktan seçmeli soru üret.
 Zorluk Seviyesi: {zorluk_seviyesi}
 Seçilen Dersler: {", ".join(secili_dersler)}
 Seçilen Üniteler: {", ".join(secili_uniteler) if secili_uniteler else "Tüm müfredat"}
+{ek_baglam}
 
 Her soru için mutlaka detaylı bir çözüm açıklaması (cozum_aciklamasi) da ekle.
 Yanıtı kesinlikle ve sadece şu JSON formatında ver (başka hiçbir markdown veya metin ekleme):
@@ -419,7 +435,7 @@ elif not st.session_state.quiz_submitted:
                 st.session_state.total_duration = f"{gecen // 60:02d}:{gecen % 60:02d}"
                 st.session_state.quiz_submitted = True
                 
-                # Sınav bittiğinde performansı geçmişe kaydet
+                # Sınav bittiğinde performansı geçmişe kaydet ve yanlış soruları arşive ekle
                 d_say = 0
                 y_say = 0
                 b_say = 0
@@ -432,6 +448,12 @@ elif not st.session_state.quiz_submitted:
                         d_say += 1
                     else:
                         y_say += 1
+                        # Yanlış yapılan soruyu yanlışlar arşivine kaydet
+                        st.session_state.yanlis_sorular_arsivi.append({
+                            "soru_metni": q_item.get("soru_metni"),
+                            "cozum": q_item.get("cozum_aciklamasi"),
+                            "ders": q_item.get("ders")
+                        })
                 
                 yeni_kayit = {
                     "tarih": datetime.now().strftime("%d-%m-%Y %H:%M"),
