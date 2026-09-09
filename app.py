@@ -11,13 +11,13 @@ from streamlit_drawable_canvas import st_canvas
 
 # --- RENDER / SAYFA AYARI ---
 st.set_page_config(
-    page_title="Soru Fabrikası & Tablet Sınav Modülü",
+    page_title="Soru Fabrikası Tablet Sınav Modülü",
     page_icon="🎓",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# --- MODERN TASARIM VE ÖZEL CSS (Canlı Turuncu ve Kırmızı Sayaç Entegrasyonu) ---
+# --- MODERN TASARIM VE ÖZEL CSS ---
 st.markdown("""
 <style>
     .main {
@@ -41,7 +41,6 @@ st.markdown("""
         transform: translateY(-1px);
         box-shadow: 0 4px 12px rgba(249, 115, 22, 0.2);
     }
-    /* Canlı turuncu renk vurguları */
     .stButton>button[kind="primary"] {
         background-color: #f97316 !important;
         border-color: #f97316 !important;
@@ -57,7 +56,6 @@ st.markdown("""
         border-radius: 12px;
         box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
     }
-    /* Sayaç Rengi Kırmızı Yapıldı */
     div[data-testid="stMetric"] div[data-testid="stMetricValue"] {
         color: #dc2626 !important;
     }
@@ -183,11 +181,8 @@ with st.sidebar:
     ])
 
     mevcut_dersler = list(MUGREDAT.get(secili_sinif, {}).keys())
-    # Türkçe dersi varsayılan olarak seçili gelmemesi için varsayılan liste filtrelendi (örn. varsa ilk alternatif veya boş bırakıldı)
-    varsayilan_dersler = [d for d in mevcut_dersler if d != "Türkçe"]
-    varsayilan_secim = varsayilan_dersler[:1] if varsayilan_dersler else []
-
-    secili_dersler = st.multiselect("📚 Dersler:", mevcut_dersler, default=varsayilan_secim)
+    # Otomatik seçim kaldırıldı, default boş bırakıldı
+    secili_dersler = st.multiselect("📚 Dersler:", mevcut_dersler, default=[])
 
     tum_uniteler = []
     if secili_dersler:
@@ -196,7 +191,7 @@ with st.sidebar:
                 tum_uniteler.append(f"[{d}] {u}")
 
     secili_uniteler = st.multiselect("📖 Üniteler ve Konular:", tum_uniteler)
-    soru_sayisi = st.slider("🔢 Soru Sayısı:", 1, 30, 3)
+    soru_sayisi = st.slider("🔢 Soru Sayısı:", 1, 100, 3)
 
     st.markdown("---")
     if st.button("🚀 Soru Üretimini Başlat", use_container_width=True, type="primary"):
@@ -283,7 +278,7 @@ st.title("🎓 Soru Fabrikası & Tablet Sınav Modülü")
 st.markdown("---")
 
 if st.session_state.quiz_data is None:
-    st.info("Sol taraftaki panelden ayarlarınızı yapıp **'Soru Üretimini Başlat'** butonuna tıklayarak sorularınızı oluşturun.")
+    st.info("Sol taraftaki panelden ders seçiminizi yapıp **'Soru Üretimini Başlat'** butonuna tıklayarak sorularınızı oluşturun.")
 
 elif not st.session_state.exam_started:
     toplam_soru_sayisi = len(st.session_state.quiz_data)
@@ -294,7 +289,7 @@ elif not st.session_state.exam_started:
     <div class="custom-card">
         <h2>✨ Sınavınız Hazır!</h2>
         <p style="color: #64748b; font-size: 16px;">Üretilen Soru Sayısı: <b>{toplam_soru_sayisi}</b> | Toplam Süre: <b>{dakika_gosterim} Dakika ({toplam_sure_sn} Saniye)</b></p>
-        <p style="color: #64748b; font-size: 14px;">Her soru için ortalama <b>80 saniye</b> süre tanınmaktadır. Sınav esnasında sayaç geriye sayacaktır.</p>
+        <p style="color: #64748b; font-size: 14px;">Her soru için ortalama <b>80 saniye</b> süre tanınmaktadır. Sınavı başlattığınızda sayaç geriye saymaya başlayacaktır.</p>
     </div>
     """, unsafe_allow_html=True)
 
