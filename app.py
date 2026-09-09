@@ -11,7 +11,7 @@ from streamlit_drawable_canvas import st_canvas
 
 # --- RENDER / SAYFA AYARI ---
 st.set_page_config(
-    page_title="Soru Fabrikası & MEB Müfredat Modülü",
+    page_title="Soru Fabrikası & Tablet Sınav Modülü",
     page_icon="🎓",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -20,34 +20,27 @@ st.set_page_config(
 # --- MODERN TASARIM VE ÖZEL CSS ---
 st.markdown("""
 <style>
-    /* Ana Arka Plan ve Tipografi */
     .main {
         background-color: #f8fafc;
     }
-    
-    /* Kart Yapıları */
     .custom-card {
         background-color: #ffffff;
         border: 1px solid #e2e8f0;
-        padding: 25px;
-        border-radius: 14px;
+        padding: 30px;
+        border-radius: 16px;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
         margin-bottom: 20px;
+        text-align: center;
     }
-
-    /* Buton Stilleri */
     .stButton>button {
         border-radius: 8px;
         font-weight: 600;
         transition: all 0.2s ease-in-out;
     }
-    
     .stButton>button:hover {
         transform: translateY(-1px);
         box-shadow: 0 4px 12px rgba(79, 70, 229, 0.15);
     }
-
-    /* Metrik Kartları */
     div[data-testid="stMetric"] {
         background-color: #ffffff;
         border: 1px solid #e2e8f0;
@@ -55,8 +48,6 @@ st.markdown("""
         border-radius: 12px;
         box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
     }
-    
-    /* Başlık Düzenlemeleri */
     h1, h2, h3 {
         color: #1e293b;
         font-family: 'Segoe UI', sans-serif;
@@ -153,6 +144,8 @@ if "user_answers" not in st.session_state:
     st.session_state.user_answers = {}
 if "quiz_submitted" not in st.session_state:
     st.session_state.quiz_submitted = False
+if "exam_started" not in st.session_state:
+    st.session_state.exam_started = False
 if "start_time" not in st.session_state:
     st.session_state.start_time = None
 if "total_duration" not in st.session_state:
@@ -259,7 +252,8 @@ Yanıtı kesinlikle ve sadece şu JSON formatında ver (başka hiçbir markdown 
                 st.session_state.quiz_data = quiz_data
                 st.session_state.user_answers = {}
                 st.session_state.quiz_submitted = False
-                st.session_state.start_time = time.time()
+                st.session_state.exam_started = False
+                st.session_state.start_time = None
                 st.session_state.total_duration = None
                 st.session_state.current_question = 0
                 st.success(f"{len(quiz_data)} soru başarıyla üretildi!")
@@ -272,23 +266,55 @@ st.title("🎓 Soru Fabrikası & Tablet Sınav Modülü")
 st.markdown("---")
 
 if st.session_state.quiz_data is None:
-    st.info("Sol taraftaki panelden ayarlarınızı yapıp **'Soru Üretimini Başlat'** butonuna tıklayarak sınava başlayabilirsiniz.")
+    st.info("Sol taraftaki panelden ayarlarınızı yapıp **'Soru Üretimini Başlat'** butonuna tıklayarak sorularınızı oluşturun.")
+
+elif not st.session_state.exam_started:
+    # --- MODERN BAŞLAT EKRANI ---
+    toplam_soru_sayisi = len(st.session_state.quiz_data)
+    toplam_sure_sn = toplam_soru_sayisi * 80
+    dakika_gosterim = toplam_sure_sn // 60
+
+    st.markdown(f"""
+    <div class="custom-card">
+        <h2>✨ Sınavınız Hazır!</h2>
+        <p style="color: #64748b; font-size: 16px;">Üretilen Soru Sayısı: <b>{toplam_soru_sayisi}</b> | Toplam Süre: <b>{dakika_gosterim} Dakika ({toplam_sure_sn} Saniye)</b></p>
+        <p style="color: #64748b; font-size: 14px;">Her soru için ortalama <b>80 saniye</b> süre tanınmaktadır. Sınav esnasında sayaç geriye sayacaktır.</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        if st.button("🚀 Sınavı Şimdi Başlat", use_container_width=True, type="primary"):
+            st.session_state.exam_started = True
+            st.session_state.start_time = time.time()
+            st.rerun()
+
 elif not st.session_state.quiz_submitted:
     quiz_data = st.session_state.quiz_data
     toplam_soru = len(quiz_data)
     curr_idx = st.session_state.current_question
 
-    # --- SAYAÇ VE İLERLEME GÖSTERGESİ ---
-    if st.session_state.start_time:
-        gecen_sn = int(time.time() - st.session_state.start_time)
-        dakika = gecen_sn // 60
-        saniye = gecen_sn % 60
-        col_time, col_progress = st.columns([1, 3])
-        with col_time:
-            st.metric(label="⏱️ Geçen Süre", value=f"{dakika:02d}:{saniye:02d}")
-        with col_progress:
-            st.write(f"**Soru {curr_idx + 1} / {toplam_soru}**")
-            st.progress((curr_idx + 1) / toplam_soru)
+    # --- HER SORU İÇİN 80 SANİYE HESABI (TOPLAM SAYAÇ) ---
+    toplam_izin_verilen_sure = toplam_soru * 80
+    gecen_sn = int(time.time() - st.session_state.start_time)
+    kalan_sn = toplam_izin_verilen_sure - gecen_sn
+
+    if kalan_sn <= 0:
+        # Süre bittiğinde otomatik bitir
+        st.session_state.quiz_submitted = True
+        st.session_state.total_duration = f"{toplam_izin_verilen_sure // 60:02d}:00"
+        st.rerun()
+
+    kalan_dakika = kalan_sn // 60
+    kalan_saniye = kalan_sn % 60
+
+    # Üst Bilgi / Sayaç ve İlerleme Göstergesi
+    col_time, col_progress = st.columns([1, 3])
+    with col_time:
+        st.metric(label="⏳ Kalan Sınav Süresi", value=f"{kalan_dakika:02d}:{kalan_saniye:02d}")
+    with col_progress:
+        st.write(f"**Soru {curr_idx + 1} / {toplam_soru}**")
+        st.progress((curr_idx + 1) / toplam_soru)
 
     st.markdown("<br>", unsafe_allow_html=True)
 
@@ -355,11 +381,14 @@ elif not st.session_state.quiz_submitted:
                 st.rerun()
         else:
             if st.button("📊 Sınavı Tamamla", type="primary", use_container_width=True):
-                if st.session_state.start_time:
-                    gecen = int(time.time() - st.session_state.start_time)
-                    st.session_state.total_duration = f"{gecen // 60:02d}:{gecen % 60:02d}"
+                gecen = int(time.time() - st.session_state.start_time)
+                st.session_state.total_duration = f"{gecen // 60:02d}:{gecen % 60:02d}"
                 st.session_state.quiz_submitted = True
                 st.rerun()
+
+    # Sayacın her saniye güncellenmesi için tetikleyici
+    time.sleep(1)
+    st.rerun()
 
 else:
     # --- SINAV SONUÇ VE KARNE EKRANI ---
@@ -411,6 +440,7 @@ else:
         st.session_state.quiz_data = None
         st.session_state.user_answers = {}
         st.session_state.quiz_submitted = False
+        st.session_state.exam_started = False
         st.session_state.start_time = None
         st.session_state.total_duration = None
         st.session_state.current_question = 0
