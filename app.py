@@ -17,7 +17,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- MODERN TASARIM VE ÖZEL CSS ---
+# --- MODERN TASARIM VE ÖZEL CSS (Canlı Turuncu ve Kırmızı Sayaç Entegrasyonu) ---
 st.markdown("""
 <style>
     .main {
@@ -39,7 +39,16 @@ st.markdown("""
     }
     .stButton>button:hover {
         transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.15);
+        box-shadow: 0 4px 12px rgba(249, 115, 22, 0.2);
+    }
+    /* Canlı turuncu renk vurguları */
+    .stButton>button[kind="primary"] {
+        background-color: #f97316 !important;
+        border-color: #f97316 !important;
+    }
+    .stButton>button[kind="primary"]:hover {
+        background-color: #ea580c !important;
+        border-color: #ea580c !important;
     }
     div[data-testid="stMetric"] {
         background-color: #ffffff;
@@ -47,6 +56,10 @@ st.markdown("""
         padding: 16px;
         border-radius: 12px;
         box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+    }
+    /* Sayaç Rengi Kırmızı Yapıldı */
+    div[data-testid="stMetric"] div[data-testid="stMetricValue"] {
+        color: #dc2626 !important;
     }
     h1, h2, h3 {
         color: #1e293b;
@@ -170,7 +183,11 @@ with st.sidebar:
     ])
 
     mevcut_dersler = list(MUGREDAT.get(secili_sinif, {}).keys())
-    secili_dersler = st.multiselect("📚 Dersler:", mevcut_dersler, default=mevcut_dersler[:1])
+    # Türkçe dersi varsayılan olarak seçili gelmemesi için varsayılan liste filtrelendi (örn. varsa ilk alternatif veya boş bırakıldı)
+    varsayilan_dersler = [d for d in mevcut_dersler if d != "Türkçe"]
+    varsayilan_secim = varsayilan_dersler[:1] if varsayilan_dersler else []
+
+    secili_dersler = st.multiselect("📚 Dersler:", mevcut_dersler, default=varsayilan_secim)
 
     tum_uniteler = []
     if secili_dersler:
@@ -269,7 +286,6 @@ if st.session_state.quiz_data is None:
     st.info("Sol taraftaki panelden ayarlarınızı yapıp **'Soru Üretimini Başlat'** butonuna tıklayarak sorularınızı oluşturun.")
 
 elif not st.session_state.exam_started:
-    # --- MODERN BAŞLAT EKRANI ---
     toplam_soru_sayisi = len(st.session_state.quiz_data)
     toplam_sure_sn = toplam_soru_sayisi * 80
     dakika_gosterim = toplam_sure_sn // 60
@@ -294,13 +310,11 @@ elif not st.session_state.quiz_submitted:
     toplam_soru = len(quiz_data)
     curr_idx = st.session_state.current_question
 
-    # --- HER SORU İÇİN 80 SANİYE HESABI (TOPLAM SAYAÇ) ---
     toplam_izin_verilen_sure = toplam_soru * 80
     gecen_sn = int(time.time() - st.session_state.start_time)
     kalan_sn = toplam_izin_verilen_sure - gecen_sn
 
     if kalan_sn <= 0:
-        # Süre bittiğinde otomatik bitir
         st.session_state.quiz_submitted = True
         st.session_state.total_duration = f"{toplam_izin_verilen_sure // 60:02d}:00"
         st.rerun()
@@ -308,7 +322,6 @@ elif not st.session_state.quiz_submitted:
     kalan_dakika = kalan_sn // 60
     kalan_saniye = kalan_sn % 60
 
-    # Üst Bilgi / Sayaç ve İlerleme Göstergesi
     col_time, col_progress = st.columns([1, 3])
     with col_time:
         st.metric(label="⏳ Kalan Sınav Süresi", value=f"{kalan_dakika:02d}:{kalan_saniye:02d}")
@@ -318,7 +331,6 @@ elif not st.session_state.quiz_submitted:
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # --- TEK SORU GÖSTERİMİ (KART İÇİNDE) ---
     q = quiz_data[curr_idx]
     
     with st.container(border=True):
@@ -345,16 +357,15 @@ elif not st.session_state.quiz_submitted:
             secilen_harf = secim.split(")")[0].strip()
             st.session_state.user_answers[curr_idx] = secilen_harf
 
-    # Karalama / Çözüm Tahtası
     with st.expander("✍️ Çözüm / Karalama Tahtası (Aç / Kapat)"):
         col1, col2 = st.columns([2, 1])
         with col1:
-            pen_color = st.color_picker("Kalem Rengi", "#4F46E5", key=f"color_{curr_idx}")
+            pen_color = st.color_picker("Kalem Rengi", "#f97316", key=f"color_{curr_idx}")
         with col2:
             pen_width = st.slider("Kalem Kalınlığı", 1, 15, 3, key=f"width_{curr_idx}")
 
         st_canvas(
-            fill_color="rgba(255, 165, 0, 0.3)",
+            fill_color="rgba(249, 115, 22, 0.3)",
             stroke_width=pen_width,
             stroke_color=pen_color,
             background_color="#FFFFFF",
@@ -366,7 +377,6 @@ elif not st.session_state.quiz_submitted:
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # --- GEZİNME BUTONLARI ---
     col_prev, col_spacer, col_next = st.columns([1, 2, 1])
 
     with col_prev:
@@ -386,12 +396,10 @@ elif not st.session_state.quiz_submitted:
                 st.session_state.quiz_submitted = True
                 st.rerun()
 
-    # Sayacın her saniye güncellenmesi için tetikleyici
     time.sleep(1)
     st.rerun()
 
 else:
-    # --- SINAV SONUÇ VE KARNE EKRANI ---
     quiz_data = st.session_state.quiz_data
     dogru_sayisi = 0
     yanlis_sayisi = 0
