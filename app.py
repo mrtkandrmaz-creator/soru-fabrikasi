@@ -5,6 +5,7 @@ import re
 import os
 import sys
 import time
+from datetime import datetime
 from google import genai
 from google.genai import types
 from streamlit_drawable_canvas import st_canvas
@@ -31,6 +32,18 @@ st.markdown("""
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
         margin-bottom: 20px;
         text-align: center;
+    }
+    /* Soru ve şıklar için büyük ve kalın punto stilleri */
+    .soru-metni-kutusu {
+        font-size: 20px !important;
+        font-weight: 700 !important;
+        color: #0f172a !important;
+        line-height: 1.5 !important;
+    }
+    .stRadio label {
+        font-size: 18px !important;
+        font-weight: 600 !important;
+        color: #1e293b !important;
     }
     .stButton>button {
         border-radius: 8px;
@@ -163,6 +176,8 @@ if "total_duration" not in st.session_state:
     st.session_state.total_duration = None
 if "current_question" not in st.session_state:
     st.session_state.current_question = 0
+if "performance_history" not in st.session_state:
+    st.session_state.performance_history = []
 
 # --- KENAR ÇUBUĞU (PARAMETRELER) ---
 with st.sidebar:
@@ -180,8 +195,10 @@ with st.sidebar:
         "LGS Hazırlık Soruları"
     ])
 
+    # Soru Zorluk Seviyesi Filtresi
+    zorluk_seviyesi = st.selectbox("🎯 Soru Zorluk Seviyesi:", ["Kolay", "Orta", "Zor", "Karma / Dengeli"])
+
     mevcut_dersler = list(MUGREDAT.get(secili_sinif, {}).keys())
-    # Otomatik seçim kaldırıldı, default boş bırakıldı
     secili_dersler = st.multiselect("📚 Dersler:", mevcut_dersler, default=[])
 
     tum_uniteler = []
@@ -203,6 +220,7 @@ with st.sidebar:
             prompt = f"""
 Sen MEB müfredatına ve kazanımlarına tam hakim, alanında uzman profesyonel bir soru hazırlama yapay zekasısın.
 {secili_sinif} seviyesinde, {sinav_turu} kapsamında, seçilen dersler ve üniteler doğrultusunda tam {soru_sayisi} adet son derece nitelikli, özgün, mantık hatası içermeyen ve gerçek sınav kalitesinde çoktan seçmeli soru üret.
+Zorluk Seviyesi: {zorluk_seviyesi}
 Seçilen Dersler: {", ".join(secili_dersler)}
 Seçilen Üniteler: {", ".join(secili_uniteler) if secili_uniteler else "Tüm müfredat"}
 
@@ -273,6 +291,16 @@ Yanıtı kesinlikle ve sadece şu JSON formatında ver (başka hiçbir markdown 
             else:
                 st.error(f"Hata oluştu: {hata_mesaji}")
 
+    # Kenar çubuğunda geçmiş performansları inceleme alanı
+    if st.session_state.performance_history:
+        st.markdown("---")
+        with st.expander("📈 Geçmiş Sınav Karne Arşivi"):
+            for i, p in enumerate(st.session_state.performance_history[::-1]):
+                st.markdown(f"**Sınav #{len(st.session_state.performance_history)-i}** ({p['tarih']})")
+                st.markdown(f"Seviye: {p['sinif']} | Dersler: {p['dersler']}")
+                st.markdown(f"✅ D: {p['dogru']} | ❌ Y: {p['yanlis']} | ⚪ B: {p['bos']} | ⏱️ {p['sure']}")
+                st.markdown("---")
+
 # --- ANA İÇERİK EKRANI ---
 st.title("🎓 Soru Fabrikası & Tablet Sınav Modülü")
 st.markdown("---")
@@ -331,7 +359,8 @@ elif not st.session_state.quiz_submitted:
     with st.container(border=True):
         st.markdown(f"### Soru {curr_idx + 1} &nbsp;&nbsp;|&nbsp;&nbsp; *{q.get('ders', 'Genel')}*")
         st.markdown("<br>", unsafe_allow_html=True)
-        st.write(temizle_latex_metin(q.get("soru_metni", "")))
+        # Soru metni büyük ve kalın puntolarla gösteriliyor
+        st.markdown(f'<div class="soru-metni-kutusu">{temizle_latex_metin(q.get("soru_metni", ""))}</div>', unsafe_allow_html=True)
         st.markdown("<br>", unsafe_allow_html=True)
 
         secenekler = q.get("secenekler", {})
@@ -389,6 +418,31 @@ elif not st.session_state.quiz_submitted:
                 gecen = int(time.time() - st.session_state.start_time)
                 st.session_state.total_duration = f"{gecen // 60:02d}:{gecen % 60:02d}"
                 st.session_state.quiz_submitted = True
+                
+                # Sınav bittiğinde performansı geçmişe kaydet
+                d_say = 0
+                y_say = 0
+                b_say = 0
+                for idx_q, q_item in enumerate(quiz_data):
+                    dogru_c = q_item.get("dogru_cevap")
+                    ogrenci_c = st.session_state.user_answers.get(idx_q)
+                    if not ogrenci_c:
+                        b_say += 1
+                    elif ogrenci_c == dogru_c:
+                        d_say += 1
+                    else:
+                        y_say += 1
+                
+                yeni_kayit = {
+                    "tarih": datetime.now().strftime("%d-%m-%Y %H:%M"),
+                    "sinif": secili_sinif,
+                    "dersler": ", ".join(secili_dersler),
+                    "dogru": d_say,
+                    "yanlis": y_say,
+                    "bos": b_say,
+                    "sure": st.session_state.total_duration
+                }
+                st.session_state.performance_history.append(yeni_kayit)
                 st.rerun()
 
     time.sleep(1)
