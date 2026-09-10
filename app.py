@@ -19,7 +19,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- MODERN TASARIM VE ÖZEL CSS (Büyük ve Kalın Şıklar & Dolgulu Kutular) ---
+# --- MODERN VE YÜKSEK OKUNABİLİR ÖZEL CSS (Yenilenmiş Renk Paleti) ---
 st.markdown("""
 <style>
     .main {
@@ -27,7 +27,7 @@ st.markdown("""
     }
     .custom-card {
         background-color: #ffffff;
-        border: 1px solid #e2e8f0;
+        border: 1px solid #cbd5e1;
         padding: 30px;
         border-radius: 16px;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
@@ -40,7 +40,7 @@ st.markdown("""
         color: #0f172a !important;
         line-height: 1.5 !important;
     }
-    /* Soru şıkları daha büyük ve kalın */
+    /* Soru şıkları büyük ve kalın */
     .stRadio label {
         font-size: 22px !important;
         font-weight: 800 !important;
@@ -58,6 +58,7 @@ st.markdown("""
     .stButton>button[kind="primary"] {
         background-color: #f97316 !important;
         border-color: #f97316 !important;
+        color: #ffffff !important;
     }
     .stButton>button[kind="primary"]:hover {
         background-color: #ea580c !important;
@@ -65,7 +66,7 @@ st.markdown("""
     }
     div[data-testid="stMetric"] {
         background-color: #ffffff;
-        border: 1px solid #e2e8f0;
+        border: 1px solid #cbd5e1;
         padding: 16px;
         border-radius: 12px;
         box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
@@ -73,26 +74,49 @@ st.markdown("""
     div[data-testid="stMetric"] div[data-testid="stMetricValue"] {
         color: #dc2626 !important;
     }
-    h1, h2, h3 {
-        color: #1e293b;
+    h1, h2, h3, h4, h5, h6 {
+        color: #0f172a;
         font-family: 'Segoe UI', sans-serif;
     }
     
-    /* Modern Dolgulu Checkbox Tasarımı */
+    /* Sidebar ve Ünite Seçim Alanları İçin Yüksek Okunabilirlik ve Modern Renkler */
+    section[data-testid="stSidebar"] {
+        background-color: #ffffff;
+        border-right: 1px solid #e2e8f0;
+    }
+    section[data-testid="stSidebar"] .stExpander {
+        background-color: #f8fafc !important;
+        border: 1px solid #cbd5e1 !important;
+        border-radius: 10px !important;
+        margin-bottom: 8px !important;
+    }
+    section[data-testid="stSidebar"] .stExpander summary {
+        font-weight: 700 !important;
+        color: #1e293b !important;
+    }
+
+    /* Modern Dolgulu Checkbox Tasarımı (Yüksek Kontrast & Okunabilirlik) */
     div.row-widget.stCheckbox {
-        background-color: #f1f5f9;
-        padding: 8px 12px;
-        border-radius: 8px;
-        border: 1px solid #e2e8f0;
-        margin-bottom: 6px;
+        background-color: #ffffff !important;
+        padding: 10px 14px !important;
+        border-radius: 8px !important;
+        border: 1px solid #cbd5e1 !important;
+        margin-bottom: 8px !important;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.03);
         transition: all 0.2s ease;
     }
     div.row-widget.stCheckbox:hover {
-        background-color: #e2e8f0;
-        border-color: #cbd5e1;
+        background-color: #f1f5f9 !important;
+        border-color: #94a3b8 !important;
+    }
+    div.row-widget.stCheckbox label p {
+        color: #0f172a !important;
+        font-weight: 600 !important;
+        font-size: 15px !important;
     }
     div.row-widget.stCheckbox [data-baseweb="checkbox"] {
-        background-color: #ffffff;
+        background-color: #ffffff !important;
+        border-color: #64748b !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -234,7 +258,7 @@ with st.sidebar:
     for ders_adi, uniteler_listesi in mevcut_dersler.items():
         with st.expander(f"📘 {ders_adi}"):
             secili_dersler.append(ders_adi)
-            st.markdown("İstediğiniz üniteleri işaretleyin (İşaretlemezseniz tümü dahil olur):")
+            st.markdown("İstediğiniz üniteleri işaretleyin:")
             for unite in uniteler_listesi:
                 if st.checkbox(unite, key=f"chk_unite_{secili_sinif}_{ders_adi}_{unite}"):
                     secili_uniteler.append(f"[{ders_adi}] {unite}")
