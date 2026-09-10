@@ -33,16 +33,16 @@ st.markdown("""
         margin-bottom: 20px;
         text-align: center;
     }
-    /* Soru ve şıklar için büyük ve kalın punto stilleri */
+    /* Soru ve şıklar için daha büyük, okunaklı ve kalın punto stilleri */
     .soru-metni-kutusu {
-        font-size: 20px !important;
+        font-size: 22px !important;
         font-weight: 700 !important;
         color: #0f172a !important;
         line-height: 1.5 !important;
     }
     .stRadio label {
-        font-size: 18px !important;
-        font-weight: 600 !important;
+        font-size: 20px !important;
+        font-weight: 700 !important;
         color: #1e293b !important;
     }
     .stButton>button {
@@ -79,7 +79,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- MEB MÜFREDATI ---
+# --- MEB MÜFREDATI (ALMANCA DAHİL) ---
 MUGREDAT = {
     "4. Sınıf": {
         "Türkçe": ["Sözcükte Anlam", "Cümle Bilgisi", "Paragraf Yorumlama", "Yazım Kuralları ve Noktalama", "Metin Türleri ve Söz Sanatları"],
@@ -95,7 +95,8 @@ MUGREDAT = {
         "Fen Bilimleri": ["Güneş, Dünya ve Ay", "Canlılar Dünyası", "Kuvvetin Uygulanması ve Sürtünme", "Maddenin Hâl Değişimi ve Isı", "Işığın Yayılması"],
         "Sosyal Bilgiler": ["Birey ve Toplum", "Kültür ve Miras", "İnsanlar, Yerler ve Çevre", "Bilim, Teknoloji ve Toplum", "Üretim, Dağıtım ve Tüketim"],
         "Din Kültürü": ["Allah İnancı ve İnsan", "Hz. Muhammed ve Aile Hayatı", "İslam'ın Temel İbadetleri", "Ahlaki Değerler"],
-        "İngilizce": ["Hello!", "My Town", "Games and Hobbies", "My Daily Routine", "Health", "Movies"]
+        "İngilizce": ["Hello!", "My Town", "Games and Hobbies", "My Daily Routine", "Health", "Movies"],
+        "Almanca": ["Hallo!", "Sich vorstellen", "Zahlen und Farben", "Familie und Freunde", "Schulsachen"]
     },
     "6. Sınıf": {
         "Türkçe": ["Sözcükte Anlam", "Cümlede Anlam", "Paragraf Bilgisi", "Metin Türleri", "Fiiller"],
@@ -103,7 +104,8 @@ MUGREDAT = {
         "Fen Bilimleri": ["Güneş Sistemi ve Tutulmalar", "Vücudumuzdaki Sistemler", "Kuvvet ve Hareket", "Madde ve Isı", "Ses ve Özellikleri"],
         "Sosyal Bilgiler": ["Biz ve Toplum", "Yeryüzünde Yaşam", "Türklerin Tarihsel Yolculuğu", "Ussal Ekonomi", "Yönetimimiz ve Demokrasi"],
         "Din Kültürü": ["Peygamber ve İlahi Kitaplar", "Namaz İbadeti", "Hz. Muhammed'in Hayatı", "Ahlaki Tutum ve Davranışlar"],
-        "İngilizce": ["Life", "Yummy Breakfast", "Downtown", "Weather and Emotions", "At the Fair", "Vacations"]
+        "İngilizce": ["Life", "Yummy Breakfast", "Downtown", "Weather and Emotions", "At the Fair", "Vacations"],
+        "Almanca": ["Guten Tag!", "Hobbys", "Tagesablauf", "Essen und Trinken", "Wohnen"]
     },
     "7. Sınıf": {
         "Türkçe": ["Sözcükte Anlam", "Cümlede Anlam", "Cümlenin Ögeleri", "Fiilimsiler", "Anlatım Bozuklukları"],
@@ -111,7 +113,8 @@ MUGREDAT = {
         "Fen Bilimleri": ["Güneş Sistemi ve Ötesi", "Hücre ve Bölünmeler", "Kuvvet ve Enerji", "Saf Madde ve Karışımlar", "Işığın Soğurulması"],
         "Sosyal Bilgiler": ["Birlikte Yaşamak", "Ülkemizde Nüfus", "Tarihte Yolculuk", "Ekonomi ve Sosyal Hayat", "Yaşayan Demokrasi"],
         "Din Kültürü": ["Melek ve Ahiret İnancı", "Hac ve Kurban", "Ahlaki Davranışlar", "İslam Düşüncesinde Yorumlar"],
-        "İngilizce": ["Appearance and Personality", "Sports", "Biographies", "Wild Animals", "Television", "Celebrations"]
+        "İngilizce": ["Appearance and Personality", "Sports", "Biographies", "Wild Animals", "Television", "Celebrations"],
+        "Almanca": ["Mein Körper und Gesundheit", "Kleidung", "Wetter und Jahreszeiten", "Freizeitaktivitäten"]
     },
     "8. Sınıf": {
         "Türkçe": ["Fiilimsiler", "Cümlenin Ögeleri", "Cümle Türleri", "Yazım Kuralları", "Sözel Mantık ve Muhakeme", "Paragraf Analizi"],
@@ -119,7 +122,8 @@ MUGREDAT = {
         "Fen Bilimleri": ["Mevsimlerin Oluşumu ve İklim", "DNA ve Genetik Kod", "Basınç", "Madde ve Endüstri", "Basit Makineler", "Enerji Dönüşümleri"],
         "Sosyal Bilgiler": ["Bir Demokrasi Kahramanı: Atatürk", "Milli Uyanış", "Ya İstiklal Ya Ölüm", "Atatürkçülük ve Çağdaşlaşan Türkiye"],
         "Din Kültürü": ["Kader İnancı", "Zekat ve Sadaka", "Din ve Hayat", "Hz. Muhammed'in Örnekliği"],
-        "İngilizce": ["Friendship", "Teen Life", "In the Kitchen", "On the Phone", "The Internet", "Adventures"]
+        "İngilizce": ["Friendship", "Teen Life", "In the Kitchen", "On the Phone", "The Internet", "Adventures"],
+        "Almanca": ["Reisen und Urlaub", "Berufe", "Technologie", "Umwelt und Natur"]
     },
     "LGS Hazırlık": {
         "Türkçe": ["Sözel Mantık ve Muhakeme", "Paragraf Analizi", "Dil Bilgisi Karma Denemeleri"],
@@ -127,7 +131,8 @@ MUGREDAT = {
         "Fen Bilimleri": ["LGS Fen Bilimleri Kapsamlı Karma Denemeler", "Mevsimler, DNA ve Basınç Tekrarı"],
         "Sosyal Bilgiler": ["T.C. İnkılap Tarihi ve Atatürkçülük Karma Tekrar"],
         "Din Kültürü": ["LGS Din Kültürü Karma Denemeleri ve Yorum Soruları"],
-        "İngilizce": ["LGS İngilizce Vocabulary & Reading Comprehension Testleri"]
+        "İngilizce": ["LGS İngilizce Vocabulary & Reading Comprehension Testleri"],
+        "Almanca": ["LGS Almanca Kelime ve Paragraf Soruları"]
     }
 }
 
@@ -198,7 +203,6 @@ with st.sidebar:
         "Yanlışlardan Üretilen Sorular"
     ])
 
-    # Soru Zorluk Seviyesi Filtresi
     zorluk_seviyesi = st.selectbox("🎯 Soru Zorluk Seviyesi:", ["Kolay", "Orta", "Zor", "Karma / Dengeli"])
 
     mevcut_dersler = list(MUGREDAT.get(secili_sinif, {}).keys())
@@ -220,7 +224,6 @@ with st.sidebar:
         elif not secili_dersler:
             st.error("Lütfen en az bir ders seçiniz!")
         else:
-            # Yanlışlardan üretilen sorular için ek bağlam hazırlığı
             ek_baglam = ""
             if sinav_turu == "Yanlışlardan Üretilen Sorular":
                 ilgili_yanlislar = [y for y in st.session_state.yanlis_sorular_arsivi if not secili_dersler or y['ders'] in secili_dersler]
@@ -307,7 +310,6 @@ Yanıtı kesinlikle ve sadece şu JSON formatında ver (başka hiçbir markdown 
             else:
                 st.error(f"Hata oluştu: {hata_mesaji}")
 
-    # Kenar çubuğunda geçmiş performansları inceleme alanı
     if st.session_state.performance_history:
         st.markdown("---")
         with st.expander("📈 Geçmiş Sınav Karne Arşivi"):
@@ -375,7 +377,6 @@ elif not st.session_state.quiz_submitted:
     with st.container(border=True):
         st.markdown(f"### Soru {curr_idx + 1} &nbsp;&nbsp;|&nbsp;&nbsp; *{q.get('ders', 'Genel')}*")
         st.markdown("<br>", unsafe_allow_html=True)
-        # Soru metni büyük ve kalın puntolarla gösteriliyor
         st.markdown(f'<div class="soru-metni-kutusu">{temizle_latex_metin(q.get("soru_metni", ""))}</div>', unsafe_allow_html=True)
         st.markdown("<br>", unsafe_allow_html=True)
 
@@ -435,7 +436,6 @@ elif not st.session_state.quiz_submitted:
                 st.session_state.total_duration = f"{gecen // 60:02d}:{gecen % 60:02d}"
                 st.session_state.quiz_submitted = True
                 
-                # Sınav bittiğinde performansı geçmişe kaydet ve yanlış soruları arşive ekle
                 d_say = 0
                 y_say = 0
                 b_say = 0
@@ -448,7 +448,6 @@ elif not st.session_state.quiz_submitted:
                         d_say += 1
                     else:
                         y_say += 1
-                        # Yanlış yapılan soruyu yanlışlar arşivine kaydet
                         st.session_state.yanlis_sorular_arsivi.append({
                             "soru_metni": q_item.get("soru_metni"),
                             "cozum": q_item.get("cozum_aciklamasi"),
@@ -513,6 +512,58 @@ else:
                     st.write(f"**{k})** {temizle_latex_metin(secenekler[k])}")
                 st.markdown("---")
                 st.markdown(f"**💡 Çözüm Açıklaması:** {temizle_latex_metin(q.get('cozum_aciklamasi', 'Açıklama bulunamadı.'))}")
+
+    # --- DOSYA DIŞA AKTARMA VE İNDİRME SEÇENEKLERİ ---
+    st.markdown("---")
+    st.markdown("### 📥 Sınav Arşivi ve Çıktı İşlemleri")
+    
+    col_exp1, col_exp2 = st.columns(2)
+    
+    with col_exp1:
+        export_data = {
+            "tarih": datetime.now().strftime("%Y-%m-%d %H:%M"),
+            "sinif": secili_sinif,
+            "dersler": secili_dersler,
+            "dogru_sayisi": dogru_sayisi,
+            "yanlis_sayisi": yanlis_sayisi,
+            "bos_sayisi": bos_sayisi,
+            "sure": st.session_state.get("total_duration", "00:00"),
+            "sorular": quiz_data,
+            "ogrenci_cevaplari": st.session_state.user_answers
+        }
+        json_str = json.dumps(export_data, ensure_ascii=False, indent=4)
+        st.download_button(
+            label="💾 Sınavı ve Karneni JSON Olarak İndir",
+            data=json_str,
+            file_name=f"sinav_karne_{datetime.now().strftime('%Y%m%d_%H%M')}.json",
+            mime="application/json",
+            use_container_width=True
+        )
+        
+    with col_exp2:
+        txt_content = f"SINAV SONUÇ RAPORU\nTarih: {datetime.now().strftime('%d-%m-%Y %H:%M')}\nSınıf: {secili_sinif}\n"
+        txt_content += f"Dersler: {', '.join(secili_dersler)}\n"
+        txt_content += f"Doğru: {dogru_sayisi} | Yanlış: {yanlis_sayisi} | Boş: {bos_sayisi}\n"
+        txt_content += f"Süre: {st.session_state.get('total_duration', '00:00')}\n"
+        txt_content += "="*40 + "\n\n"
+        
+        for idx, q in enumerate(quiz_data):
+            ogr = st.session_state.user_answers.get(idx, "Boş")
+            dg = q.get("dogru_cevap")
+            txt_content += f"Soru {idx+1} [{q.get('ders', 'Genel')}]: {q.get('soru_metni')}\n"
+            for k, v in q.get("secenekler", {}).items():
+                txt_content += f"  {k}) {v}\n"
+            txt_content += f"Öğrencinin Cevabı: {ogr} | Doğru Cevap: {dg}\n"
+            txt_content += f"Çözüm: {q.get('cozum_aciklamasi', '')}\n"
+            txt_content += "-"*30 + "\n"
+            
+        st.download_button(
+            label="📄 Soru ve Çözümleri Metin (TXT) Olarak İndir",
+            data=txt_content,
+            file_name=f"soru_bankasi_cozumler_{datetime.now().strftime('%Y%m%d_%H%M')}.txt",
+            mime="text/plain",
+            use_container_width=True
+        )
 
     st.markdown("<br>", unsafe_allow_html=True)
     if st.button("🔄 Yeni Sınav Başlat", use_container_width=True, type="primary"):
