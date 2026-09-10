@@ -249,19 +249,22 @@ with st.sidebar:
 
     st.markdown("---")
     st.markdown("📚 **Ders ve Üniteler**")
-    st.caption("Açtığınız dersler otomatik olarak sınava dahil edilir. İsterseniz altından özel üniteler seçebilirsiniz.")
+    st.caption("Sadece işaretlediğiniz ünitelerden sorular üretilecektir. Ünite seçmezseniz ilgili dersin tüm müfredatı baz alınır.")
 
     mevcut_dersler = MUGREDAT.get(secili_sinif, {})
-    secili_dersler = []
-    secili_uniteler = []
+    secili_ders_unite_haritasi = {}
 
     for ders_adi, uniteler_listesi in mevcut_dersler.items():
         with st.expander(f"📘 {ders_adi}"):
-            secili_dersler.append(ders_adi)
-            st.markdown("İstediğiniz üniteleri işaretleyin:")
+            ders_secildi = st.checkbox(f"Tüm {ders_adi} Dersini Dahil Et", key=f"chk_ders_{secili_sinif}_{ders_adi}")
+            secili_alt_uniteler = []
+            st.markdown("Veya özel üniteler seçin:")
             for unite in uniteler_listesi:
                 if st.checkbox(unite, key=f"chk_unite_{secili_sinif}_{ders_adi}_{unite}"):
-                    secili_uniteler.append(f"[{ders_adi}] {unite}")
+                    secili_alt_uniteler.append(unite)
+            
+            if ders_secildi or secili_alt_uniteler:
+                secili_ders_unite_haritasi[ders_adi] = secili_alt_uniteler if secili_alt_uniteler else uniteler_listesi
 
     st.markdown("---")
     soru_sayisi = st.slider("🔢 Soru Sayısı:", 1, 100, 3)
@@ -269,26 +272,34 @@ with st.sidebar:
     if st.button("🚀 Soru Üretimini Başlat", use_container_width=True, type="primary"):
         if not API_KEYS or "buraya_gercek" in API_KEYS[0]:
             st.error("Geçerli bir API anahtarı bulunamadı!")
-        elif not secili_dersler:
-            st.error("Lütfen en az bir ders seçiniz!")
+        elif not secili_ders_unite_haritasi:
+            st.error("Lütfen en az bir ders veya ünite seçiniz!")
         else:
             ek_baglam = ""
             if sinav_turu == "Yanlışlardan Üretilen Sorular":
-                ilgili_yanlislar = [y for y in st.session_state.yanlis_sorular_arsivi if not secili_dersler or y['ders'] in secili_dersler]
+                ilgili_yanlislar = [y for y in st.session_state.yanlis_sorular_arsivi if y['ders'] in secili_ders_unite_haritasi.keys()]
                 if ilgili_yanlislar:
                     ek_baglam = "Öğrencinin geçmişte hata yaptığı ve pekiştirmesi gereken benzer soru örnekleri şunlardır:\n"
                     for y in ilgili_yanlislar[-5:]:
                         ek_baglam += f"- Soru Metni: {y['soru_metni']} | Doğru Çözüm: {y['cozum']}\n"
                     ek_baglam += "Lütfen bu hatalı yapılan konuları ve kavramları pekiştirecek, benzer mantıkta ama farklı özgün sorular üret.\n"
                 else:
-                    ek_baglam = "Öğrencinin henüz kayıtlı yanlış çözümü bulunmuyor. Bu nedenle seçilen ünitelerden standart kapsamlı ve pekiştirici sorular üret.\n"
+                    ek_baglam = "Öğrencinin seçilen derslerde henüz kayıtlı yanlış çözümü bulunmuyor. Bu nedenle seçilen ünitelerden standart kapsamlı ve pekiştirici sorular üret.\n"
+
+            # Seçilen ders ve üniteleri metne dönüştür
+            ders_unite_detay = ""
+            aktif_dersler_listesi = list(secili_ders_unite_haritasi.keys())
+            for d, u_list in secili_ders_unite_haritasi.items():
+                ders_unite_detay += f"- Ders: {d}, İstenen Üniteler/Kazanımlar: {', '.join(u_list)}\n"
 
             prompt = f"""
 Sen MEB müfredatına ve kazanımlarına tam hakim, alanında uzman profesyonel bir soru hazırlama yapay zekasısın.
-{secili_sinif} seviyesinde, {sinav_turu} kapsamında, seçilen dersler ve üniteler doğrultusunda tam {soru_sayisi} adet son derece nitelikli, özgün, mantık hatası içermeyen ve gerçek sınav kalitesinde çoktan seçmeli soru üret.
+{secili_sinif} seviyesinde, {sinav_turu} kapsamında, YALNIZCA aşağıda belirtilen dersler ve seçilen üniteler doğrultusunda, TAM VE KESİN OLARAK TOPLAM {soru_sayisi} adet son derece nitelikli, özgün, mantık hatası içermeyen ve gerçek sınav kalitesinde çoktan seçmeli soru üret. 
+Soru sayısının kesinlikle tam {soru_sayisi} olmasına dikkat et (fazla veya eksik olmasın). Soruları seçilen dersler arasında dengeli bir şekilde dağıt.
+
 Zorluk Seviyesi: {zorluk_seviyesi}
-Seçilen Dersler: {", ".join(secili_dersler)}
-Seçilen Üniteler: {", ".join(secili_uniteler) if secili_uniteler else "Tüm müfredat"}
+Seçilen Dersler ve Üniteler:
+{ders_unite_detay}
 {ek_baglam}
 
 Her soru için mutlaka detaylı bir çözüm açıklaması (cozum_aciklamasi) da ekle.
@@ -339,7 +350,7 @@ Yanıtı kesinlikle ve sadece şu JSON formatında ver (başka hiçbir markdown 
                                 for idx, item in enumerate(quiz_data):
                                     item["soru_no"] = idx + 1
                                     if "ders" not in item:
-                                        item["ders"] = secili_dersler[0]
+                                        item["ders"] = aktif_dersler_listesi[0]
                                 basarili = True
                                 break
                     except Exception as e:
@@ -372,7 +383,7 @@ st.title("🎓 Soru Fabrikası & Tablet Sınav Modülü")
 st.markdown("---")
 
 if st.session_state.quiz_data is None:
-    st.info("Sol taraftaki panelden ders seçiminizi yapıp **'Soru Üretimini Başlat'** butonuna tıklayarak sorularınızı oluşturun.")
+    st.info("Sol taraftaki panelden ders/ünite seçiminizi yapıp **'Soru Üretimini Başlat'** butonuna tıklayarak sorularınızı oluşturun.")
 
 elif not st.session_state.exam_started:
     toplam_soru_sayisi = len(st.session_state.quiz_data)
@@ -502,10 +513,11 @@ elif not st.session_state.quiz_submitted:
                             "ders": q_item.get("ders")
                         })
                 
+                aktif_dersler_str = ", ".join(secili_ders_unite_haritasi.keys()) if 'secili_ders_unite_haritasi' in locals() else "Seçilen Dersler"
                 yeni_kayit = {
                     "tarih": datetime.now().strftime("%d-%m-%Y %H:%M"),
                     "sinif": secili_sinif,
-                    "dersler": ", ".join(secili_dersler) if 'secili_dersler' in locals() else "Seçilen Dersler",
+                    "dersler": aktif_dersler_str,
                     "dogru": d_say,
                     "yanlis": y_say,
                     "bos": b_say,
