@@ -9,6 +9,7 @@ from datetime import datetime
 from google import genai
 from google.genai import types
 from streamlit_drawable_canvas import st_canvas
+import pandas as pd
 
 # --- RENDER / SAYFA AYARI ---
 st.set_page_config(
@@ -18,7 +19,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- MODERN TASARIM VE ÖZEL CSS ---
+# --- MODERN TASARIM VE ÖZEL CSS (Büyük ve Kalın Şıklar & Dolgulu Kutular) ---
 st.markdown("""
 <style>
     .main {
@@ -33,17 +34,17 @@ st.markdown("""
         margin-bottom: 20px;
         text-align: center;
     }
-    /* Soru ve şıklar için daha büyük, okunaklı ve kalın punto stilleri */
     .soru-metni-kutusu {
         font-size: 22px !important;
         font-weight: 700 !important;
         color: #0f172a !important;
         line-height: 1.5 !important;
     }
+    /* Soru şıkları daha büyük ve kalın */
     .stRadio label {
-        font-size: 20px !important;
-        font-weight: 700 !important;
-        color: #1e293b !important;
+        font-size: 22px !important;
+        font-weight: 800 !important;
+        color: #0f172a !important;
     }
     .stButton>button {
         border-radius: 8px;
@@ -75,6 +76,23 @@ st.markdown("""
     h1, h2, h3 {
         color: #1e293b;
         font-family: 'Segoe UI', sans-serif;
+    }
+    
+    /* Modern Dolgulu Checkbox Tasarımı */
+    div.row-widget.stCheckbox {
+        background-color: #f1f5f9;
+        padding: 8px 12px;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        margin-bottom: 6px;
+        transition: all 0.2s ease;
+    }
+    div.row-widget.stCheckbox:hover {
+        background-color: #e2e8f0;
+        border-color: #cbd5e1;
+    }
+    div.row-widget.stCheckbox [data-baseweb="checkbox"] {
+        background-color: #ffffff;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -186,7 +204,7 @@ if "performance_history" not in st.session_state:
 if "yanlis_sorular_arsivi" not in st.session_state:
     st.session_state.yanlis_sorular_arsivi = []
 
-# --- KENAR ÇUBUĞU (PARAMETRELER) ---
+# --- KENAR ÇUBUĞU (AKILLI DERS & ÜNİTE AKIŞI) ---
 with st.sidebar:
     st.markdown("### 🔮 Sınav Fabrikası Soru Paneli")
     st.markdown("---")
@@ -205,19 +223,25 @@ with st.sidebar:
 
     zorluk_seviyesi = st.selectbox("🎯 Soru Zorluk Seviyesi:", ["Kolay", "Orta", "Zor", "Karma / Dengeli"])
 
-    mevcut_dersler = list(MUGREDAT.get(secili_sinif, {}).keys())
-    secili_dersler = st.multiselect("📚 Dersler:", mevcut_dersler, default=[])
+    st.markdown("---")
+    st.markdown("📚 **Ders ve Üniteler**")
+    st.caption("Açtığınız dersler otomatik olarak sınava dahil edilir. İsterseniz altından özel üniteler seçebilirsiniz.")
 
-    tum_uniteler = []
-    if secili_dersler:
-        for d in secili_dersler:
-            for u in MUGREDAT[secili_sinif].get(d, []):
-                tum_uniteler.append(f"[{d}] {u}")
+    mevcut_dersler = MUGREDAT.get(secili_sinif, {})
+    secili_dersler = []
+    secili_uniteler = []
 
-    secili_uniteler = st.multiselect("📖 Üniteler ve Konular:", tum_uniteler)
-    soru_sayisi = st.slider("🔢 Soru Sayısı:", 1, 100, 3)
+    for ders_adi, uniteler_listesi in mevcut_dersler.items():
+        with st.expander(f"📘 {ders_adi}"):
+            secili_dersler.append(ders_adi)
+            st.markdown("İstediğiniz üniteleri işaretleyin (İşaretlemezseniz tümü dahil olur):")
+            for unite in uniteler_listesi:
+                if st.checkbox(unite, key=f"chk_unite_{secili_sinif}_{ders_adi}_{unite}"):
+                    secili_uniteler.append(f"[{ders_adi}] {unite}")
 
     st.markdown("---")
+    soru_sayisi = st.slider("🔢 Soru Sayısı:", 1, 100, 3)
+
     if st.button("🚀 Soru Üretimini Başlat", use_container_width=True, type="primary"):
         if not API_KEYS or "buraya_gercek" in API_KEYS[0]:
             st.error("Geçerli bir API anahtarı bulunamadı!")
@@ -457,7 +481,7 @@ elif not st.session_state.quiz_submitted:
                 yeni_kayit = {
                     "tarih": datetime.now().strftime("%d-%m-%Y %H:%M"),
                     "sinif": secili_sinif,
-                    "dersler": ", ".join(secili_dersler),
+                    "dersler": ", ".join(secili_dersler) if 'secili_dersler' in locals() else "Seçilen Dersler",
                     "dogru": d_say,
                     "yanlis": y_say,
                     "bos": b_say,
@@ -512,58 +536,6 @@ else:
                     st.write(f"**{k})** {temizle_latex_metin(secenekler[k])}")
                 st.markdown("---")
                 st.markdown(f"**💡 Çözüm Açıklaması:** {temizle_latex_metin(q.get('cozum_aciklamasi', 'Açıklama bulunamadı.'))}")
-
-    # --- DOSYA DIŞA AKTARMA VE İNDİRME SEÇENEKLERİ ---
-    st.markdown("---")
-    st.markdown("### 📥 Sınav Arşivi ve Çıktı İşlemleri")
-    
-    col_exp1, col_exp2 = st.columns(2)
-    
-    with col_exp1:
-        export_data = {
-            "tarih": datetime.now().strftime("%Y-%m-%d %H:%M"),
-            "sinif": secili_sinif,
-            "dersler": secili_dersler,
-            "dogru_sayisi": dogru_sayisi,
-            "yanlis_sayisi": yanlis_sayisi,
-            "bos_sayisi": bos_sayisi,
-            "sure": st.session_state.get("total_duration", "00:00"),
-            "sorular": quiz_data,
-            "ogrenci_cevaplari": st.session_state.user_answers
-        }
-        json_str = json.dumps(export_data, ensure_ascii=False, indent=4)
-        st.download_button(
-            label="💾 Sınavı ve Karneni JSON Olarak İndir",
-            data=json_str,
-            file_name=f"sinav_karne_{datetime.now().strftime('%Y%m%d_%H%M')}.json",
-            mime="application/json",
-            use_container_width=True
-        )
-        
-    with col_exp2:
-        txt_content = f"SINAV SONUÇ RAPORU\nTarih: {datetime.now().strftime('%d-%m-%Y %H:%M')}\nSınıf: {secili_sinif}\n"
-        txt_content += f"Dersler: {', '.join(secili_dersler)}\n"
-        txt_content += f"Doğru: {dogru_sayisi} | Yanlış: {yanlis_sayisi} | Boş: {bos_sayisi}\n"
-        txt_content += f"Süre: {st.session_state.get('total_duration', '00:00')}\n"
-        txt_content += "="*40 + "\n\n"
-        
-        for idx, q in enumerate(quiz_data):
-            ogr = st.session_state.user_answers.get(idx, "Boş")
-            dg = q.get("dogru_cevap")
-            txt_content += f"Soru {idx+1} [{q.get('ders', 'Genel')}]: {q.get('soru_metni')}\n"
-            for k, v in q.get("secenekler", {}).items():
-                txt_content += f"  {k}) {v}\n"
-            txt_content += f"Öğrencinin Cevabı: {ogr} | Doğru Cevap: {dg}\n"
-            txt_content += f"Çözüm: {q.get('cozum_aciklamasi', '')}\n"
-            txt_content += "-"*30 + "\n"
-            
-        st.download_button(
-            label="📄 Soru ve Çözümleri Metin (TXT) Olarak İndir",
-            data=txt_content,
-            file_name=f"soru_bankasi_cozumler_{datetime.now().strftime('%Y%m%d_%H%M')}.txt",
-            mime="text/plain",
-            use_container_width=True
-        )
 
     st.markdown("<br>", unsafe_allow_html=True)
     if st.button("🔄 Yeni Sınav Başlat", use_container_width=True, type="primary"):
