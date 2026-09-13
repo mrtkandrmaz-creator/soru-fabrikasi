@@ -203,7 +203,7 @@ def ciz_vektorel_geometri(geometri_tipi="ucgen", etiketler=None):
     plt.close(fig)
     return f"data:image/png;base64,{img_str}"
 
-# --- MEB MÜFREDATI ---
+# --- MEB MÜFREDATI VE ÖZEL MODÜLLER ---
 MUGREDAT = {
     "4. Sınıf": {
         "Türkçe": ["Sözcükte Anlam", "Cümle Bilgisi", "Paragraf Yorumlama", "Yazım Kuralları ve Noktalama", "Metin Türleri ve Söz Sanatları"],
@@ -226,7 +226,7 @@ MUGREDAT = {
         "Türkçe": ["Sözcükte Anlam", "Cümlede Anlam", "Paragraf Bilgisi", "Metin Türleri", "Fiiller"],
         "Matematik": ["Çarpanlar ve Katlar", "Kümeler", "Tam Sayılar", "Kesirlerle İşlemler", "Cebirsel İfadeler", "Açılar", "Üçgende Açılar ve Alan", "Çember ve Daire", "Dörtgende Çevre og Alan"],
         "Fen Bilimleri": ["Güneş Sistemi ve Tutulmalar", "Vücudumuzdaki Sistemler", "Kuvvet ve Hareket", "Madde ve Isı", "Ses ve Özellikleri"],
-        "Sosyal Bilgiler": ["Biz ve Toplum", "Yeryüzünde Yaşam", "Türklerin Tarihsel Yolculuğu", "Ussal Ekonomi", "Yönetimimiz ve Demokrasi"],
+        "Sosyal Bilgiler": ["Biz ve Toplum", "Yeryüzünde Yaşam", "Türklerin Tarihsel Yolculuk", "Ussal Ekonomi", "Yönetimimiz ve Demokrasi"],
         "Din Kültürü": ["Peygamber ve İlahi Kitaplar", "Namaz İbadeti", "Hz. Muhammed'in Hayatı", "Ahlaki Tutum ve Davranışlar"],
         "İngilizce": ["Life", "Yummy Breakfast", "Downtown", "Weather and Emotions", "At the Fair", "Vacations"],
         "Almanca": ["Guten Tag!", "Hobbys", "Tagesablauf", "Essen und Trinken", "Wohnen"]
@@ -248,6 +248,10 @@ MUGREDAT = {
         "Din Kültürü": ["Kader İnancı", "Zekat ve Sadaka", "Din ve Hayat", "Hz. Muhammed'in Örnekliği"],
         "İngilizce": ["Friendship", "Teen Life", "In the Kitchen", "On the Phone", "The Internet", "Adventures"],
         "Almanca": ["Reisen und Urlaub", "Berufe", "Technologie", "Umwelt und Natur"]
+    },
+    "Genel Yetenek & Aktiviteler": {
+        "Bilgi Yarışması": ["Genel Kültür ve Tarih", "Dünya Coğrafyası", "Bilim ve Sanat", "Doğa ve Uzay", "Eğlenceli Trivia"],
+        "Zihinden Dört İşlem": ["Hızlı Toplama ve Çıkarma", "Çarpım Tablosu Hakimiyeti", "Kademeli Zincir İşlemler", "Zihinden Bölme ve Kat Problemleri"]
     },
     "LGS Hazırlık": {
         "Türkçe": ["Sözel Mantık ve Muhakeme", "Paragraf Analizi", "Dil Bilgisi Karma Denemeleri"],
@@ -286,6 +290,8 @@ api_manager = APIKeyManager(API_KEYS)
 def temizle_latex_metin(text):
     if not isinstance(text, str):
         return str(text)
+    # \circ ifadelerini derece sembolüne dönüştür
+    text = re.sub(r'\\circ\b', '°', text)
     text = re.sub(r'\\frac\{([^}]+)\}\{([^}]+)\}', r'\1/\2', text)
     text = text.replace('\\%', '%').replace('$', '').strip()
     return text
@@ -333,7 +339,7 @@ with st.sidebar:
     if not API_KEYS or "buraya_gercek" in API_KEYS[0]:
         st.warning("⚠️ `.streamlit/secrets.toml` dosyasına geçerli Gemini API anahtarınızı ekleyin.")
 
-    secili_sinif = st.selectbox("Eğitim Seviyesi:", list(MUGREDAT.keys()))
+    secili_sinif = st.selectbox("Eğitim Seviyesi / Kategori:", list(MUGREDAT.keys()))
     sinav_turu = st.selectbox("Sınav Türü:", [
         "Konu Tarama Soruları",
         "Yeni Nesil ve Karma Soru Çeşitleri",
@@ -345,14 +351,14 @@ with st.sidebar:
     zorluk_seviyesi = st.selectbox("🎯 Soru Zorluk Seviyesi:", ["Kolay", "Orta", "Zor", "Karma / Dengeli"])
 
     st.markdown("---")
-    st.markdown("📚 **Ders ve Üniteler**")
+    st.markdown("📚 **Dersler ve Üniteler**")
 
     mevcut_dersler = MUGREDAT.get(secili_sinif, {})
     secili_ders_unite_haritasi = {}
 
     for ders_adi, uniteler_listesi in mevcut_dersler.items():
         with st.expander(f"📘 {ders_adi}"):
-            ders_secildi = st.checkbox(f"Tüm {ders_adi} Dersini Dahil Et", key=f"chk_ders_{secili_sinif}_{ders_adi}")
+            ders_secildi = st.checkbox(f"Tüm {ders_adi} Kategorisini Dahil Et", key=f"chk_ders_{secili_sinif}_{ders_adi}")
             secili_alt_uniteler = []
             for unite in uniteler_listesi:
                 if st.checkbox(unite, key=f"chk_unite_{secili_sinif}_{ders_adi}_{unite}"):
@@ -379,19 +385,24 @@ with st.sidebar:
             ders_unite_detay = ""
             aktif_dersler_listesi = list(secili_ders_unite_haritasi.keys())
             for d, u_list in secili_ders_unite_haritasi.items():
-                ders_unite_detay += f"- Ders: {d}, İstenen Üniteler: {', '.join(u_list)}\n"
+                ders_unite_detay += f"- Ders/Kategori: {d}, İstenen Alt Başlıklar: {', '.join(u_list)}\n"
 
             prompt = f"""
-Sen MEB müfredatına tam hakim profesyonel bir soru hazırlama yapay zekasısın.
+Sen MEB müfredatına ve zeka/bilgi yarışması formatlarına tam hakim profesyonel bir soru hazırlama yapay zekasısın.
 {secili_sinif} seviyesinde, {sinav_turu} kapsamında, TOPLAM {soru_sayisi} adet son derece nitelikli, özgün, birbirini tekrar etmeyen ve değişken senaryolara sahip çoktan seçmeli soru üret. 
+
+ÖZEL TALİMATLAR:
+- Eğer seçilen kategori "Bilgi Yarışması" ise; genel kültür, tarih, sanat veya bilim odaklı, şaşırtıcı ve eğlenceli trivia soruları hazırla.
+- Eğer seçilen kategori "Zihinden Dört İşlem" ise; zihinden hızlıca yapılabilecek, pratik pratik kural gerektiren veya kademeli işlem becerisini ölçen sayısal sorular üret (Geometri kullanma, geometri_tipi='yok' olsun).
+- Metin içerisindeki derece ifadeleri için LaTeX komutu (`\\circ`) yerine doğrudan derece sembolü (°) kullan (Örn: 70°).
 
 ÇOK ÖNEMLİ - GEOMETRİ VE HARF TUTARLILIĞI KURALLARI:
 1. Soruların kalıpları, sayısal değerleri ve metinsel kurguları birbirinden tamamen farklı olsun.
-2. Eğer soru bir üçgen, açı, paralelkenar vb. içeriyorsa ve soru metninde belirli köşe harfleri (örneğin KLM üçgeni, PRS açısı vb.) kullanılıyorsa, soru metninde geçen bu harfler ile şemada gösterilen harfler KESİNLİKLE BİRE BİR AYNI OLMALIDIR. Asla soru metninde "KLM üçgeni" deyip şekilde "ABC" gösterme. Soru metninde hangi harfler geçiyorsa (örn. K, L, M), `etiketler` JSON alanında da o harfleri şemanın köşe konumlarına karşılık gelecek şekilde kullan (`"etiketler": {{"A": "K", "B": "L", "C": "M"}}` şeklinde).
-3. Geometri dışı sorularda "geometri_tipi" değerini "yok" yapabilirsin.
+2. Eğer soru bir üçgen, açı, paralelkenar vb. içeriyorsa ve soru metninde belirli köşe harfleri (örneğin KLM üçgeni, PRS açısı vb.) kullanılıyorsa, soru metninde geçen bu harfler ile şemada gösterilen harfler KESİNLİKLE BİRE BİR AYNI OLMALIDIR. Soru metninde hangi harfler geçiyorsa, `etiketler` JSON alanında da o harfleri şemanın köşe konumlarına karşılık gelecek şekilde kullan (`"etiketler": {{"A": "K", "B": "L", "C": "M"}}` şeklinde).
+3. Geometri dışı sorularda (Bilgi Yarışması, Dört İşlem vb.) "geometri_tipi" değerini "yok" yapabilirsin.
 
 Zorluk Seviyesi: {zorluk_seviyesi}
-Seçilen Dersler ve Üniteler:
+Seçilen Alanlar ve Alt Başlıklar:
 {ders_unite_detay}
 {ek_baglam}
 
@@ -402,9 +413,9 @@ Yanıtı kesinlikle ve sadece şu JSON formatında ver (başka hiçbir markdown 
     "secenekler": {{"A": "...", "B": "...", "C": "...", "D": "..."}},
     "dogru_cevap": "A",
     "cozum_aciklamasi": "Çözüm açıklaması...",
-    "ders": "Ders Adı",
-    "geometri_tipi": "dik_ucgen", 
-    "etiketler": {{"A": "K", "B": "L", "C": "M"}}
+    "ders": "Kategori/Ders Adı",
+    "geometri_tipi": "yok", 
+    "etiketler": {{}}
   }}
 ]
 """
@@ -478,7 +489,7 @@ Yanıtı kesinlikle ve sadece şu JSON formatında ver (başka hiçbir markdown 
                 st.session_state.start_time = None
                 st.session_state.total_duration = None
                 st.session_state.current_question = 0
-                st.success(f"{len(ctx.quiz_data)} adet çeşitli soru ve şemaları başarıyla üretildi!")
+                st.success(f"{len(ctx.quiz_data)} adet soru başarıyla üretildi!")
                 st.rerun()
             else:
                 st.error(f"Hata oluştu: {ctx.hata_mesaji or 'Geçerli veri alınamadı.'}")
@@ -496,7 +507,7 @@ st.title("🎓 Soru Fabrikası & Tablet Sınav Modülü")
 st.markdown("---")
 
 if st.session_state.quiz_data is None:
-    st.info("Sol panelden ders ve ünite seçimlerinizi yapıp **'Soru Üretimini Başlat'** butonuna tıklayarak sınavınızı oluşturun.")
+    st.info("Sol panelden kategori/ders ve ünite seçimlerinizi yapıp **'Soru Üretimini Başlat'** butonuna tıklayarak sınavınızı oluşturun.")
 
 elif not st.session_state.exam_started:
     toplam_soru_sayisi = len(st.session_state.quiz_data)
@@ -505,7 +516,7 @@ elif not st.session_state.exam_started:
 
     st.markdown(f"""
     <div class="custom-card">
-        <h2>✨ Zenginleştirilmiş Çeşitli Sınavınız Hazır!</h2>
+        <h2>✨ Zenginleştirilmiş Sınavınız Hazır!</h2>
         <p style="color: #64748b; font-size: 16px;">Üretilen Soru Sayısı: <b>{toplam_soru_sayisi}</b> | Süre: <b>{dakika_gosterim} Dakika</b></p>
     </div>
     """, unsafe_allow_html=True)
@@ -583,7 +594,6 @@ elif not st.session_state.quiz_submitted:
         if widget_key not in st.session_state:
             st.session_state[widget_key] = default_val
         else:
-            # Eğer session state'deki değer başka bir sorunun verisiyle karışmışsa veya sıfırlanması gerekiyorsa denetle
             if st.session_state[widget_key] not in options_list and default_val is not None:
                 st.session_state[widget_key] = default_val
 
@@ -603,7 +613,6 @@ elif not st.session_state.quiz_submitted:
             on_change=handle_radio_change
         )
 
-        # Anlık güvenli eşitleme yedeği
         if secim:
             harf = secim.split(")")[0].strip()
             st.session_state.user_answers[curr_idx] = harf
@@ -667,7 +676,7 @@ elif not st.session_state.quiz_submitted:
                 yeni_kayit = {
                     "tarih": datetime.now().strftime("%d-%m-%Y %H:%M"),
                     "sinif": secili_sinif,
-                    "dersler": "Seçilen Dersler",
+                    "dersler": "Seçilen Alanlar",
                     "dogru": d_say,
                     "yanlis": y_say,
                     "bos": b_say,
