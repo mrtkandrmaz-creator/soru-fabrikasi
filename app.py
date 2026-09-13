@@ -13,6 +13,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import io
 import base64
+import threading
 
 # --- RENDER / SAYFA AYARI ---
 st.set_page_config(
@@ -53,7 +54,7 @@ st.markdown("""
         margin: 12px auto;
         border: 2px solid #cbd5e1;
         box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-        max-width: 400px;
+        max-width: 420px;
     }
     .stRadio label {
         font-size: 20px !important;
@@ -77,6 +78,10 @@ st.markdown("""
     .stButton>button[kind="primary"]:hover {
         background-color: #ea580c !important;
         border-color: #ea580c !important;
+    }
+    /* Mor İlerleme Çubuğu ve Uyumlu Buton Boyutu */
+    div[data-testid="stProgress"] > div > div > div {
+        background-color: #9333ea !important;
     }
     div[data-testid="stMetric"] {
         background-color: #ffffff;
@@ -122,54 +127,58 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- SORUYA ÖZEL DİNAMİK VE KARARLI GEOMETRİ ÜRETİCİSİ (KÜÇÜLTÜLÜN BOYUTLAR) ---
+# --- ÇEŞİTLENDİRİLMİŞ DİNAMİK VEKTÖREL GEOMETRİ ÜRETİCİSİ ---
 def ciz_vektorel_geometri(geometri_tipi="ucgen", etiketler=None):
     if not isinstance(etiketler, dict):
         etiketler = {}
         
-    # Daha küçük, kompakt ve akıcı görsel boyutlandırma
-    fig, ax = plt.subplots(figsize=(3.6, 2.5))
+    fig, ax = plt.subplots(figsize=(3.8, 2.6))
     ax.set_aspect('equal')
     ax.axis('off')
     
     tip = str(geometri_tipi).lower()
     
-    if "ucgen" in tip or "aci" in tip or "üçgen" in tip:
+    if "dik_ucgen" in tip or "dik üçgen" in tip:
         bx, by = 1.0, 1.0
         cx, cy = 5.0, 1.0
-        ax_val, ay_val = 3.0, 4.3
-        
+        ax_val, ay_val = 1.0, 4.2
         ax.plot([bx, cx, ax_val, bx], [by, cy, ay_val, by], color='#0f172a', linewidth=2.2, solid_capstyle='round', solid_joinstyle='round')
+        # Dik açı simgesi
+        ax.plot([1.0, 1.4, 1.4, 1.0], [1.0, 1.0, 1.4, 1.4], color='#0f172a', linewidth=1.5)
         
-        lbl_a = etiketler.get("A", "A")
-        lbl_b = etiketler.get("B", "B")
-        lbl_c = etiketler.get("C", "C")
+        ax.text(ax_val - 0.2, ay_val + 0.15, etiketler.get("A", "A"), fontsize=11, fontweight='bold', color='#0f172a')
+        ax.text(bx - 0.2, by - 0.2, etiketler.get("B", "B"), fontsize=10, fontweight='bold', color='#0f172a')
+        ax.text(cx + 0.2, cy - 0.2, etiketler.get("C", "C"), fontsize=10, fontweight='bold', color='#0f172a')
         
-        ax.text(ax_val, ay_val + 0.15, lbl_a, fontsize=11, fontweight='bold', ha='center', va='bottom', color='#0f172a')
-        ax.text(bx - 0.2, by - 0.15, lbl_b, fontsize=10, fontweight='bold', ha='right', va='top', color='#0f172a')
-        ax.text(cx + 0.2, cy - 0.15, lbl_c, fontsize=10, fontweight='bold', ha='left', va='top', color='#0f172a')
+    elif "ikizkenar" in tip:
+        bx, by = 1.0, 1.0
+        cx, cy = 5.0, 1.0
+        ax_val, ay_val = 3.0, 4.5
+        ax.plot([bx, cx, ax_val, bx], [by, cy, ay_val, by], color='#0f172a', linewidth=2.2, solid_capstyle='round', solid_joinstyle='round')
+        ax.text(ax_val, ay_val + 0.15, etiketler.get("A", "A"), fontsize=11, fontweight='bold', ha='center', color='#0f172a')
+        ax.text(bx - 0.2, by - 0.15, etiketler.get("B", "B"), fontsize=10, fontweight='bold', color='#0f172a')
+        ax.text(cx + 0.2, cy - 0.15, etiketler.get("C", "C"), fontsize=10, fontweight='bold', color='#0f172a')
+        # İkizkenar çizgileri (işaretleri)
+        ax.plot([2.0, 1.9], [2.75, 2.95], color='#dc2626', linewidth=2)
+        ax.plot([4.0, 4.1], [2.75, 2.95], color='#dc2626', linewidth=2)
         
-        if "AB" in etiketler:
-            ax.text((bx+ax_val)/2 - 0.35, (by+ay_val)/2 + 0.1, etiketler["AB"], fontsize=9, fontweight='bold', color='#0f172a')
-        if "AC" in etiketler:
-            ax.text((cx+ax_val)/2 + 0.35, (cy+ay_val)/2 + 0.1, etiketler["AC"], fontsize=9, fontweight='bold', color='#0f172a')
-        if "BC" in etiketler:
-            ax.text((bx+cx)/2, by - 0.3, etiketler["BC"], fontsize=9, fontweight='bold', ha='center', color='#0f172a')
-            
-    elif "dortgen" in tip or "kare" in tip or "dikdortgen" in tip:
-        x_coords = [1, 5, 5, 1, 1]
+    elif "paralelkenar" in tip:
+        x_coords = [1.5, 5.5, 4.5, 0.5, 1.5]
         y_coords = [1, 1, 4, 4, 1]
         ax.plot(x_coords, y_coords, color='#0f172a', linewidth=2.2, solid_capstyle='round', solid_joinstyle='round')
+        ax.text(0.3, 4.1, etiketler.get("A", "A"), fontsize=10, fontweight='bold', color='#0f172a')
+        ax.text(4.6, 4.1, etiketler.get("B", "B"), fontsize=10, fontweight='bold', color='#0f172a')
+        ax.text(5.7, 0.8, etiketler.get("C", "C"), fontsize=10, fontweight='bold', color='#0f172a')
+        ax.text(1.3, 0.8, etiketler.get("D", "D"), fontsize=10, fontweight='bold', color='#0f172a')
         
-        lbl_a = etiketler.get("A", "A")
-        lbl_b = etiketler.get("B", "B")
-        lbl_c = etiketler.get("C", "C")
-        lbl_d = etiketler.get("D", "D")
-        
-        ax.text(0.8, 4.2, lbl_a, fontsize=10, fontweight='bold', color='#0f172a')
-        ax.text(5.2, 4.2, lbl_b, fontsize=10, fontweight='bold', color='#0f172a')
-        ax.text(5.2, 0.8, lbl_c, fontsize=10, fontweight='bold', color='#0f172a')
-        ax.text(0.8, 0.8, lbl_d, fontsize=10, fontweight='bold', color='#0f172a')
+    elif "yamuk" in tip:
+        x_coords = [1.5, 4.5, 5.5, 0.5, 1.5]
+        y_coords = [1, 1, 4, 4, 1]
+        ax.plot(x_coords, y_coords, color='#0f172a', linewidth=2.2, solid_capstyle='round', solid_joinstyle='round')
+        ax.text(0.3, 4.1, etiketler.get("A", "A"), fontsize=10, fontweight='bold', color='#0f172a')
+        ax.text(4.6, 4.1, etiketler.get("B", "B"), fontsize=10, fontweight='bold', color='#0f172a')
+        ax.text(5.7, 0.8, etiketler.get("C", "C"), fontsize=10, fontweight='bold', color='#0f172a')
+        ax.text(1.3, 0.8, etiketler.get("D", "D"), fontsize=10, fontweight='bold', color='#0f172a')
         
     elif "cember" in tip or "daire" in tip:
         circle = plt.Circle((3, 2.5), 1.8, color='#0f172a', fill=False, linewidth=2.2)
@@ -177,14 +186,15 @@ def ciz_vektorel_geometri(geometri_tipi="ucgen", etiketler=None):
         ax.plot([3, 4.8], [2.5, 2.5], color='#0f172a', linewidth=1.8)
         ax.text(3.9, 2.7, etiketler.get("r", "r"), fontsize=10, fontweight='bold', color='#0f172a')
         ax.text(3, 2.5, etiketler.get("M", "M"), fontsize=10, fontweight='bold', ha='center', va='center', color='#0f172a')
-    else:
+        
+    else: # Standart Üçgen / Açı Çeşidi
         bx, by = 1.0, 1.0
         cx, cy = 5.0, 1.0
-        ax_val, ay_val = 3.0, 4.3
+        ax_val, ay_val = 3.2, 4.2
         ax.plot([bx, cx, ax_val, bx], [by, cy, ay_val, by], color='#0f172a', linewidth=2.2, solid_capstyle='round', solid_joinstyle='round')
-        ax.text(ax_val, ay_val + 0.15, etiketler.get("A", "A"), fontsize=11, fontweight='bold', ha='center', va='bottom', color='#0f172a')
-        ax.text(bx - 0.2, by - 0.15, etiketler.get("B", "B"), fontsize=10, fontweight='bold', ha='right', va='top', color='#0f172a')
-        ax.text(cx + 0.2, cy - 0.15, etiketler.get("C", "C"), fontsize=10, fontweight='bold', ha='left', va='top', color='#0f172a')
+        ax.text(ax_val, ay_val + 0.15, etiketler.get("A", "A"), fontsize=11, fontweight='bold', ha='center', color='#0f172a')
+        ax.text(bx - 0.2, by - 0.15, etiketler.get("B", "B"), fontsize=10, fontweight='bold', color='#0f172a')
+        ax.text(cx + 0.2, cy - 0.15, etiketler.get("C", "C"), fontsize=10, fontweight='bold', color='#0f172a')
 
     ax.set_xlim(0, 6)
     ax.set_ylim(0, 5.0)
@@ -217,7 +227,7 @@ MUGREDAT = {
     },
     "6. Sınıf": {
         "Türkçe": ["Sözcükte Anlam", "Cümlede Anlam", "Paragraf Bilgisi", "Metin Türleri", "Fiiller"],
-        "Matematik": ["Çarpanlar ve Katlar", "Kümeler", "Tam Sayılar", "Kesirlerle İşlemler", "Cebirsel İfadeler", "Açılar", "Üçgende Açılar ve Alan", "Çember ve Daire", "Dörtgende Çevre ve Alan"],
+        "Matematik": ["Çarpanlar ve Katlar", "Kümeler", "Tam Sayılar", "Kesirlerle İşlemler", "Cebirsel İfadeler", "Açılar", "Üçgende Açılar ve Alan", "Çember ve Daire", "Dörtgende Çevre og Alan"],
         "Fen Bilimleri": ["Güneş Sistemi ve Tutulmalar", "Vücudumuzdaki Sistemler", "Kuvvet ve Hareket", "Madde ve Isı", "Ses ve Özellikleri"],
         "Sosyal Bilgiler": ["Biz ve Toplum", "Yeryüzünde Yaşam", "Türklerin Tarihsel Yolculuğu", "Ussal Ekonomi", "Yönetimimiz ve Demokrasi"],
         "Din Kültürü": ["Peygamber ve İlahi Kitaplar", "Namaz İbadeti", "Hz. Muhammed'in Hayatı", "Ahlaki Tutum ve Davranışlar"],
@@ -236,7 +246,7 @@ MUGREDAT = {
     "8. Sınıf": {
         "Türkçe": ["Fiilimsiler", "Cümlenin Ögeleri", "Cümle Türleri", "Yazım Kuralları", "Sözel Mantık ve Muhakeme", "Paragraf Analizi"],
         "Matematik": ["Çarpanlar ve Katlar", "Üslü İfadeler", "Kareköklü İfadeler", "Veri Analizi", "Basit Olayların Olma Olasılığı", "Doğrusal Denklemler", "Üçgenler ve Üçgende Açılar", "Çember ve Daire", "Dörtgenler ve Çevre Bağıntıları"],
-        "Fen Bilimleri": ["Mevsimlerin Oluşumu ve İklim", "DNA ve Genetik Kod", "Basınç", "Madde og Endüstri", "Basit Makineler", "Enerji Dönüşümleri"],
+        "Fen Bilimleri": ["Mevsimlerin Oluşumu ve İklim", "DNA ve Genetik Kod", "Basınç", "Madde ve Endüstri", "Basit Makineler", "Enerji Dönüşümleri"],
         "Sosyal Bilgiler": ["Bir Demokrasi Kahramanı: Atatürk", "Milli Uyanış", "Ya İstiklal Ya Ölüm", "Atatürkçülük ve Çağdaşlaşan Türkiye"],
         "Din Kültürü": ["Kader İnancı", "Zekat ve Sadaka", "Din ve Hayat", "Hz. Muhammed'in Örnekliği"],
         "İngilizce": ["Friendship", "Teen Life", "In the Kitchen", "On the Phone", "The Internet", "Adventures"],
@@ -283,10 +293,8 @@ def temizle_latex_metin(text):
     text = text.replace('\\%', '%').replace('$', '').strip()
     return text
 
-# --- KARARLI JSON AYIKLAYICI ---
 def kararli_json_ayikla(raw_text):
     try:
-        # Markdown kod bloklarını temizle
         clean_text = re.sub(r'```(?:json)?\s*([\s\S]*?)\s*```', r'\1', raw_text).strip()
         match = re.search(r'(\[.*\]|\{.*\})', clean_text, re.DOTALL)
         if match:
@@ -376,12 +384,15 @@ with st.sidebar:
             for d, u_list in secili_ders_unite_haritasi.items():
                 ders_unite_detay += f"- Ders: {d}, İstenen Üniteler: {', '.join(u_list)}\n"
 
+            # Yüksek Çeşitlilik Sağlayan Prompt Yapısı
             prompt = f"""
 Sen MEB müfredatına tam hakim profesyonel bir soru hazırlama yapay zekasısın.
-{secili_sinif} seviyesinde, {sinav_turu} kapsamında, TOPLAM {soru_sayisi} adet son derece nitelikli, özgün ve gerçek sınav kalitesinde çoktan seçmeli soru üret. 
+{secili_sinif} seviyesinde, {sinav_turu} kapsamında, TOPLAM {soru_sayisi} adet son derece nitelikli, özgün, birbirini tekrar etmeyen ve değişken senaryolara sahip çoktan seçmeli soru üret. 
 
-ÖNEMLİ GÖRSEL VE GEOMETRİ KURALI:
-Eğer soru geometri, üçgen, açı, dörtgen veya çember içeriyorsa; soru metninde geçen açı değerlerini (örn: B açısı 50°, C açısı 60°, A (?)) kesinlikle JSON içindeki "etiketler" alanına yansıtmalısın. Böylece sistem bu etiketlerle tam uyumlu dinamik vektör görseli üretecektir. Geometri dışı sorularda "geometri_tipi" değerini "yok" yapabilirsin.
+MAKSİMUM ÇEŞİTLİLİK VE GÖRSEL KURALI:
+- Soruların kalıpları, sayısal değerleri ve metinsel kurguları birbirinden tamamen farklı olsun (aynı kalıpta sorular üretme).
+- Eğer soru geometri, açı, üçgen, paralelkenar, yamuk veya çember içeriyorsa; "geometri_tipi" alanını soruya uygun olarak ("dik_ucgen", "ikizkenar_ucgen", "paralelkenar", "yamuk", "cember", "ucgen") seç. Etiketler alanına şekil üzerindeki harf ve değerleri yerleştir.
+- Geometri dışı sorularda "geometri_tipi" değerini "yok" yapabilirsin.
 
 Zorluk Seviyesi: {zorluk_seviyesi}
 Seçilen Dersler ve Üniteler:
@@ -396,59 +407,85 @@ Yanıtı kesinlikle ve sadece şu JSON formatında ver (başka hiçbir markdown 
     "dogru_cevap": "A",
     "cozum_aciklamasi": "Çözüm açıklaması...",
     "ders": "Ders Adı",
-    "geometri_tipi": "ucgen", 
-    "etiketler": {{"A": "A (?)", "B": "B (50°)", "C": "C (60°)"}}
+    "geometri_tipi": "dik_ucgen", 
+    "etiketler": {{"A": "A", "B": "B", "C": "C"}}
   }}
 ]
 """
-            basarili = False
-            quiz_data = []
-            hata_mesaji = None
+            class WorkerContext:
+                def __init__(self):
+                    self.quiz_data = []
+                    self.basarili = False
+                    self.hata_mesaji = None
+                    self.api_tamamlandi = False
 
-            with st.spinner("⏳ Sorular ve soruya özel dinamik görseller hazırlanıyor..."):
-                for _ in range(max(1, len(api_manager.keys))):
-                    current_key = api_manager.get_next_key()
-                    if not current_key:
-                        hata_mesaji = "API anahtarı okunamadı."
-                        break
-                    try:
-                        client = genai.Client(api_key=current_key)
-                        response = client.models.generate_content(
-                            model='gemini-3.6-flash',
-                            contents=prompt,
-                            config=types.GenerateContentConfig(
-                                temperature=0.7,
-                                response_mime_type="application/json"
-                            )
+            ctx = WorkerContext()
+            tahmini_sure_sn = int((soru_sayisi * 1.5) + 5)
+            
+            progress_bar = st.progress(0.0)
+            status_placeholder = st.empty()
+            
+            baslangic_zamani = time.time()
+            current_key = api_manager.get_next_key()
+            
+            def api_cagirici():
+                try:
+                    client = genai.Client(api_key=current_key)
+                    response = client.models.generate_content(
+                        model='gemini-3.6-flash',
+                        contents=prompt,
+                        config=types.GenerateContentConfig(
+                            temperature=0.85,  # Çeşitliliği artırmak için sıcaklık yükseltildi
+                            response_mime_type="application/json"
                         )
-                        if response and response.text:
-                            quiz_data = kararli_json_ayikla(response.text)
-                            if quiz_data:
-                                for idx, item in enumerate(quiz_data):
-                                    item["soru_no"] = idx + 1
-                                    if "ders" not in item:
-                                        item["ders"] = aktif_dersler_listesi[0]
-                                    if "geometri_tipi" not in item:
-                                        item["geometri_tipi"] = "yok"
-                                    if "etiketler" not in item:
-                                        item["etiketler"] = {}
-                                basarili = True
-                                break
-                    except Exception as e:
-                        hata_mesaji = str(e)
+                    )
+                    if response and response.text:
+                        parsed = kararli_json_ayikla(response.text)
+                        if parsed:
+                            ctx.quiz_data = parsed
+                            for idx, item in enumerate(ctx.quiz_data):
+                                item["soru_no"] = idx + 1
+                                if "ders" not in item:
+                                    item["ders"] = aktif_dersler_listesi[0]
+                                if "geometri_tipi" not in item:
+                                    item["geometri_tipi"] = "yok"
+                                if "etiketler" not in item:
+                                    item["etiketler"] = {}
+                            ctx.basarili = True
+                except Exception as e:
+                    ctx.hata_mesaji = str(e)
+                finally:
+                    ctx.api_tamamlandi = True
 
-            if basarili and quiz_data:
-                st.session_state.quiz_data = quiz_data
+            t = threading.Thread(target=api_cagirici)
+            t.start()
+
+            while not ctx.api_tamamlandi:
+                gecen_sure = time.time() - baslangic_zamani
+                kalan_tahmin = max(0, tahmini_sure_sn - int(gecen_sure))
+                
+                oran = min(0.95, gecen_sure / tahmini_sure_sn)
+                progress_bar.progress(oran)
+                status_placeholder.markdown(f"⏳ **Sorular üretiliyor...** Tahmini kalan süre: **{kalan_tahmin} saniye** (Soru Sayısı: {soru_sayisi})")
+                time.sleep(0.1)
+
+            t.join()
+
+            progress_bar.progress(1.0)
+            status_placeholder.empty()
+
+            if ctx.basarili and ctx.quiz_data:
+                st.session_state.quiz_data = ctx.quiz_data
                 st.session_state.user_answers = {}
                 st.session_state.quiz_submitted = False
                 st.session_state.exam_started = False
                 st.session_state.start_time = None
                 st.session_state.total_duration = None
                 st.session_state.current_question = 0
-                st.success(f"{len(quiz_data)} adet soru ve dinamik şemaları başarıyla üretildi!")
+                st.success(f"{len(ctx.quiz_data)} adet çeşitli soru ve şemaları başarıyla üretildi!")
                 st.rerun()
             else:
-                st.error(f"Hata oluştu: {hata_mesaji or 'Geçerli veri alınamadı.'}")
+                st.error(f"Hata oluştu: {ctx.hata_mesaji or 'Geçerli veri alınamadı.'}")
 
     if st.session_state.performance_history:
         st.markdown("---")
@@ -472,7 +509,7 @@ elif not st.session_state.exam_started:
 
     st.markdown(f"""
     <div class="custom-card">
-        <h2>✨ Dinamik Görsel Destekli Sınavınız Hazır!</h2>
+        <h2>✨ Zenginleştirilmiş Çeşitli Sınavınız Hazır!</h2>
         <p style="color: #64748b; font-size: 16px;">Üretilen Soru Sayısı: <b>{toplam_soru_sayisi}</b> | Süre: <b>{dakika_gosterim} Dakika</b></p>
     </div>
     """, unsafe_allow_html=True)
@@ -516,11 +553,9 @@ elif not st.session_state.quiz_submitted:
         st.markdown(f"### Soru {curr_idx + 1} &nbsp;&nbsp;|&nbsp;&nbsp; *{q.get('ders', 'Genel')}*")
         st.markdown("<br>", unsafe_allow_html=True)
         
-        # Soru Metni
         soru_metni_str = temizle_latex_metin(q.get("soru_metni", ""))
         st.markdown(f'<div class="soru-metni-kutusu">{soru_metni_str}</div>', unsafe_allow_html=True)
         
-        # Soruya Özel Dinamik Geometri Şekli Çizimi (Daha küçük/kompakt kutu içinde)
         geometri_tipi = q.get("geometri_tipi", "yok")
         etiketler = q.get("etiketler", {})
         
@@ -608,11 +643,10 @@ elif not st.session_state.quiz_submitted:
                             "ders": q_item.get("ders")
                         })
                 
-                aktif_dersler_str = "Seçilen Dersler"
                 yeni_kayit = {
                     "tarih": datetime.now().strftime("%d-%m-%Y %H:%M"),
                     "sinif": secili_sinif,
-                    "dersler": aktif_dersler_str,
+                    "dersler": "Seçilen Dersler",
                     "dogru": d_say,
                     "yanlis": y_say,
                     "bos": b_say,
