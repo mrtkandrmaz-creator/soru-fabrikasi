@@ -126,37 +126,33 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- ZENGİNLEŞTİRİLMİŞ GÖRSEL VE ŞEMATİK ÇİZİCİ (MATPLOTLIB) ---
+# --- SORU İÇERİĞİYLE TAM UYUMLU DİNAMİK GÖRSEL ÇİZİCİ (MATPLOTLIB) ---
 def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
     if not isinstance(etiketler, dict):
         etiketler = {}
         
-    fig, ax = plt.subplots(figsize=(4.2, 3.0))
+    fig, ax = plt.subplots(figsize=(4.3, 3.1))
     ax.set_aspect('equal')
     ax.axis('off')
     
     tip = str(gorsel_tipi).lower()
     
-    # --- FEN BİLİMLERİ / DENEY VE SİSTEM ŞEMALARI (ÖNCELİKLİ) ---
-    if "isitma_kababi" in tip or "deney" in tip or "kap" in tip:
-        # Beherglas çizimi
+    # 1. ISITMA / HAL DEĞİŞTİRME / SICAKLIK DENEYİ
+    if "isitma_kababi" in tip or "hal_degisimi" in tip or "isi" in tip:
         ax.plot([2.0, 2.0, 4.0, 4.0], [1.0, 3.5, 3.5, 1.0], color='#0f172a', linewidth=2.2, solid_capstyle='round')
         rect = plt.Rectangle((2.05, 1.05), 1.9, 1.6, color='#38bdf8', alpha=0.5)
         ax.add_patch(rect)
-        # Termometre
         ax.plot([3.0, 3.0], [1.2, 4.3], color='#dc2626', linewidth=2.5)
         circle_term = plt.Circle((3.0, 1.2), 0.16, color='#dc2626', fill=True)
         ax.add_patch(circle_term)
-        # Isıtıcı ocak tabanı
         rect_ocak = plt.Rectangle((1.5, 0.6), 3.0, 0.3, color='#475569', ec='#0f172a', linewidth=1.5)
         ax.add_patch(rect_ocak)
-        # Etiketler
         ax.text(3.3, 3.9, etiketler.get("T", "Termometre"), fontsize=9, fontweight='bold', color='#dc2626')
         ax.text(2.2, 1.9, etiketler.get("S", "Sıvı"), fontsize=9, fontweight='bold', color='#0369a1')
         ax.text(3.0, 0.3, etiketler.get("K", "Isıtıcı Kaynak"), fontsize=9, fontweight='bold', ha='center', color='#0f172a')
 
-    elif "basinc" in tip or "kuvvet" in tip:
-        # Katı / Sıvı Basınç Blok Şeması
+    # 2. BASINÇ (KATI / SIVI / GAZ BASINCI)
+    elif "basinc" in tip:
         rect_blok = plt.Rectangle((1.5, 2.0), 3.0, 1.2, color='#cbd5e1', ec='#0f172a', linewidth=2)
         ax.add_patch(rect_blok)
         ax.arrow(3.0, 4.0, 0.0, -0.8, head_width=0.3, head_length=0.2, fc='#dc2626', ec='#dc2626')
@@ -164,41 +160,37 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
         ax.text(3.0, 2.6, etiketler.get("G", "Ağırlık (G)"), fontsize=11, fontweight='bold', ha='center', color='#0f172a')
         ax.text(3.0, 1.4, etiketler.get("S", "Yüzey Alanı (S)"), fontsize=9, fontweight='bold', ha='center', color='#475569')
 
+    # 3. ELEKTRİK DEVRELERİ
     elif "devre" in tip or "elektrik" in tip:
-        # Basit elektrik devresi şeması
         ax.plot([1.2, 4.8, 4.8, 1.2, 1.2], [1.5, 1.5, 3.6, 3.6, 1.5], color='#0f172a', linewidth=2, linestyle='--')
-        # Ampul sembolü
         circle_ampul = plt.Circle((3.0, 3.6), 0.38, color='#f59e0b', fill=True, ec='#0f172a', linewidth=2)
         ax.add_patch(circle_ampul)
         ax.text(3.0, 3.6, etiketler.get("A", "💡"), fontsize=12, ha='center', va='center')
-        # Pil sembolü
         ax.plot([1.2, 1.2], [2.2, 2.9], color='#dc2626', linewidth=3.5)
         ax.plot([1.0, 1.4], [2.4, 2.4], color='#0f172a', linewidth=2)
         ax.text(3.0, 1.15, etiketler.get("P", "Güç Kaynağı / Pil"), fontsize=9, fontweight='bold', ha='center', color='#0f172a')
 
-    elif "hucre" in tip or "biyoloji" in tip or "canli" in tip:
-        # Hücre / Organel şema temsil çizimi
-        oval_hucre = plt.Elipse((3.0, 2.5), 3.8, 2.4, angle=0, color='#34d399', alpha=0.3, ec='#059669', linewidth=2.2)
+    # 4. HÜCRE VE CANLILAR DÜNYASI
+    elif "hucre" in tip or "biyoloji" in tip:
+        oval_hucre = plt.Ellipse((3.0, 2.5), 3.8, 2.4, angle=0, color='#34d399', alpha=0.3, ec='#059669', linewidth=2.2)
         ax.add_patch(oval_hucre)
         circle_cekirdek = plt.Circle((3.0, 2.5), 0.7, color='#10b981', alpha=0.7, ec='#047857', linewidth=2)
         ax.add_patch(circle_cekirdek)
         ax.text(3.0, 2.5, etiketler.get("C", "Çekirdek"), fontsize=9, fontweight='bold', ha='center', va='center', color='#065f46')
         ax.text(3.0, 4.0, etiketler.get("H", "Hücre Zarı"), fontsize=9, fontweight='bold', ha='center', color='#047857')
 
+    # 5. KUVVET VE HAREKET / DİNAMOMETRE
     elif "kuvvet_hareket" in tip or "dinamometre" in tip:
-        # Dinamometre / Yay uzama deneyi
-        ax.plot([3.0, 3.0], [4.2, 3.2], color='#475569', linewidth=3) # Asılacak yer
-        # Zikzak yay
+        ax.plot([3.0, 3.0], [4.2, 3.2], color='#475569', linewidth=3)
         y_vals = [3.2, 3.0, 2.8, 2.6, 2.4, 2.2, 2.0]
         x_vals = [3.0, 3.3, 2.7, 3.3, 2.7, 3.3, 3.0]
         ax.plot(x_vals, y_vals, color='#d97706', linewidth=2.2)
-        # Cisim ağırlığı
         rect_cisim = plt.Rectangle((2.6, 1.2), 0.8, 0.8, color='#cbd5e1', ec='#0f172a', linewidth=2)
         ax.add_patch(rect_cisim)
         ax.text(3.0, 1.6, etiketler.get("Y", "Yük (G)"), fontsize=9, fontweight='bold', ha='center', color='#0f172a')
 
-    # --- GEOMETRİ ŞEKİLLERİ ---
-    elif "dik_ucgen" in tip or "dik üçgen" in tip:
+    # 6. GEOMETRİ ŞEKİLLERİ (MATEMATİK VB.)
+    elif "dik_ucgen" in tip:
         bx, by = 1.0, 1.0
         cx, cy = 5.0, 1.0
         ax_val, ay_val = 1.0, 4.2
@@ -208,17 +200,6 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
         ax.text(bx - 0.2, by - 0.2, etiketler.get("B", "B"), fontsize=10, fontweight='bold', color='#0f172a')
         ax.text(cx + 0.2, cy - 0.2, etiketler.get("C", "C"), fontsize=10, fontweight='bold', color='#0f172a')
         
-    elif "ikizkenar" in tip:
-        bx, by = 1.0, 1.0
-        cx, cy = 5.0, 1.0
-        ax_val, ay_val = 3.0, 4.5
-        ax.plot([bx, cx, ax_val, bx], [by, cy, ay_val, by], color='#0f172a', linewidth=2.2, solid_capstyle='round')
-        ax.text(ax_val, ay_val + 0.15, etiketler.get("A", "A"), fontsize=11, fontweight='bold', ha='center', color='#0f172a')
-        ax.text(bx - 0.2, by - 0.15, etiketler.get("B", "B"), fontsize=10, fontweight='bold', color='#0f172a')
-        ax.text(cx + 0.2, cy - 0.15, etiketler.get("C", "C"), fontsize=10, fontweight='bold', color='#0f172a')
-        ax.plot([2.0, 1.9], [2.75, 2.95], color='#dc2626', linewidth=2)
-        ax.plot([4.0, 4.1], [2.75, 2.95], color='#dc2626', linewidth=2)
-        
     elif "paralelkenar" in tip:
         x_coords = [1.2, 4.2, 5.2, 2.2, 1.2]
         y_coords = [3.5, 3.5, 1.2, 1.2, 3.5]
@@ -227,16 +208,7 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
         ax.text(4.3, 3.7, etiketler.get("B", "B"), fontsize=11, fontweight='bold', color='#0f172a')
         ax.text(5.4, 1.0, etiketler.get("C", "C"), fontsize=11, fontweight='bold', color='#0f172a')
         ax.text(2.0, 1.0, etiketler.get("D", "D"), fontsize=11, fontweight='bold', color='#0f172a')
-        
-    elif "yamuk" in tip:
-        x_coords = [1.8, 4.2, 5.2, 0.8, 1.8]
-        y_coords = [3.5, 3.5, 1.2, 1.2, 3.5]
-        ax.plot(x_coords, y_coords, color='#0f172a', linewidth=2.2, solid_capstyle='round')
-        ax.text(1.6, 3.7, etiketler.get("A", "A"), fontsize=11, fontweight='bold', color='#0f172a')
-        ax.text(4.3, 3.7, etiketler.get("B", "B"), fontsize=11, fontweight='bold', color='#0f172a')
-        ax.text(5.4, 1.0, etiketler.get("C", "C"), fontsize=11, fontweight='bold', color='#0f172a')
-        ax.text(0.6, 1.0, etiketler.get("D", "D"), fontsize=11, fontweight='bold', color='#0f172a')
-        
+
     elif "cember" in tip or "daire" in tip:
         circle = plt.Circle((3, 2.5), 1.8, color='#0f172a', fill=False, linewidth=2.2)
         ax.add_patch(circle)
@@ -245,11 +217,10 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
         ax.text(3, 2.5, etiketler.get("M", "M"), fontsize=10, fontweight='bold', ha='center', va='center', color='#0f172a')
 
     else:
-        # Varsayılan standart fen bilimleri deney düzeneği
         ax.plot([2.0, 2.0, 4.0, 4.0], [1.0, 3.5, 3.5, 1.0], color='#0f172a', linewidth=2.2, solid_capstyle='round')
         rect = plt.Rectangle((2.05, 1.05), 1.9, 1.6, color='#38bdf8', alpha=0.5)
         ax.add_patch(rect)
-        ax.text(3.0, 1.8, etiketler.get("A", "Deney Kabı"), fontsize=9, fontweight='bold', ha='center', color='#0369a1')
+        ax.text(3.0, 1.8, etiketler.get("A", "Deney Düzeneği"), fontsize=9, fontweight='bold', ha='center', color='#0369a1')
 
     ax.set_xlim(0, 6)
     ax.set_ylim(0, 5.0)
@@ -444,30 +415,35 @@ with st.sidebar:
             for d, u_list in secili_ders_unite_haritasi.items():
                 ders_unite_detay += f"- Ders/Kategori: {d}, İstenen Alt Başlıklar: {', '.join(u_list)}\n"
 
-            fen_ozel_talimat = ""
+            fen_uyum_talimati = ""
             if any("Fen Bilimleri" in d for d in aktif_dersler_listesi):
-                fen_ozel_talimat = """
-                ÖNEMLİ (FEN BİLİMLERİ İÇİN ZORUNLU GÖRSEL KULLANIMI):
-                Seçilen dersler arasında Fen Bilimleri yer almaktadır. Fen Bilimleri sorularında SORU ORANI OLARAK EN AZ %80 ORANINDA görsel/şematik deney düzeneği, hücre şeması, kuvvet-dinamometre illüstrasyonu veya elektrik devresi kullanılmalıdır.
-                `gorsel_tipi` alanını kesinlikle şu değerlerden biriyle doldur: `isitma_kababi`, `basinc`, `devre`, `hucre`, `kuvvet_hareket`. Boş veya 'yok' bırakma!
+                fen_uyum_talimati = """
+                ÇOK ÖNEMLİ KURAL (SORU VE GÖRSEL UYUMU):
+                Eğer soru **Fen Bilimleri** dersine aitse, soru metninde bahsedilen fen olayı ile `gorsel_tipi` kesinlikle tam uyumlu olmalıdır:
+                - Soru sıcaklık, hal değişimi, erime, kaynama veya ısınma ile ilgiliyse `gorsel_tipi` kesinlikle `isitma_kababi` olmalıdır.
+                - Soru katı/sıvı basıncı veya yüzey alanı ilişkisiyse `gorsel_tipi` kesinlikle `basinc` olmalıdır.
+                - Soru elektrik akımı, ampul veya devre ile ilgiliyse `gorsel_tipi` kesinlikle `devre` olmalıdır.
+                - Soru hücre, organel veya canlı yapısı ile ilgiliyse `gorsel_tipi` kesinlikle `hucre` olmalıdır.
+                - Soru kuvvet, yay veya dinamometre ile ilgiliyse `gorsel_tipi` kesinlikle `kuvvet_hareket` olmalıdır.
+                Asla alakasız bir görsel tipi seçme! Soru metni ile görsel birbirini kusursuz tamamlamalıdır.
                 """
 
             prompt = f"""
-Sen MEB müfredatına ve zeka/bilgi yarışması formatlarına tam hakim profesyonel bir soru hazırlama yapay zekasısın.
-{secili_sinif} seviyesinde, {sinav_turu} kapsamında, TOPLAM {soru_sayisi} adet son derece nitelikli, özgün, birbirini tekrar etmeyen ve değişken senaryolara sahip çoktan seçmeli soru üret. 
+Sen MEB müfredatına tam hakim profesyonel bir soru hazırlama yapay zekasısın.
+{secili_sinif} seviyesinde, {sinav_turu} kapsamında, TOPLAM {soru_sayisi} adet son derece nitelikli, özgün ve birbirini tekrar etmeyen çoktan seçmeli soru üret. 
 
-{fen_ozel_talimat}
+{fen_uyum_talimati}
 
-GENEL KURALLAR VE GÖRSEL KULLANIMI:
-- Soru türüne ve içeriğine göre `gorsel_tipi` alanını şu değerlerden uygun olanıyla doldur: `isitma_kababi`, `basinc`, `devre`, `hucre`, `kuvvet_hareket`, `paralelkenar`, `yamuk`, `dik_ucgen`, `cember` veya `yok`.
-- Metin içerisindeki derece ifadeleri için LaTeX komutu (`\\circ`) yerine doğrudan derece sembolü (°) kullan (Örn: 70°).
+GENEL KURALLAR:
+- `gorsel_tipi` alanını şu uygun değerlerden biriyle doldur: `isitma_kababi`, `basinc`, `devre`, `hucre`, `kuvvet_hareket`, `paralelkenar`, `dik_ucgen`, `cember` veya `yok`.
+- Derece ifadeleri için LaTeX (`\\circ`) yerine doğrudan derece sembolü (°) kullan.
 
 Zorluk Seviyesi: {zorluk_seviyesi}
 Seçilen Alanlar ve Alt Başlıklar:
 {ders_unite_detay}
 {ek_baglam}
 
-Yanıtı kesinlikle ve sadece şu JSON formatında ver (başka hiçbir markdown veya metin ekleme, doğrudan saf JSON dizisi döndür):
+Yanıtı kesinlikle ve sadece şu JSON formatında ver (başka hiçbir metin ekleme, saf JSON dizisi döndür):
 [
   {{
     "soru_metni": "Soru metni...",
@@ -503,7 +479,7 @@ Yanıtı kesinlikle ve sadece şu JSON formatında ver (başka hiçbir markdown 
                         model='gemini-3.6-flash',
                         contents=prompt,
                         config=types.GenerateContentConfig(
-                            temperature=0.85,
+                            temperature=0.75,
                             response_mime_type="application/json"
                         )
                     )
@@ -550,7 +526,7 @@ Yanıtı kesinlikle ve sadece şu JSON formatında ver (başka hiçbir markdown 
                 st.session_state.start_time = None
                 st.session_state.total_duration = None
                 st.session_state.current_question = 0
-                st.success(f"{len(ctx.quiz_data)} adet soru başarıyla üretildi!")
+                st.success(f"{len(ctx.quiz_data)} adet görsel uyumlu soru başarıyla üretildi!")
                 st.rerun()
             else:
                 st.error(f"Hata oluştu: {ctx.hata_mesaji or 'Geçerli veri alınamadı.'}")
@@ -577,7 +553,7 @@ elif not st.session_state.exam_started:
 
     st.markdown(f"""
     <div class="custom-card">
-        <h2>✨ Görsel ve Deney Şemalı Sınavınız Hazır!</h2>
+        <h2>✨ Görsel ve Soru Uyumlu Sınavınız Hazır!</h2>
         <p style="color: #64748b; font-size: 16px;">Üretilen Soru Sayısı: <b>{toplam_soru_sayisi}</b> | Süre: <b>{dakika_gosterim} Dakika</b></p>
     </div>
     """, unsafe_allow_html=True)
@@ -643,7 +619,6 @@ elif not st.session_state.quiz_submitted:
 
         widget_key = f"radio_q_{curr_idx}"
 
-        # Kullanıcının bu soruya daha önce verdiği cevabı hafızadan bul
         kayitli_harf = st.session_state.user_answers.get(curr_idx, None)
         default_opt_index = None
         if kayitli_harf:
