@@ -3,3 +3,5 @@ streamlit-drawable-canvas
 google-generativeai
 google-genai
 streamlit
+matplotlib
+pandas
