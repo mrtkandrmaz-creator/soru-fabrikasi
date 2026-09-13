@@ -79,7 +79,6 @@ st.markdown("""
         background-color: #ea580c !important;
         border-color: #ea580c !important;
     }
-    /* Mor İlerleme Çubuğu ve Uyumlu Buton Boyutu */
     div[data-testid="stProgress"] > div > div > div {
         background-color: #9333ea !important;
     }
@@ -143,7 +142,6 @@ def ciz_vektorel_geometri(geometri_tipi="ucgen", etiketler=None):
         cx, cy = 5.0, 1.0
         ax_val, ay_val = 1.0, 4.2
         ax.plot([bx, cx, ax_val, bx], [by, cy, ay_val, by], color='#0f172a', linewidth=2.2, solid_capstyle='round', solid_joinstyle='round')
-        # Dik açı simgesi
         ax.plot([1.0, 1.4, 1.4, 1.0], [1.0, 1.0, 1.4, 1.4], color='#0f172a', linewidth=1.5)
         
         ax.text(ax_val - 0.2, ay_val + 0.15, etiketler.get("A", "A"), fontsize=11, fontweight='bold', color='#0f172a')
@@ -158,7 +156,6 @@ def ciz_vektorel_geometri(geometri_tipi="ucgen", etiketler=None):
         ax.text(ax_val, ay_val + 0.15, etiketler.get("A", "A"), fontsize=11, fontweight='bold', ha='center', color='#0f172a')
         ax.text(bx - 0.2, by - 0.15, etiketler.get("B", "B"), fontsize=10, fontweight='bold', color='#0f172a')
         ax.text(cx + 0.2, cy - 0.15, etiketler.get("C", "C"), fontsize=10, fontweight='bold', color='#0f172a')
-        # İkizkenar çizgileri (işaretleri)
         ax.plot([2.0, 1.9], [2.75, 2.95], color='#dc2626', linewidth=2)
         ax.plot([4.0, 4.1], [2.75, 2.95], color='#dc2626', linewidth=2)
         
@@ -187,7 +184,7 @@ def ciz_vektorel_geometri(geometri_tipi="ucgen", etiketler=None):
         ax.text(3.9, 2.7, etiketler.get("r", "r"), fontsize=10, fontweight='bold', color='#0f172a')
         ax.text(3, 2.5, etiketler.get("M", "M"), fontsize=10, fontweight='bold', ha='center', va='center', color='#0f172a')
         
-    else: # Standart Üçgen / Açı Çeşidi
+    else:
         bx, by = 1.0, 1.0
         cx, cy = 5.0, 1.0
         ax_val, ay_val = 3.2, 4.2
@@ -218,7 +215,7 @@ MUGREDAT = {
     },
     "5. Sınıf": {
         "Türkçe": ["Sözcükte Anlam", "Cümlede Anlam", "Metin Yorumlama ve Paragraf", "Yazım Kuralları", "Noktalama İşaretleri"],
-        "Matematik": ["Doğal Sayılarla İşlemler", "Kesirler", "Ondalık Gösterimler", "Yüzdeler", "Üçgen ve Dörtgenler", "Veri İşleme", "Çember ve Daire", "Açı çeşitleri", "Temel Geometrik Kavramlar ve Doğrular"],
+        "Matematik": ["Doğal Sayılarla İşlemler", "Kesirler", "Ondalık Gösterimler", "Yüzdeler", "Üçgen ve Dörtgenler", "Veri İşleme", "Çember ve Daire", "Açı çeşitleri ve Dörtgenlerde Açılar", "Temel Geometrik Kavramlar ve Doğrular"],
         "Fen Bilimleri": ["Güneş, Dünya ve Ay", "Canlılar Dünyası", "Kuvvetin Uygulanması ve Sürtünme", "Maddenin Hâl Değişimi ve Isı", "Kuvveti Tanıyalım", "Işığın Yayılması"],
         "Sosyal Bilgiler": ["Birey ve Toplum", "Kültür ve Miras", "İnsanlar, Yerler ve Çevre", "Bilim, Teknoloji ve Toplum", "Üretim, Dağıtım ve Tüketim"],
         "Din Kültürü": ["Allah İnancı ve İnsan", "Hz. Muhammed ve Aile Hayatı", "İslam'ın Temel İbadetleri", "Ahlaki Değerler"],
@@ -384,15 +381,14 @@ with st.sidebar:
             for d, u_list in secili_ders_unite_haritasi.items():
                 ders_unite_detay += f"- Ders: {d}, İstenen Üniteler: {', '.join(u_list)}\n"
 
-            # Yüksek Çeşitlilik Sağlayan Prompt Yapısı
             prompt = f"""
 Sen MEB müfredatına tam hakim profesyonel bir soru hazırlama yapay zekasısın.
 {secili_sinif} seviyesinde, {sinav_turu} kapsamında, TOPLAM {soru_sayisi} adet son derece nitelikli, özgün, birbirini tekrar etmeyen ve değişken senaryolara sahip çoktan seçmeli soru üret. 
 
-MAKSİMUM ÇEŞİTLİLİK VE GÖRSEL KURALI:
-- Soruların kalıpları, sayısal değerleri ve metinsel kurguları birbirinden tamamen farklı olsun (aynı kalıpta sorular üretme).
-- Eğer soru geometri, açı, üçgen, paralelkenar, yamuk veya çember içeriyorsa; "geometri_tipi" alanını soruya uygun olarak ("dik_ucgen", "ikizkenar_ucgen", "paralelkenar", "yamuk", "cember", "ucgen") seç. Etiketler alanına şekil üzerindeki harf ve değerleri yerleştir.
-- Geometri dışı sorularda "geometri_tipi" değerini "yok" yapabilirsin.
+ÇOK ÖNEMLİ - GEOMETRİ VE HARF TUTARLILIĞI KURALLARI:
+1. Soruların kalıpları, sayısal değerleri ve metinsel kurguları birbirinden tamamen farklı olsun.
+2. Eğer soru bir üçgen, açı, paralelkenar vb. içeriyorsa ve soru metninde belirli köşe harfleri (örneğin KLM üçgeni, PRS açısı vb.) kullanılıyorsa, soru metninde geçen bu harfler ile şemada gösterilen harfler KESİNLİKLE BİRE BİR AYNI OLMALIDIR. Asla soru metninde "KLM üçgeni" deyip şekilde "ABC" gösterme. Soru metninde hangi harfler geçiyorsa (örn. K, L, M), `etiketler` JSON alanında da o harfleri şemanın köşe konumlarına karşılık gelecek şekilde kullan (`"etiketler": {{"A": "K", "B": "L", "C": "M"}}` şeklinde).
+3. Geometri dışı sorularda "geometri_tipi" değerini "yok" yapabilirsin.
 
 Zorluk Seviyesi: {zorluk_seviyesi}
 Seçilen Dersler ve Üniteler:
@@ -408,7 +404,7 @@ Yanıtı kesinlikle ve sadece şu JSON formatında ver (başka hiçbir markdown 
     "cozum_aciklamasi": "Çözüm açıklaması...",
     "ders": "Ders Adı",
     "geometri_tipi": "dik_ucgen", 
-    "etiketler": {{"A": "A", "B": "B", "C": "C"}}
+    "etiketler": {{"A": "K", "B": "L", "C": "M"}}
   }}
 ]
 """
@@ -435,7 +431,7 @@ Yanıtı kesinlikle ve sadece şu JSON formatında ver (başka hiçbir markdown 
                         model='gemini-3.6-flash',
                         contents=prompt,
                         config=types.GenerateContentConfig(
-                            temperature=0.85,  # Çeşitliliği artırmak için sıcaklık yükseltildi
+                            temperature=0.85,
                             response_mime_type="application/json"
                         )
                     )
@@ -573,26 +569,51 @@ elif not st.session_state.quiz_submitted:
         keys_list = sorted(secenekler.keys())
         options_list = [f"{k}) {temizle_latex_metin(secenekler[k])}" for k in keys_list]
 
-        kayitli_cevap = st.session_state.user_answers.get(curr_idx, None)
-        default_idx = keys_list.index(kayitli_cevap) if kayitli_cevap in keys_list else None
+        widget_key = f"radio_q_{curr_idx}"
+
+        # Kararlı ve sızıntı yapmayan widget durum yönetimi
+        kayitli_harf = st.session_state.user_answers.get(curr_idx, None)
+        default_val = None
+        if kayitli_harf:
+            for opt in options_list:
+                if opt.startswith(kayitli_harf + ")"):
+                    default_val = opt
+                    break
+
+        if widget_key not in st.session_state:
+            st.session_state[widget_key] = default_val
+        else:
+            # Eğer session state'deki değer başka bir sorunun verisiyle karışmışsa veya sıfırlanması gerekiyorsa denetle
+            if st.session_state[widget_key] not in options_list and default_val is not None:
+                st.session_state[widget_key] = default_val
+
+        def handle_radio_change():
+            val = st.session_state.get(widget_key)
+            if val:
+                harf = val.split(")")[0].strip()
+                st.session_state.user_answers[curr_idx] = harf
+            else:
+                if curr_idx in st.session_state.user_answers:
+                    del st.session_state.user_answers[curr_idx]
 
         secim = st.radio(
             label="Cevabınızı seçin:",
             options=options_list,
-            index=default_idx,
-            key=f"radio_soru_{curr_idx}"
+            key=widget_key,
+            on_change=handle_radio_change
         )
 
+        # Anlık güvenli eşitleme yedeği
         if secim:
-            secilen_harf = secim.split(")")[0].strip()
-            st.session_state.user_answers[curr_idx] = secilen_harf
+            harf = secim.split(")")[0].strip()
+            st.session_state.user_answers[curr_idx] = harf
 
     with st.expander("✍️ Çözüm / Karalama Tahtası (Aç / Kapat)"):
         col1, col2 = st.columns([2, 1])
         with col1:
-            pen_color = st.color_picker("Kalem Rengi", "#f97316", key=f"color_{curr_idx}")
+            pen_color = st.color_picker("Kalem Rengi", "#f97316", key=f"color_q_{curr_idx}")
         with col2:
-            pen_width = st.slider("Kalem Kalınlığı", 1, 15, 3, key=f"width_{curr_idx}")
+            pen_width = st.slider("Kalem Kalınlığı", 1, 15, 3, key=f"width_q_{curr_idx}")
 
         st_canvas(
             fill_color="rgba(249, 115, 22, 0.3)",
@@ -602,7 +623,7 @@ elif not st.session_state.quiz_submitted:
             height=220,
             width=700,
             drawing_mode="freedraw",
-            key=f"canvas_{curr_idx}",
+            key=f"canvas_q_{curr_idx}",
         )
 
     st.markdown("<br>", unsafe_allow_html=True)
@@ -708,19 +729,18 @@ else:
                     ''', unsafe_allow_html=True)
                 
                 st.markdown("<br>", unsafe_allow_html=True)
-                secenekler = q.get("secenekler", {})
-                for k in sorted(secenekler.keys()):
-                    st.write(f"**{k})** {temizle_latex_metin(secenekler[k])}")
-                st.markdown("---")
-                st.markdown(f"**💡 Çözüm Açıklaması:** {temizle_latex_metin(q.get('cozum_aciklamasi', 'Açıklama bulunamadı.'))}")
+                st.markdown(f"**Doğru Cevap Seçenek:** `{dogru}`")
+                st.markdown(f"**Çözüm Açıklaması:** {temizle_latex_metin(q.get('cozum_aciklamasi', 'Açıklama bulunmuyor.'))}")
 
     st.markdown("<br>", unsafe_allow_html=True)
-    if st.button("🔄 Yeni Sınav Başlat", use_container_width=True, type="primary"):
-        st.session_state.quiz_data = None
-        st.session_state.user_answers = {}
-        st.session_state.quiz_submitted = False
-        st.session_state.exam_started = False
-        st.session_state.start_time = None
-        st.session_state.total_duration = None
-        st.session_state.current_question = 0
-        st.rerun()
+    col_yeniden1, col_yeniden2, col_yeniden3 = st.columns([1, 2, 1])
+    with col_yeniden2:
+        if st.button("🔄 Yeni Sınav Oluştur / Başa Dön", use_container_width=True, type="primary"):
+            st.session_state.quiz_data = None
+            st.session_state.user_answers = {}
+            st.session_state.quiz_submitted = False
+            st.session_state.exam_started = False
+            st.session_state.start_time = None
+            st.session_state.total_duration = None
+            st.session_state.current_question = 0
+            st.rerun()
