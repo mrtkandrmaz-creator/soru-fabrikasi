@@ -126,7 +126,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- ÇEŞİTLENDİRİLMİŞ DİNAMİK VEKTÖREL GEOMETRİ ÜRETİCİSİ ---
+# --- DÜZELTİLMİŞ VE GÜÇLENDİRİLMİŞ GEOMETRİ ÇİZİCİ ---
 def ciz_vektorel_geometri(geometri_tipi="ucgen", etiketler=None):
     if not isinstance(etiketler, dict):
         etiketler = {}
@@ -160,22 +160,22 @@ def ciz_vektorel_geometri(geometri_tipi="ucgen", etiketler=None):
         ax.plot([4.0, 4.1], [2.75, 2.95], color='#dc2626', linewidth=2)
         
     elif "paralelkenar" in tip:
-        x_coords = [1.5, 5.5, 4.5, 0.5, 1.5]
-        y_coords = [1, 1, 4, 4, 1]
+        x_coords = [1.2, 4.2, 5.2, 2.2, 1.2]
+        y_coords = [3.5, 3.5, 1.2, 1.2, 3.5]
         ax.plot(x_coords, y_coords, color='#0f172a', linewidth=2.2, solid_capstyle='round', solid_joinstyle='round')
-        ax.text(0.3, 4.1, etiketler.get("A", "A"), fontsize=10, fontweight='bold', color='#0f172a')
-        ax.text(4.6, 4.1, etiketler.get("B", "B"), fontsize=10, fontweight='bold', color='#0f172a')
-        ax.text(5.7, 0.8, etiketler.get("C", "C"), fontsize=10, fontweight='bold', color='#0f172a')
-        ax.text(1.3, 0.8, etiketler.get("D", "D"), fontsize=10, fontweight='bold', color='#0f172a')
+        ax.text(1.0, 3.7, etiketler.get("A", "A"), fontsize=11, fontweight='bold', color='#0f172a')
+        ax.text(4.3, 3.7, etiketler.get("B", "B"), fontsize=11, fontweight='bold', color='#0f172a')
+        ax.text(5.4, 1.0, etiketler.get("C", "C"), fontsize=11, fontweight='bold', color='#0f172a')
+        ax.text(2.0, 1.0, etiketler.get("D", "D"), fontsize=11, fontweight='bold', color='#0f172a')
         
     elif "yamuk" in tip:
-        x_coords = [1.5, 4.5, 5.5, 0.5, 1.5]
-        y_coords = [1, 1, 4, 4, 1]
+        x_coords = [1.8, 4.2, 5.2, 0.8, 1.8]
+        y_coords = [3.5, 3.5, 1.2, 1.2, 3.5]
         ax.plot(x_coords, y_coords, color='#0f172a', linewidth=2.2, solid_capstyle='round', solid_joinstyle='round')
-        ax.text(0.3, 4.1, etiketler.get("A", "A"), fontsize=10, fontweight='bold', color='#0f172a')
-        ax.text(4.6, 4.1, etiketler.get("B", "B"), fontsize=10, fontweight='bold', color='#0f172a')
-        ax.text(5.7, 0.8, etiketler.get("C", "C"), fontsize=10, fontweight='bold', color='#0f172a')
-        ax.text(1.3, 0.8, etiketler.get("D", "D"), fontsize=10, fontweight='bold', color='#0f172a')
+        ax.text(1.6, 3.7, etiketler.get("A", "A"), fontsize=11, fontweight='bold', color='#0f172a')
+        ax.text(4.3, 3.7, etiketler.get("B", "B"), fontsize=11, fontweight='bold', color='#0f172a')
+        ax.text(5.4, 1.0, etiketler.get("C", "C"), fontsize=11, fontweight='bold', color='#0f172a')
+        ax.text(0.6, 1.0, etiketler.get("D", "D"), fontsize=11, fontweight='bold', color='#0f172a')
         
     elif "cember" in tip or "daire" in tip:
         circle = plt.Circle((3, 2.5), 1.8, color='#0f172a', fill=False, linewidth=2.2)
@@ -215,7 +215,7 @@ MUGREDAT = {
     },
     "5. Sınıf": {
         "Türkçe": ["Sözcükte Anlam", "Cümlede Anlam", "Metin Yorumlama ve Paragraf", "Yazım Kuralları", "Noktalama İşaretleri"],
-        "Matematik": ["Doğal Sayılarla İşlemler", "Kesirler", "Ondalık Gösterimler", "Yüzdeler", "Üçgen ve Dörtgenler", "Veri İşleme", "Çember ve Daire", "Açı çeşitleri ve Dörtgenlerde Açılar", "Temel Geometrik Kavramlar ve Doğrular"],
+        "Matematik": ["Doğal Sayılarla İşlemler", "Kesirler", "Ondalık Gösterimler", "Yüzdeler", "Üçgen ve Dörtgenler", "Veri İşleme", "Çember ve Daire", "Açı çeşitleri ve Dörtgende Açılar", "Temel Geometrik Kavramlar ve Doğrular"],
         "Fen Bilimleri": ["Güneş, Dünya ve Ay", "Canlılar Dünyası", "Kuvvetin Uygulanması ve Sürtünme", "Maddenin Hâl Değişimi ve Isı", "Kuvveti Tanıyalım", "Işığın Yayılması"],
         "Sosyal Bilgiler": ["Birey ve Toplum", "Kültür ve Miras", "İnsanlar, Yerler ve Çevre", "Bilim, Teknoloji ve Toplum", "Üretim, Dağıtım ve Tüketim"],
         "Din Kültürü": ["Allah İnancı ve İnsan", "Hz. Muhammed ve Aile Hayatı", "İslam'ın Temel İbadetleri", "Ahlaki Değerler"],
@@ -290,7 +290,6 @@ api_manager = APIKeyManager(API_KEYS)
 def temizle_latex_metin(text):
     if not isinstance(text, str):
         return str(text)
-    # \circ ifadelerini derece sembolüne dönüştür
     text = re.sub(r'\\circ\b', '°', text)
     text = re.sub(r'\\frac\{([^}]+)\}\{([^}]+)\}', r'\1/\2', text)
     text = text.replace('\\%', '%').replace('$', '').strip()
@@ -393,13 +392,13 @@ Sen MEB müfredatına ve zeka/bilgi yarışması formatlarına tam hakim profesy
 
 ÖZEL TALİMATLAR:
 - Eğer seçilen kategori "Bilgi Yarışması" ise; genel kültür, tarih, sanat veya bilim odaklı, şaşırtıcı ve eğlenceli trivia soruları hazırla.
-- Eğer seçilen kategori "Zihinden Dört İşlem" ise; zihinden hızlıca yapılabilecek, pratik pratik kural gerektiren veya kademeli işlem becerisini ölçen sayısal sorular üret (Geometri kullanma, geometri_tipi='yok' olsun).
+- Eğer seçilen kategori "Zihinden Dört İşlem" ise; zihinden hızlıca yapılabilecek, pratik kural gerektiren veya kademeli işlem becerisini ölçen sayısal sorular üret (geometri_tipi='yok' olsun).
 - Metin içerisindeki derece ifadeleri için LaTeX komutu (`\\circ`) yerine doğrudan derece sembolü (°) kullan (Örn: 70°).
 
-ÇOK ÖNEMLİ - GEOMETRİ VE HARF TUTARLILIĞI KURALLARI:
-1. Soruların kalıpları, sayısal değerleri ve metinsel kurguları birbirinden tamamen farklı olsun.
-2. Eğer soru bir üçgen, açı, paralelkenar vb. içeriyorsa ve soru metninde belirli köşe harfleri (örneğin KLM üçgeni, PRS açısı vb.) kullanılıyorsa, soru metninde geçen bu harfler ile şemada gösterilen harfler KESİNLİKLE BİRE BİR AYNI OLMALIDIR. Soru metninde hangi harfler geçiyorsa, `etiketler` JSON alanında da o harfleri şemanın köşe konumlarına karşılık gelecek şekilde kullan (`"etiketler": {{"A": "K", "B": "L", "C": "M"}}` şeklinde).
-3. Geometri dışı sorularda (Bilgi Yarışması, Dört İşlem vb.) "geometri_tipi" değerini "yok" yapabilirsin.
+ÇOK ÖNEMLİ - GEOMETRİ VE ŞEKİL KİMLİĞİ KURALLARI:
+1. Sorularda paralelkenar, yamuk gibi dörtgen türleri seçildiğinde `geometri_tipi` alanını kesinlikle uygun değere (`paralelkenar`, `yamuk` vb.) ayarla.
+2. Soru metninde geçen köşe harfleri (örn. A, B, C, D) şemadaki köşe etiketleriyle (`etiketler` sözlüğü) tam olarak örtüşmelidir.
+3. Geometri dışı sorularda `geometri_tipi` değerini "yok" yap.
 
 Zorluk Seviyesi: {zorluk_seviyesi}
 Seçilen Alanlar ve Alt Başlıklar:
@@ -414,8 +413,8 @@ Yanıtı kesinlikle ve sadece şu JSON formatında ver (başka hiçbir markdown 
     "dogru_cevap": "A",
     "cozum_aciklamasi": "Çözüm açıklaması...",
     "ders": "Kategori/Ders Adı",
-    "geometri_tipi": "yok", 
-    "etiketler": {{}}
+    "geometri_tipi": "paralelkenar", 
+    "etiketler": {{"A": "A", "B": "B", "C": "C", "D": "D"}}
   }}
 ]
 """
@@ -582,20 +581,18 @@ elif not st.session_state.quiz_submitted:
 
         widget_key = f"radio_q_{curr_idx}"
 
-        # Kararlı ve sızıntı yapmayan widget durum yönetimi
+        # Kullanıcının bu soruya daha önce verdiği cevabı hafızadan bul
         kayitli_harf = st.session_state.user_answers.get(curr_idx, None)
-        default_val = None
+        default_opt_index = None
         if kayitli_harf:
-            for opt in options_list:
+            for idx_opt, opt in enumerate(options_list):
                 if opt.startswith(kayitli_harf + ")"):
-                    default_val = opt
+                    default_opt_index = idx_opt
                     break
 
+        # Her soru değişiminde Streamlit state widget çakışmasını önlemek için anlık indexi ayarlıyoruz
         if widget_key not in st.session_state:
-            st.session_state[widget_key] = default_val
-        else:
-            if st.session_state[widget_key] not in options_list and default_val is not None:
-                st.session_state[widget_key] = default_val
+            st.session_state[widget_key] = options_list[default_opt_index] if default_opt_index is not None else None
 
         def handle_radio_change():
             val = st.session_state.get(widget_key)
@@ -609,6 +606,7 @@ elif not st.session_state.quiz_submitted:
         secim = st.radio(
             label="Cevabınızı seçin:",
             options=options_list,
+            index=default_opt_index,
             key=widget_key,
             on_change=handle_radio_change
         )
@@ -684,9 +682,6 @@ elif not st.session_state.quiz_submitted:
                 }
                 st.session_state.performance_history.append(yeni_kayit)
                 st.rerun()
-
-    time.sleep(1)
-    st.rerun()
 
 else:
     quiz_data = st.session_state.quiz_data
