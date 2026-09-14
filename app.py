@@ -688,7 +688,7 @@ elif not st.session_state.quiz_submitted:
         </div>
         <script>
             (function() {{
-                var targetTime = {bth_timestamp} * 1000;
+                var targetTime = {bith_timestamp} * 1000;
                 if (window.examInterval) clearInterval(window.examInterval);
                 window.examInterval = setInterval(function() {{
                     var now = new Date().getTime();
@@ -706,7 +706,7 @@ elif not st.session_state.quiz_submitted:
                 }}, 1000);
             }})();
         </script>
-        """.replace("{bth_timestamp}", str(bith_timestamp))
+        """
         st.markdown(timer_html, unsafe_allow_html=True)
     with c3:
         if st.button("Sınavı Bitir", type="secondary"):
