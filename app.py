@@ -23,7 +23,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- MODERN VE STABİL ÖZEL CSS (HTML BASMA RİSKİNİ ORTADAN KALDIRAN YAPI) ---
+# --- MODERN VE STABİL ÖZEL CSS (KAYDIRMALI YATAY PANEL VE UI İYİLEŞTİRMELERİ) ---
 st.markdown("""
 <style>
     .main {
@@ -91,6 +91,28 @@ st.markdown("""
     .stButton>button[kind="primary"]:hover {
         background-color: #ea580c !important;
         border-color: #ea580c !important;
+    }
+    /* KAYDIRMALI YATAY HIZLI ATLAMA PANELİ KONTEYNERİ */
+    .horizontal-jump-container {
+        display: flex;
+        flex-direction: row;
+        overflow-x: auto;
+        gap: 8px;
+        padding: 10px 4px;
+        background-color: #f1f5f9;
+        border-radius: 12px;
+        border: 1px solid #cbd5e1;
+        margin-top: 15px;
+        margin-bottom: 15px;
+        white-space: nowrap;
+        scrollbar-width: thin;
+    }
+    .horizontal-jump-container::-webkit-scrollbar {
+        height: 6px;
+    }
+    .horizontal-jump-container::-webkit-scrollbar-thumb {
+        background-color: #cbd5e1;
+        border-radius: 4px;
     }
     div[data-testid="stProgress"] > div > div > div {
         background-color: #9333ea !important;
@@ -442,7 +464,7 @@ with st.sidebar:
                 if ilgili_yanlislar:
                     ek_baglam = "Öğrencinin geçmişte hata yaptığı benzer soru örnekleri üzerinden benzer nitelikte sorular üret.\n"
             elif "LGS Çıkmış" in sinav_turu or "LGS Çıkmış Sorular" in secili_ders_unite_haritasi.keys():
-                ek_baglam = "Bu sorular MEB tarafından LGS'de sorulmuş gerçek çıkmış soru mantığına, soru köklerine ve beceri temelli (mantık-muhakeme) yapıya birebir uygun olmalıdır.\n"
+                ek_baglam = "Bu sorular MEB tarafından LGS'de sorulmuş gerçek çıkmış soru mantığına, soru köklerine ve beceri temelli (mantık-muhakeme) yapıye birebir uygun olmalıdır.\n"
 
             ders_unite_detay = ""
             aktif_dersler_listesi = list(secili_ders_unite_haritasi.keys())
@@ -629,7 +651,9 @@ elif not st.session_state.quiz_submitted:
     with c1:
         st.markdown(f"### Soru **{curr_idx + 1}** / {toplam_soru}")
     with c2:
-        st.markdown(f"### ⏳ Kalan Süre: :red[{kalan_dak:02d}:{kalan_saniye:02d}]")
+        # GERÇEK ZAMANLI ANLIK SAYAÇ GÖSTERGESİ ALANI
+        timer_placeholder = st.empty()
+        timer_placeholder.markdown(f"### ⏳ Kalan Süre: :red[{kalan_dak:02d}:{kalan_saniye:02d}]")
     with c3:
         if st.button("Sınavı Bitir", type="secondary"):
             st.session_state.quiz_submitted = True
@@ -707,24 +731,30 @@ elif not st.session_state.quiz_submitted:
                 st.session_state.total_duration = int(time.time() - st.session_state.start_time)
                 st.rerun()
 
-    # 2. HIZLI ATLAMA PANELİ (STREAMLIT NATIVE BUTTON GRID - HTML HATASINI KESİN OLARAK ENGELLER)
-    st.markdown("<p style='font-size: 15px; font-weight: 700; color: #1e293b; margin-top: 15px; margin-bottom: 5px;'>🗺️ Hızlı Soru Atlama Paneli</p>", unsafe_allow_html=True)
+    # 2. KAYDIRMALI, MODERN VE TEK SATIRA SIĞAN HIZLI SORU ATLAMA PANELİ
+    st.markdown("<p style='font-size: 15px; font-weight: 700; color: #1e293b; margin-top: 15px; margin-bottom: 5px;'>🗺️ Hızlı Soru Atlama Paneli (Kaydırmalı)</p>", unsafe_allow_html=True)
     
-    # Soruları sütunlara bölerek kararlı ve şık buton matrisi oluşturalım
-    cols_per_row = min(toplam_soru, 10)
-    if cols_per_row > 0:
-        jump_cols = st.columns(cols_per_row)
-        for idx_h in range(toplam_soru):
-            col_idx = idx_h % cols_per_row
-            q_num = idx_h + 1
-            durum_isareti = "✅" if idx_h in st.session_state.user_answers else "⭕"
-            buton_etiketi = f"S{q_num} {durum_isareti}"
-            
-            with jump_cols[col_idx]:
-                # Aktif soru için farklı bir stil/buton tetikleyicisi
-                if st.button(buton_etiketi, key=f"native_jump_{idx_h}", use_container_width=True):
-                    st.session_state.current_question = idx_h
-                    st.rerun()
+    # HTML sarmalayıcı container ve dinamik butonlar ile tek satır yatay akış
+    html_buttons_code = '<div class="horizontal-jump-container">'
+    st.markdown(html_buttons_code, unsafe_allow_html=True)
+    
+    jump_cols = st.columns(toplam_soru)
+    for idx_h in range(toplam_soru):
+        q_num = idx_h + 1
+        durum_isareti = "✅" if idx_h in st.session_state.user_answers else "⭕"
+        buton_etiketi = f"S{q_num} {durum_isareti}"
+        
+        with jump_cols[idx_h]:
+            if st.button(buton_etiketi, key=f"native_jump_{idx_h}", use_container_width=True):
+                st.session_state.current_question = idx_h
+                st.rerun()
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # ANLIK GERÇEK ZAMANLI SAYAÇ DÖNGÜSÜ (Canlı Sayaç Güncelleme Tetikleyicisi)
+    if kalan_sn > 0 and not st.session_state.quiz_submitted:
+        time.sleep(1)
+        st.rerun()
 
 else:
     quiz_data = st.session_state.quiz_data
