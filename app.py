@@ -23,7 +23,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- MODERN VE STABİL ÖZEL CSS ---
+# --- MODERN VE STABİL ÖZEL CSS (GERÇEK ZAMANLI SAYAÇ DAHİL) ---
 st.markdown("""
 <style>
     .main {
@@ -96,8 +96,8 @@ st.markdown("""
         display: flex;
         flex-direction: row;
         overflow-x: auto;
-        gap: 8px;
-        padding: 10px 4px;
+        gap: 10px;
+        padding: 12px 8px;
         background-color: #f1f5f9;
         border-radius: 12px;
         border: 1px solid #cbd5e1;
@@ -105,13 +105,37 @@ st.markdown("""
         margin-bottom: 15px;
         white-space: nowrap;
         scrollbar-width: thin;
+        align-items: center;
     }
     .horizontal-jump-container::-webkit-scrollbar {
         height: 6px;
     }
     .horizontal-jump-container::-webkit-scrollbar-thumb {
-        background-color: #cbd5e1;
+        background-color: #94a3b8;
         border-radius: 4px;
+    }
+    /* Modern Canlı Sayaç Tasarımı */
+    .live-timer-card {
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        color: #f8fafc;
+        padding: 12px 20px;
+        border-radius: 12px;
+        text-align: center;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        border: 1px solid #334155;
+    }
+    .live-timer-card .timer-title {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #94a3b8;
+        margin-bottom: 2px;
+    }
+    .live-timer-card .timer-value {
+        font-size: 22px;
+        font-weight: 800;
+        color: #f43f5e;
+        font-family: monospace;
     }
     div[data-testid="stProgress"] > div > div > div {
         background-color: #9333ea !important;
@@ -233,7 +257,6 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
         cx, cy = 4.8, 1.0
         ax_val, ay_val = 1.2, 4.0
         ax.plot([bx, cx, ax_val, bx], [by, cy, ay_val, by], color='#0f172a', linewidth=2.5, solid_capstyle='round')
-        # Dik açı işareti
         ax.plot([1.2, 1.5, 1.5, 1.2], [1.0, 1.0, 1.3, 1.3], color='#dc2626', linewidth=1.8)
         ax.text(ax_val - 0.25, ay_val + 0.15, etiketler.get("A", "A"), fontsize=11, fontweight='bold', color='#0f172a')
         ax.text(bx - 0.25, by - 0.25, etiketler.get("B", "B (90°)"), fontsize=10, fontweight='bold', color='#dc2626')
@@ -652,15 +675,39 @@ elif not st.session_state.quiz_submitted:
         st.session_state.total_duration = int(time.time() - st.session_state.start_time)
         st.rerun()
 
-    kalan_dak = kalan_sn // 60
-    kalan_saniye = kalan_sn % 60
-
     c1, c2, c3 = st.columns([2, 2, 1])
     with c1:
         st.markdown(f"### Soru **{curr_idx + 1}** / {toplam_soru}")
     with c2:
-        timer_placeholder = st.empty()
-        timer_placeholder.markdown(f"### ⏳ Kalan Süre: :red[{kalan_dak:02d}:{kalan_saniye:02d}]")
+        # GERÇEK ZAMANLI AKICI SAYAÇ (JS destekli anlık geri sayım)
+        bith_timestamp = st.session_state.start_time + toplam_izin_verilen_sure
+        timer_html = f"""
+        <div class="live-timer-card">
+            <div class="timer-title">⏳ Kalan Sınav Süresi</div>
+            <div id="live-countdown" class="timer-value">Hesaplanıyor...</div>
+        </div>
+        <script>
+            (function() {{
+                var targetTime = {bth_timestamp} * 1000;
+                if (window.examInterval) clearInterval(window.examInterval);
+                window.examInterval = setInterval(function() {{
+                    var now = new Date().getTime();
+                    var distance = targetTime - now;
+                    if (distance < 0) {{
+                        document.getElementById("live-countdown").innerHTML = "00:00 SÜRE BİTTİ!";
+                        clearInterval(window.examInterval);
+                        return;
+                    }}
+                    var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                    var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                    minutes = minutes < 10 ? "0" + minutes : minutes;
+                    seconds = seconds < 10 ? "0" + seconds : seconds;
+                    document.getElementById("live-countdown").innerHTML = minutes + ":" + seconds;
+                }}, 1000);
+            }})();
+        </script>
+        """.replace("{bth_timestamp}", str(bith_timestamp))
+        st.markdown(timer_html, unsafe_allow_html=True)
     with c3:
         if st.button("Sınavı Bitir", type="secondary"):
             st.session_state.quiz_submitted = True
@@ -706,7 +753,8 @@ elif not st.session_state.quiz_submitted:
             secenek_harf_map[goruntu] = harf
 
     mevcut_cevap = st.session_state.user_answers.get(curr_idx, None)
-    mevcut_secim_index = 0
+    
+    mevcut_secim_index = None
     if mevcut_cevap:
         for i, g in enumerate(secenek_formatli):
             if secenek_harf_map.get(g) == mevcut_cevap:
@@ -718,7 +766,8 @@ elif not st.session_state.quiz_submitted:
         secenek_formatli,
         index=mevcut_secim_index,
         key=f"radio_soru_{curr_idx}",
-        label_visibility="collapsed"
+        label_visibility="collapsed",
+        placeholder="Lütfen bir seçenek seçiniz..." if mevcut_secim_index is None else None
     )
 
     if secilen_metin:
@@ -748,14 +797,14 @@ elif not st.session_state.quiz_submitted:
     html_buttons = '<div class="horizontal-jump-container">'
     for i in range(toplam_soru):
         is_answered = i in st.session_state.user_answers
-        badge = "✅" if is_answered else f"{i+1}"
+        badge = f"{i+1}"
         
         if i == curr_idx:
-            html_buttons += f'<span style="padding: 6px 12px; background-color: #f97316; color: white; border-radius: 6px; font-weight: bold; font-size: 14px;">{badge}</span>'
+            html_buttons += f'<span style="padding: 8px 14px; background-color: #f97316; color: white; border-radius: 8px; font-weight: bold; font-size: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Soru {badge} (Aktif)</span>'
         elif is_answered:
-            html_buttons += f'<span style="padding: 6px 12px; background-color: #22c55e; color: white; border-radius: 6px; font-weight: bold; font-size: 14px;">{badge}</span>'
+            html_buttons += f'<span style="padding: 8px 14px; background-color: #22c55e; color: white; border-radius: 8px; font-weight: bold; font-size: 15px;">✓ {badge}</span>'
         else:
-            html_buttons += f'<span style="padding: 6px 12px; background-color: #e2e8f0; color: #0f172a; border-radius: 6px; font-weight: bold; font-size: 14px;">{badge}</span>'
+            html_buttons += f'<span style="padding: 8px 14px; background-color: #e2e8f0; color: #0f172a; border-radius: 8px; font-weight: bold; font-size: 15px;">{badge}</span>'
     html_buttons += '</div>'
     
     st.markdown(html_buttons, unsafe_allow_html=True)
@@ -764,7 +813,7 @@ elif not st.session_state.quiz_submitted:
     for i in range(toplam_soru):
         col_idx = i % 10
         with cols_jump[col_idx]:
-            if st.button(f"Atla: {i+1}", key=f"jump_btn_{i}", use_container_width=True):
+            if st.button(f"Soru {i+1}", key=f"jump_btn_{i}", use_container_width=True):
                 st.session_state.current_question = i
                 st.rerun()
 
