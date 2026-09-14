@@ -761,13 +761,13 @@ elif not st.session_state.quiz_submitted:
                 mevcut_secim_index = i
                 break
 
+    # st.radio içerisindeki desteklenmeyen placeholder argümanı kaldırıldı
     secilen_metin = st.radio(
         "Seçenekleriniz:",
         secenek_formatli,
         index=mevcut_secim_index,
         key=f"radio_soru_{curr_idx}",
-        label_visibility="collapsed",
-        placeholder="Lütfen bir seçenek seçiniz..." if mevcut_secim_index is None else None
+        label_visibility="collapsed"
     )
 
     if secilen_metin:
