@@ -151,7 +151,6 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
     
     tip = str(gorsel_tipi).lower()
     
-    # 1. DÜNYA, GÜNEŞ, AY VE UZAY SİSTEMLERİ
     if "gunes_dunya_ay" in tip or "astronomi" in tip:
         sun = plt.Circle((1.0, 2.5), 0.7, color='#f59e0b', ec='#d97706', linewidth=2)
         ax.add_patch(sun)
@@ -169,7 +168,6 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
         ax.plot(3.0 + 1.1*np.cos(theta), 2.5 + 0.7*np.sin(theta), color='#94a3b8', linestyle='--', linewidth=1)
         ax.text(3.0, 3.4, etiketler.get("O", "Ay'ın Yörüngesi"), fontsize=8, color='#64748b', ha='center')
 
-    # 2. DİNAMOMETRE VE KUVVET ÖLÇÜM DÜZENEĞİ
     elif "dinamometre" in tip or "kuvvet_hareket" in tip:
         ax.plot([3.0, 3.0], [4.4, 4.0], color='#475569', linewidth=3)
         ring = plt.Circle((3.0, 4.5), 0.15, color='#475569', fill=False, linewidth=2.5)
@@ -191,7 +189,6 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
         ax.text(3.0, 0.85, etiketler.get("Y", "Yük (G)"), fontsize=9, fontweight='bold', ha='center', color='#0f172a')
         ax.text(3.6, 2.8, etiketler.get("N", "N"), fontsize=10, fontweight='bold', color='#dc2626')
 
-    # 3. DÜNYA'NIN KATMANLARI
     elif "dunya_katmanlari" in tip:
         k_dis = plt.Circle((3.0, 2.5), 1.9, color='#38bdf8', alpha=0.4, ec='#0284c7', linewidth=2)
         k_manto = plt.Circle((3.0, 2.5), 1.3, color='#f97316', alpha=0.6, ec='#c2410c', linewidth=2)
@@ -202,7 +199,6 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
         ax.text(3.0, 4.0, etiketler.get("K1", "Hava Küre (Atmosfer)"), fontsize=8, fontweight='bold', ha='center', color='#0369a1')
         ax.text(3.0, 2.5, etiketler.get("K2", "Çekirdek"), fontsize=8, fontweight='bold', ha='center', color='#ffffff')
 
-    # 4. MATEMATİK: ÇEMBER VE DAİRE
     elif "cember" in tip or "daire" in tip:
         cember = plt.Circle((3.0, 2.5), 1.6, color='#0f172a', fill=False, linewidth=2.2)
         ax.add_patch(cember)
@@ -218,7 +214,6 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
         
         ax.text(3.0, 0.4, etiketler.get("Aciklama", "Çember ve Daire Geometrisi"), fontsize=9, fontweight='bold', ha='center', color='#475569')
 
-    # 5. ISITMA / HAL DEĞİŞTİRME
     elif "isitma_kababi" in tip or "hal_degisimi" in tip:
         ax.plot([2.0, 2.0, 4.0, 4.0], [1.0, 3.5, 3.5, 1.0], color='#0f172a', linewidth=2.2, solid_capstyle='round')
         rect = plt.Rectangle((2.05, 1.05), 1.9, 1.6, color='#38bdf8', alpha=0.5)
@@ -232,7 +227,6 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
         ax.text(2.2, 1.9, etiketler.get("S", "Sıvı"), fontsize=9, fontweight='bold', color='#0369a1')
         ax.text(3.0, 0.3, etiketler.get("K", "Isıtıcı Kaynak"), fontsize=9, fontweight='bold', ha='center', color='#0f172a')
 
-    # 6. BASINÇ
     elif "basinc" in tip:
         rect_blok = plt.Rectangle((1.5, 2.0), 3.0, 1.2, color='#cbd5e1', ec='#0f172a', linewidth=2)
         ax.add_patch(rect_blok)
@@ -241,7 +235,6 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
         ax.text(3.0, 2.6, etiketler.get("G", "Ağırlık (G)"), fontsize=11, fontweight='bold', ha='center', color='#0f172a')
         ax.text(3.0, 1.4, etiketler.get("S", "Yüzey Alanı (S)"), fontsize=9, fontweight='bold', ha='center', color='#475569')
 
-    # 7. ELEKTRİK DEVRELERİ
     elif "devre" in tip or "elektrik" in tip:
         ax.plot([1.2, 4.8, 4.8, 1.2, 1.2], [1.5, 1.5, 3.6, 3.6, 1.5], color='#0f172a', linewidth=2, linestyle='--')
         circle_ampul = plt.Circle((3.0, 3.6), 0.38, color='#f59e0b', fill=True, ec='#0f172a', linewidth=2)
@@ -249,7 +242,6 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
         ax.text(3.0, 3.6, etiketler.get("A", "💡"), fontsize=12, ha='center', va='center')
         ax.text(3.0, 1.15, etiketler.get("P", "Güç Kaynağı / Pil"), fontsize=9, fontweight='bold', ha='center', color='#0f172a')
 
-    # 8. GEOMETRİ: DİK ÜÇGEN
     elif "dik_ucgen" in tip:
         bx, by = 1.0, 1.0
         cx, cy = 5.0, 1.0
@@ -275,7 +267,6 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
     plt.close(fig)
     return f"data:image/png;base64,{img_str}"
 
-# --- MEB MÜFREDATI VE ÖZEL MODÜLLER (ALMANCA VE LGS ÇIKMIŞ SORULAR DAHİL) ---
 MUGREDAT = {
     "4. Sınıf": {
         "Türkçe": ["Sözcükte Anlam", "Cümle Bilgisi", "Paragraf Yorumlama", "Yazım Kuralları ve Noktalama", "Metin Türleri ve Söz Sanatları"],
@@ -339,7 +330,6 @@ MUGREDAT = {
     }
 }
 
-# --- GÜVENLİ API ANAHTARI YÖNETİMİ ---
 raw_keys = st.secrets.get("API_KEYS", [])
 if isinstance(raw_keys, str):
     API_KEYS = [raw_keys.strip()]
@@ -385,7 +375,6 @@ def kararli_json_ayikla(raw_text):
         pass
     return []
 
-# --- SESSION STATE TANIMLARI ---
 if "quiz_data" not in st.session_state:
     st.session_state.quiz_data = None
 if "user_answers" not in st.session_state:
@@ -547,10 +536,8 @@ Yanıtı kesinlikle ve sadece şu JSON formatında ver (başka hiçbir metin ekl
                                 if "etiketler" not in item:
                                     item["etiketler"] = {}
                             
-                            # DERS DERS GRUPLAMA (Dersler ardışık olarak sıralansın)
                             ctx.quiz_data = sorted(ctx.quiz_data, key=lambda x: str(x.get("ders", "Genel")))
                             
-                            # Sıralandıktan sonra soru numaralarını 1'den başlayarak yeniden düzenle
                             for idx, item in enumerate(ctx.quiz_data):
                                 item["soru_no"] = idx + 1
 
@@ -590,6 +577,25 @@ Yanıtı kesinlikle ve sadece şu JSON formatında ver (başka hiçbir metin ekl
             else:
                 st.error(f"Hata oluştu: {ctx.hata_mesaji or 'Geçerli veri alınamadı.'}")
 
+    # --- YENİ: SINAV ESNASINDA KENAR ÇUBUĞUNDA KAYDIRILABİLİR SORU HARİTASI ---
+    if st.session_state.exam_started and not st.session_state.quiz_submitted and st.session_state.quiz_data:
+        st.markdown("---")
+        st.markdown("### 🗺️ Hızlı Soru Atlama Paneli")
+        st.markdown("<p style='font-size: 13px; color: #64748b;'>İstediğiniz soruya doğrudan geçiş yapabilirsiniz:</p>", unsafe_allow_html=True)
+        
+        # Kaydırılabilir görünüm için konteyner
+        with st.container(height=240):
+            q_data_list = st.session_state.quiz_data
+            for idx_h in range(len(q_data_list)):
+                q_num = idx_h + 1
+                cevap_durumu = "✅" if idx_h in st.session_state.user_answers else "⭕"
+                aktif_isaret = " 👉" if idx_h == st.session_state.current_question else ""
+                
+                btn_label = f"Soru {q_num} {cevap_durumu}{aktif_isaret}"
+                if st.button(btn_label, key=f"sidebar_jump_{idx_h}", use_container_width=True):
+                    st.session_state.current_question = idx_h
+                    st.rerun()
+
     if st.session_state.performance_history:
         st.markdown("---")
         with st.expander("📈 Geçmiş Sınav Karne Arşivi"):
@@ -614,7 +620,7 @@ elif not st.session_state.exam_started:
     <div class="custom-card">
         <h2>✨ Ders Bazlı Gruplanmış Sınavınız Hazır!</h2>
         <p style="color: #64748b; font-size: 16px;">Toplam Soru: <b>{toplam_soru_sayisi}</b> | Önerilen Süre: <b>{dakika_gosterim} Dakika</b></p>
-        <p style="color: #334155; font-size: 14px; margin-top: 5px;"><i>Sorular her dersin tüm soruları bitince sıradaki derse geçecek şekilde düzenlenmiştir.</i></p>
+        <p style="color: #334155; font-size: 14px; margin-top: 5px;"><i>Sorular her dersin tüm soruları bitince sıradaki derse geçecek şekilde düzenlenmiştir. Sol panelden istediğiniz soruya hızlıca atlayabilirsiniz.</i></p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -654,7 +660,6 @@ elif not st.session_state.quiz_submitted:
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # Ders Banner / Başlığı
     st.markdown(f"""
     <div class="ders-banner">
         <span>📘 Ders: {aktif_ders}</span>
@@ -737,7 +742,6 @@ elif not st.session_state.quiz_submitted:
                 st.rerun()
 
 else:
-    # --- SINAV SONUCU VE KARNE RAPORU ---
     quiz_data = st.session_state.quiz_data
     user_answers = st.session_state.user_answers
     toplam_soru = len(quiz_data)
