@@ -236,16 +236,17 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
         ax.text(3.0, 3.6, etiketler.get("A", "💡"), fontsize=12, ha='center', va='center')
         ax.text(3.0, 1.15, etiketler.get("P", "Güç Kaynağı / Pil"), fontsize=9, fontweight='bold', ha='center', color='#0f172a')
 
-    # 8. GEOMETRİ: DİK ÜÇGEN / PARALELKENAR
-    elif "dik_ucgen" in tip:
-        bx, by = 1.0, 1.0
-        cx, cy = 5.0, 1.0
-        ax_val, ay_val = 1.0, 4.2
+    # 8. GEOMETRİ: DİK ÜÇGEN / ÜÇGENLER
+    elif "dik_ucgen" in tip or "ucgen" in tip:
+        bx, by = 1.2, 1.0
+        cx, cy = 4.8, 1.0
+        ax_val, ay_val = 1.2, 4.0
         ax.plot([bx, cx, ax_val, bx], [by, cy, ay_val, by], color='#0f172a', linewidth=2.2, solid_capstyle='round')
-        ax.plot([1.0, 1.4, 1.4, 1.0], [1.0, 1.0, 1.4, 1.4], color='#0f172a', linewidth=1.5)
+        ax.plot([1.2, 1.5, 1.5, 1.2], [1.0, 1.0, 1.3, 1.3], color='#0f172a', linewidth=1.5) # Dik açı işareti
         ax.text(ax_val - 0.2, ay_val + 0.15, etiketler.get("A", "A"), fontsize=11, fontweight='bold', color='#0f172a')
-        ax.text(bx - 0.2, by - 0.2, etiketler.get("B", "B"), fontsize=10, fontweight='bold', color='#0f172a')
-        ax.text(cx + 0.2, cy - 0.2, etiketler.get("C", "C"), fontsize=10, fontweight='bold', color='#0f172a')
+        ax.text(bx - 0.25, by - 0.25, etiketler.get("B", "B"), fontsize=10, fontweight='bold', color='#0f172a')
+        ax.text(cx + 0.2, cy - 0.25, etiketler.get("C", "C"), fontsize=10, fontweight='bold', color='#0f172a')
+        ax.text(3.0, 0.4, etiketler.get("Aciklama", "Dik Üçgen Geometrisi"), fontsize=9, fontweight='bold', ha='center', color='#475569')
         
     else:
         circle_def = plt.Circle((3, 2.5), 1.5, color='#0f172a', fill=False, linewidth=2.2)
@@ -262,7 +263,7 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
     plt.close(fig)
     return f"data:image/png;base64,{img_str}"
 
-# --- MEB MÜFREDATI VE ÖZEL MODÜLLER (ALMANCA VE LGS ÇIKMIŞ SORULAR EKLENDİ) ---
+# --- MEB MÜFREDATI VE ÖZEL MODÜLLER ---
 MUGREDAT = {
     "4. Sınıf": {
         "Türkçe": ["Sözcükte Anlam", "Cümle Bilgisi", "Paragraf Yorumlama", "Yazım Kuralları ve Noktalama", "Metin Türleri ve Söz Sanatları"],
@@ -452,18 +453,18 @@ with st.sidebar:
                 ders_unite_detay += f"- Ders/Kategori: {d}, İstenen Alt Başlıklar/Kapsam: {', '.join(u_list)}\n"
 
             gorsel_talimati = """
-            ÇOK ÖNEMLİ KURAL (SCIENCE VISUAL WIDGET & ÇEMBER GÖRSEL UYUMU):
-            Eğer soru ilgili fen ünitesine veya matematik çember konusuna aitse, `gorsel_tipi` alanını tam olarak şu değerlerden biriyle seçmelisin:
-            - Güneş, Dünya, Ay ve Uzay sistemleri ile ilgiliyse: `gunes_dunya_ay`
-            - Kuvvet, yay, yük ve dinamometre ile ilgiliyse: `dinamometre`
-            - Dünya'nın katmanları ile ilgiliyse: `dunya_katmanlari`
-            - Matematik çember, daire, yarıçap, merkez açılarla ilgiliyse: `cember`
-            - Isı, hal değişimi, kaynama ile ilgiliyse: `isitma_kababi`
-            - Basınç ile ilgiliyse: `basinc`
-            - Elektrik devreleri ile ilgiliyse: `devre`
-            - Geometrik şekiller (dik üçgen vb.) ise: `dik_ucgen`
-            - Görsel gerektirmeyen durumlar için: `yok`
-            Soru metninde geçen kavram ile `gorsel_tipi` kesinlikle birebir örtüşmelidir!
+            KESİN GÖRSEL UYUM KURALLARI (Görsel Uyumsuzluklarını Önleme Talimatı):
+            Ürettiğin her sorunun konusuyla `gorsel_tipi` alanı tam olarak eşleşmelidir. Kesinlikle yanlış veya alakasız görsel seçme!
+            Kullanabileceğin `gorsel_tipi` değerleri ve tam eşleşme kuralları:
+            - Eğer soru Güneş, Dünya, Ay veya uzay/yörünge hareketleri ile ilgiliyse: `gorsel_tipi`: "gunes_dunya_ay"
+            - Eğer soru dinamometre, yay, ağırlık asma veya kuvvet/hareket ölçümü ile ilgiliyse: `gorsel_tipi`: "dinamometre"
+            - Eğer soru Dünya'nın katmanları (atmosfer, manto, çekirdek) ile ilgiliyse: `gorsel_tipi`: "dunya_katmanlari"
+            - Eğer soru matematik çember, daire, yarıçap, kiriş, merkez açı ile ilgiliyse: `gorsel_tipi`: "cember"
+            - Eğer soru dik üçgen, üçgende açılar veya Pisagor bağıntısı ile ilgiliyse: `gorsel_tipi`: "dik_ucgen"
+            - Eğer soru ısı, sıcaklık, hal değişimi veya kaynama kapları ile ilgiliyse: `gorsel_tipi`: "isitma_kababi"
+            - Eğer soru basınç (katı veya sıvı basıncı) ile ilgiliyse: `gorsel_tipi`: "basinc"
+            - Eğer soru elektrik devreleri, pil ve lamba ile ilgiliyse: `gorsel_tipi`: "devre"
+            - Görsel gerektirmeyen (sadece metin içeren dil bilgisi, paragraf veya tarih/sosyal/din) sorular için: `gorsel_tipi`: "yok"
             """
 
             prompt = f"""
@@ -530,7 +531,7 @@ Yanıtı kesinlikle ve sadece şu JSON formatında ver (başka hiçbir metin ekl
                                 if "ders" not in item:
                                     item["ders"] = aktif_dersler_listesi[0]
                                 if "gorsel_tipi" not in item:
-                                    item["gorsel_tipi"] = "cember" if "Matematik" in str(item.get("ders")) else "yok"
+                                    item["gorsel_tipi"] = "yok"
                                 if "etiketler" not in item:
                                     item["etiketler"] = {}
                             ctx.basarili = True
@@ -655,63 +656,49 @@ elif not st.session_state.quiz_submitted:
         keys_list = sorted(secenekler.keys())
         options_list = [f"{k}) {temizle_latex_metin(secenekler[k])}" for k in keys_list]
 
-        widget_key = f"radio_q_{curr_idx}"
-
-        kayitli_harf = st.session_state.user_answers.get(curr_idx, None)
-        default_opt_index = None
-        if kayitli_harf:
-            for idx_opt, opt in enumerate(options_list):
-                if opt.startswith(kayitli_harf + ")"):
-                    default_opt_index = idx_opt
-                    break
-
-        if widget_key not in st.session_state:
-            st.session_state[widget_key] = options_list[default_opt_index] if default_opt_index is not None else None
-
-        def handle_radio_change():
-            val = st.session_state.get(widget_key)
-            if val:
-                harf = val.split(")")[0].strip()
-                st.session_state.user_answers[curr_idx] = harf
+        mevcut_secim = st.session_state.user_answers.get(curr_idx, None)
+        secilen_index = None
+        if mevcut_secim in keys_list:
+            secilen_index = keys_list.index(mevcut_secim)
 
         secim = st.radio(
-            "Cevabınızı seçiniz:",
+            "Lütfen doğru seçeneği işaretleyiniz:",
             options_list,
-            index=default_opt_index,
-            key=widget_key,
-            on_change=handle_radio_change
+            index=secilen_index,
+            key=f"radio_q_{curr_idx}"
         )
 
-    st.markdown("<br>", unsafe_allow_html=True)
-    
-    col_prev, col_middle, col_next = st.columns([1, 2, 1])
+        if secim:
+            secilen_harf = secim.split(")")[0].strip()
+            st.session_state.user_answers[curr_idx] = secilen_harf
 
-    with col_prev:
+    st.markdown("<br>", unsafe_allow_html=True)
+    c1, c2, c3 = st.columns([1, 2, 1])
+
+    with c1:
         if curr_idx > 0:
             if st.button("⬅️ Önceki Soru", use_container_width=True):
                 st.session_state.current_question -= 1
                 st.rerun()
 
-    with col_next:
+    with c3:
         if curr_idx < toplam_soru - 1:
-            if st.button("Sonraki Soru ➡️", use_container_width=True):
+            if st.button("Sonraki Soru ➡️", use_container_width=True, type="primary"):
                 st.session_state.current_question += 1
                 st.rerun()
         else:
-            if st.button("🏁 Sınavı Tamamla", type="primary", use_container_width=True):
+            if st.button("🏁 Sınavı Tamamla ve Bitir", use_container_width=True, type="primary"):
                 st.session_state.quiz_submitted = True
-                gecen_sure_sn = int(time.time() - st.session_state.start_time)
-                m = gecen_sure_sn // 60
-                s = gecen_sure_sn % 60
-                st.session_state.total_duration = f"{m:02d}:{s:02d}"
+                gecen_sure_toplam = int(time.time() - st.session_state.start_time)
+                dk = gecen_sure_toplam // 60
+                sn = gecen_sure_toplam % 60
+                st.session_state.total_duration = f"{dk:02d}:{sn:02d}"
                 st.rerun()
 
 else:
-    # --- SINAV SONUCU VE KARNE RAPORU ---
     quiz_data = st.session_state.quiz_data
     user_answers = st.session_state.user_answers
-    toplam_soru = len(quiz_data)
-
+    
     dogru_sayisi = 0
     yanlis_sayisi = 0
     bos_sayisi = 0
@@ -720,111 +707,93 @@ else:
 
     for idx, q in enumerate(quiz_data):
         dogru_harf = str(q.get("dogru_cevap", "")).strip().upper()
-        verilen_harf = str(user_answers.get(idx, "")).strip().upper()
-
-        if not verilen_harf:
+        ogrenci_harfi = str(user_answers.get(idx, "")).strip().upper()
+        
+        if not ogrenci_harfi:
             bos_sayisi += 1
-        elif verilen_harf == dogru_harf:
+            yeni_yanlislar.append(q)
+        elif ogrenci_harfi == dogru_harf:
             dogru_sayisi += 1
         else:
             yanlis_sayisi += 1
-            yeni_yanlislar.append({
-                "ders": q.get("ders", "Genel"),
-                "soru_metni": q.get("soru_metni"),
-                "dogru_cevap": dogru_harf,
-                "verilen_cevap": verilen_harf,
-                "cozum_aciklamasi": q.get("cozum_aciklamasi")
-            })
+            yeni_yanlislar.append(q)
 
+    toplam_s = len(quiz_data)
     net_sayisi = max(0.0, dogru_sayisi - (yanlis_sayisi * 0.25))
-    basari_orani = (dogru_sayisi / toplam_soru) * 100 if toplam_soru > 0 else 0
+    basari_orani = (dogru_sayisi / toplam_s) * 100 if toplam_s > 0 else 0
 
-    st.markdown("""
+    st.session_state.yanlis_sorular_arsivi.extend(yeni_yanlislar)
+
+    bugun_str = datetime.now().strftime("%d.%m.%Y %H:%M")
+    karne_kaydi = {
+        "tarih": bugun_str,
+        "sinif": f"{dogru_sayisi}D / {yanlis_sayisi}Y / {bos_sayisi}B",
+        "dogru": dogru_sayisi,
+        "yanlis": yanlis_sayisi,
+        "sure": st.session_state.total_duration or "Bilinmiyor"
+    }
+    if not st.session_state.performance_history or st.session_state.performance_history[-1] != karne_kaydi:
+        st.session_state.performance_history.append(karne_kaydi)
+
+    st.markdown(f"""
     <div class="custom-card">
-        <h2>🎉 Sınav Tamamlandı! Karne Raporunuz</h2>
+        <h2>📊 Sınav Karnesi ve Değerlendirme Raporu</h2>
+        <p style="color: #64748b;">Sınav Süresi: <b>{st.session_state.total_duration}</b> | Tamamlama Tarihi: <b>{bugun_str}</b></p>
     </div>
     """, unsafe_allow_html=True)
 
-    col_m1, col_m2, col_m3, col_m4, col_m5 = st.columns(5)
-    with col_m1:
-        st.metric(label="Toplam Soru", value=toplam_soru)
-    with col_m2:
-        st.metric(label="✅ Doğru", value=dogru_sayisi)
-    with col_m3:
-        st.metric(label="❌ Yanlış", value=yanlis_sayisi)
-    with col_m4:
-        st.metric(label="⚪ Boş", value=bos_sayisi)
-    with col_m5:
-        st.metric(label="🏆 Başarı", value=f"%{basari_orani:.1f}")
-
-    simdi_str = datetime.now().strftime("%d.%m.%Y %H:%M")
-    karne_kaydi = {
-        "tarih": simdi_str,
-        "sinif": f"{dogru_sayisi}D / {yanlis_sayisi}Y",
-        "dogru": dogru_sayisi,
-        "yanlis": yanlis_sayisi,
-        "sure": st.session_state.total_duration or "00:00"
-    }
-    if not st.session_state.performance_history or st.session_state.performance_history[-1]["tarih"] != simdi_str:
-        st.session_state.performance_history.append(karne_kaydi)
-        for yn in yeni_yanlislar:
-            if yn not in st.session_state.yanlis_sorular_arsivi:
-                st.session_state.yanlis_sorular_arsivi.append(yn)
+    m1, m2, m3, m4 = st.columns(4)
+    with m1:
+        st.metric(label="✅ Doğru Sayısı", value=str(dogru_sayisi))
+    with m2:
+        st.metric(label="❌ Yanlış Sayısı", value=str(yanlis_sayisi))
+    with m3:
+        st.metric(label="⚠️ Boş Sayısı", value=str(bos_sayisi))
+    with m4:
+        st.metric(label="🎯 Başarı Puanı", value=f"%{basari_orani:.1f}")
 
     st.markdown("---")
-    st.markdown("### 📝 Soru Çözüm ve Analiz Raporu")
+    st.subheader("📝 Soru Soru Çözüm Analizi ve Açıklamalar")
 
     for idx, q in enumerate(quiz_data):
         dogru_harf = str(q.get("dogru_cevap", "")).strip().upper()
-        verilen_harf = str(user_answers.get(idx, "")).strip().upper()
+        ogrenci_harfi = str(user_answers.get(idx, "Boş")).strip().upper()
+        durum_ikonu = "✅" if ogrenci_harfi == dogru_harf else "❌"
 
-        if not verilen_harf:
-            durum_ikonu = "⚪"
-            durum_metin = "Boş Bırakıldı"
-            durum_renk = "#64748b"
-        elif verilen_harf == dogru_harf:
-            durum_ikonu = "✅"
-            durum_metin = "Doğru"
-            durum_renk = "#16a34a"
-        else:
-            durum_ikonu = "❌"
-            durum_metin = "Yanlış"
-            durum_renk = "#dc2626"
-
-        with st.expander(f"Soru {idx + 1} ({q.get('ders', 'Genel')}) — {durum_ikonu} {durum_metin}"):
-            st.markdown(f"**Soru:** {temizle_latex_metin(q.get('soru_metni'))}")
+        with st.container(border=True):
+            st.markdown(f"**Soru {idx + 1}** ({q.get('ders', 'Genel')}) {durum_ikonu}")
+            st.markdown(f"**Soru Metni:** {temizle_latex_metin(q.get('soru_metni', ''))}")
             
-            gorsel_tipi = q.get("gorsel_tipi", "yok")
-            etiketler = q.get("etiketler", {})
-            if gorsel_tipi and gorsel_tipi.lower() != "yok":
-                img_data_uri = ciz_vektorel_gorsel(gorsel_tipi=gorsel_tipi, etiketler=etiketler)
-                st.markdown(f'''
-                    <div class="gorsel-sema-kutusu">
-                        <img src="{img_data_uri}" style="max-width: 80%; height: auto;" />
-                    </div>
-                ''', unsafe_allow_html=True)
-
             secenekler = q.get("secenekler", {})
             for k in sorted(secenekler.keys()):
-                metin = temizle_latex_metin(secenekler[k])
+                sec_metin = temizle_latex_metin(secenekler[k])
                 isaret = ""
                 if k == dogru_harf:
-                    isaret = " 👈 **(Doğru Cevap)**"
-                elif k == verilen_harf:
-                    isaret = " 👈 **(Sizin Cevabınız)**"
-                st.markdown(f"- **{k})** {metin}{isaret}")
+                    isaret = " ⭐ **(Doğru Cevap)**"
+                elif k == ogrenci_harfi:
+                    isaret = " 👈 **(Senin Cevabın)**"
+                st.markdown(f"- **{k})** {sec_metin}{isaret}")
 
-            st.markdown(f"**💡 Çözüm Açıklaması:** {temizle_latex_metin(q.get('cozum_aciklamasi', 'Açıklama bulunmuyor.'))}")
+            st.markdown(f"💡 **Çözüm Açıklaması:** {temizle_latex_metin(q.get('cozum_aciklamasi', 'Açıklama bulunmuyor.'))}")
 
-    st.markdown("---")
-    col_yeniden1, col_yeniden2, col_yeniden3 = st.columns([1, 2, 1])
-    with col_yeniden2:
-        if st.button("🔄 Yeni Sınav / Test Oluştur", use_container_width=True, type="primary"):
+    st.markdown("<br>", unsafe_allow_html=True)
+    c_btn1, c_btn2 = st.columns(2)
+    with c_btn1:
+        if st.button("🔄 Yeni Sınav Oluştur / Sıfırla", use_container_width=True, type="primary"):
             st.session_state.quiz_data = None
             st.session_state.user_answers = {}
             st.session_state.quiz_submitted = False
             st.session_state.exam_started = False
             st.session_state.start_time = None
-            st.session_state.total_duration = None
-            st.session_state.current_question = 0
             st.rerun()
+
+    with c_btn2:
+        if yeni_yanlislar:
+            if st.button("❌ Yanlış Yapılan Sorularla Pratik Yap", use_container_width=True):
+                st.session_state.quiz_data = yeni_yanlislar
+                st.session_state.user_answers = {}
+                st.session_state.quiz_submitted = False
+                st.session_state.exam_started = False
+                st.session_state.start_time = None
+                st.session_state.current_question = 0
+                st.rerun()
