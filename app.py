@@ -71,7 +71,6 @@ st.markdown("""
         transform: translateY(-2px);
         box-shadow: 0 6px 16px rgba(249, 115, 22, 0.25);
     }
-    /* Ultra Modern Başlat Butonu Tasarımı */
     div.stButton > button[kind="primary"] {
         background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
         border: none !important;
@@ -143,7 +142,7 @@ def get_triangle_labels(etiketler):
         return etiketler.get(vertex_keys[0], vertex_keys[0]), etiketler.get(vertex_keys[1], vertex_keys[1]), etiketler.get(vertex_keys[2], vertex_keys[2])
     return etiketler.get("A", "A"), etiketler.get("B", "B"), etiketler.get("C", "C")
 
-# --- GELİŞMİŞ VE DİNAMİK ÜÇGEN / FEN / GRAFİK GÖRSEL ÇİZİCİ ---
+# --- GELİŞMİŞ VE DİNAMİK ÜÇGEN / FEN / GRAFİK GÖRSEL ÇİZİCİ (UYUM KONTROLLÜ) ---
 def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
     if not isinstance(etiketler, dict):
         etiketler = {}
@@ -436,19 +435,21 @@ with st.sidebar:
         st.warning("⚠️ `.streamlit/secrets.toml` dosyasına geçerli Gemini API anahtarınızı ekleyin.")
 
     secili_sinif = st.selectbox("Eğitim Seviyesi / Kategori:", list(MUGREDAT.keys()))
+    
+    # İstenen 6 Sınav Türü
     sinav_turu = st.selectbox("Sınav Türü:", [
-        "Yeni Nesil ve Beceri Temelli Karma Sorular",
-        "MEB LGS Çıkmış Soru Tarzı / Benzerleri",
-        "Konu Tarama ve Grafik Analiz Soruları",
-        "Günlük Yaşam Problemleri",
-        "LGS Hazırlık Karma Testi",
-        "Yanlışlardan Üretilen Sorular"
+        "Genel Tarama Sınavı",
+        "Konu Tarama Sınavı",
+        "Yanlışlardan Üretilen Sorular",
+        "LGS Geçmiş Yıllar Çıkmış Sorular",
+        "Hazır Bulunuşluk Sınavı",
+        "Yeni Nesil Sorular"
     ])
 
     zorluk_seviyesi = st.selectbox("🎯 Soru Zorluk Seviyesi:", ["Kolay", "Orta", "Zor", "Karma / Dengeli"])
 
     st.markdown("---")
-    st.markdown("📚 **Dersler, Üniteler ve LGS Çıkmış Sorular**")
+    st.markdown("📚 **Dersler ve Üniteler**")
 
     mevcut_dersler = MUGREDAT.get(secili_sinif, {})
     secili_ders_unite_haritasi = {}
@@ -473,13 +474,24 @@ with st.sidebar:
         elif not secili_ders_unite_haritasi:
             st.error("Lütfen en az bir ders veya ünite seçiniz!")
         else:
+            # Sınav türüne özel bağlam ve prompt kuralı türetme
             ek_baglam = ""
             if sinav_turu == "Yanlışlardan Üretilen Sorular":
-                ilgili_yanlislar = [y for y in st.session_state.yanlis_sorular_arsivi if y['ders'] in secili_ders_unite_haritasi.keys()]
+                ilgili_yanlislar = [y for y in st.session_state.yanlis_sorular_arsivi if y.get('ders') in secili_ders_unite_haritasi.keys()]
                 if ilgili_yanlislar:
-                    ek_baglam = "Öğrencinin geçmişte hata yaptığı benzer soru örnekleri üzerinden benzer nitelikte sorular üret.\n"
-            elif "LGS Çıkmış" in sinav_turu or "LGS Çıkmış Sorular" in secili_ders_unite_haritasi.keys():
-                ek_baglam = "Bu sorular MEB tarafından LGS'de sorulmuş gerçek çıkmış soru mantığına ve beceri temelli yapıya birebir uygun olmalıdır.\n"
+                    ek_baglam = "Öğrencinin geçmişte hata yaptığı benzer soru örnekleri üzerinden aynı konsepti farklı açılardan ele alan pekiştirici benzer nitelikte sorular üret.\n"
+                else:
+                    ek_baglam = "Öğrencinin yanlış arşivinde soru bulunmuyor; bu nedenle seçilen alanlarda öğrencinin en çok zorlandığı kritik kazanımlardan oluşan pekiştirici sorular üret.\n"
+            elif sinav_turu == "Genel Tarama Sınavı":
+                ek_baglam = "Bu sınav seçilen tüm ders ve üniteleri kapsayan, öğrencinin genel bilgi düzeyini ve kazanım hakimiyetini ölçen dengeli bir genel tarama sınavı olmalıdır.\n"
+            elif sinav_turu == "Konu Tarama Sınavı":
+                ek_baglam = "Bu sınav seçilen alt başlıkları ve konuları derinlemesine irdeleyen, kavram yanılgılarını hedefleyen detaylı bir konu tarama sınavı olmalıdır.\n"
+            elif sinav_turu == "LGS Geçmiş Yıllar Çıkmış Sorular":
+                ek_baglam = "Bu sorular MEB LGS'de çıkmış gerçek soruların mantığına, zorluk derecesine, kazanım odaklılığına ve beceri temelli yapısına birebir uygun özgün benzer sorular olmalıdır.\n"
+            elif sinav_turu == "Hazır Bulunuşluk Sınavı":
+                ek_baglam = "Bu sınav, öğrencinin yeni döneme veya konulara başlarken bilmesi gereken ön koşul temel kavramları ve temel becerileri ölçen bir hazır bulunuşluk sınavı olmalıdır.\n"
+            elif sinav_turu == "Yeni Nesil Sorular":
+                ek_baglam = "Bu sorular günlük yaşam problemleri içeren, grafik, tablo, şema veya görsel yorumlama becerisini ölçen, analitik düşünceye dayalı yeni nesil beceri temelli sorular olmalıdır.\n"
 
             ders_unite_detay = ""
             aktif_dersler_listesi = list(secili_ders_unite_haritasi.keys())
@@ -487,27 +499,21 @@ with st.sidebar:
                 ders_unite_detay += f"- Ders/Kategori: {d}, Alt Başlıklar: {', '.join(u_list)}\n"
 
             gorsel_talimati = """
-            YENİ NESİL, GÖRSEL VE KESİN HARF UYUMU KURALLARI:
-            1. Soru metninde hangi üçgen harfleri kullanıldıysa (Örneğin: "KLM üçgeni", "PRS üçgeni" veya "ABC üçgeni"), görseldeki köşe harfleri de BİREBİR AYNISI olmalıdır. Asla soru metninde KLM denip görselde ABC gösterilmemelidir.
-            2. `etiketler` sözlüğünde köşe harflerini soru metnindeki harflere göre anahtar olarak eksiksiz belirt (Örn: `{"K": "K", "L": "L", "M": "M"}` veya `{"P": "P", "R": "R", "S": "S"}`).
-            3. Soruların içeriği son derece zengin, yeni nesil mantık muhakeme, grafik/tablo yorumlama ve günlük hayat senaryoları içermelidir.
-            4. `gorsel_tipi` doğru seçilmelidir:
-                - Dik üçgen için: `gorsel_tipi`: "dik_ucgen"
-                - Eşkenar üçgen için: `gorsel_tipi`: "eskenar_ucgen"
-                - İkizkenar üçgen için: `gorsel_tipi`: "ikizkenar_ucgen"
-                - Çeşitkenar / Genel üçgen için: `gorsel_tipi`: "cesitkenar_ucgen"
-                - Çember / Daire: `gorsel_tipi`: "cember"
-                - Güneş-Dünya-Ay: `gorsel_tipi`: "gunes_dunya_ay"
-                - Dinamometre / Kuvvet: `gorsel_tipi`: "dinamometre"
-                - Grafik / Tablo / Veri: `gorsel_tipi`: "grafik"
-                - Basınç: `gorsel_tipi`: "basinc"
-                - Görsel gerektirmeyen (sözel mantık, metin analizi vb.): `gorsel_tipi`: "yok"
+            KESİN UYUM VE GÖRSEL TUTARLILIK KURALLARI (ÇOK ÖNEMLİ):
+            1. Soru metninde anlatılan olay, kavram, şekil veya geometrik yapı ile `gorsel_tipi` kesinlikle birbiriyle UYUŞMALIDIR. 
+               - Metin dik üçgenden bahsediyorsa `gorsel_tipi` kesinlikle "dik_ucgen" olmalıdır.
+               - Metin çember / daireden bahsediyorsa `gorsel_tipi` kesinlikle "cember" olmalıdır.
+               - Metin grafik veya veriden bahsediyorsa `gorsel_tipi` kesinlikle "grafik" olmalıdır.
+               - Metin Güneş-Dünya-Ay olayından bahsediyorsa `gorsel_tipi` kesinlikle "gunes_dunya_ay" olmalıdır.
+               - Metin basınç veya kuvvetten bahsediyorsa `gorsel_tipi` kesinlikle "basinc" veya "dinamometre" olmalıdır.
+               - Hiçbir görsel gerektirmeyen sorularda `gorsel_tipi` "yok" olmalıdır.
+            2. Soru metninde hangi harfler (Örn: KLM, ABC, PRS) veya değerler verildiyse, `etiketler` sözlüğünde de eksiksiz olarak yer almalıdır. Soru metni ile görsel asla çelişmemelidir.
             """
 
             prompt = f"""
 Sen MEB müfredatına, LGS sistemine ve yeni nesil soru hazırlama tekniklerine tam hakim profesyonel bir soru hazırlama yapay zekasısın.
-{secili_sinif} seviyesinde, {sinav_turu} kapsamında, TOPLAM {soru_sayisi} adet nitelikli, özgün, yeni nesil grafik/tablo ve görsel destekli sorular üret. 
-Matematik ve geometri sorularında dik üçgen, eşkenar üçgen, ikizkenar üçgen ve çeşitkenar üçgen türlerinin tamamından dengeli, harf uyumlu ve çeşitlendirilmiş sorular hazırlamaya özen göster.
+{secili_sinif} seviyesinde, '{sinav_turu}' konsepti ve formatında, TOPLAM {soru_sayisi} adet nitelikli, özgün sorular üret. 
+Matematik ve geometri sorularında dik üçgen, eşkenar üçgen, ikizkenar üçgen ve çeşitkenar üçgen türlerinin tamamından dengeli ve harf uyumlu sorular hazırlamaya özen göster.
 
 {gorsel_talimati}
 
@@ -516,6 +522,7 @@ GENEL KURALLAR:
 - Almanca sorular için dil kurallarına tam uyum sağla.
 
 Zorluk Seviyesi: {zorluk_seviyesi}
+Sınav Türü Hedefi: {sinav_turu}
 Seçilen Alanlar:
 {ders_unite_detay}
 {ek_baglam}
@@ -601,7 +608,7 @@ Yanıtı kesinlikle ve sadece şu JSON formatında ver (başka hiçbir metin ekl
                 kalan_tahmin = max(0, tahmini_sure_sn - int(gecen_sure))
                 oran = min(0.95, gecen_sure / tahmini_sure_sn)
                 progress_bar.progress(oran)
-                status_placeholder.markdown(f"⏳ **Yeni nesil sorular hazırlanıyor...** Tahmini kalan süre: **{kalan_tahmin} saniye**")
+                status_placeholder.markdown(f"⏳ **{sinav_turu} için sorular hazırlanıyor...** Tahmini kalan süre: **{kalan_tahmin} saniye**")
                 time.sleep(0.1)
 
             t.join()
@@ -616,7 +623,7 @@ Yanıtı kesinlikle ve sadece şu JSON formatında ver (başka hiçbir metin ekl
                 st.session_state.start_time = None
                 st.session_state.total_duration = None
                 st.session_state.current_question = 0
-                st.success(f"{len(ctx.quiz_data)} adet görsel ve harf uyumlu soru başarıyla üretildi!")
+                st.success(f"'{sinav_turu}' konseptine uygun {len(ctx.quiz_data)} adet soru başarıyla üretildi!")
                 st.rerun()
             else:
                 st.error(f"Hata oluştu: {ctx.hata_mesaji or 'Geçerli veri alınamadı.'}")
@@ -642,9 +649,9 @@ if not st.session_state.quiz_data:
         <div class="custom-card">
             <h2>Hoş Geldiniz!</h2>
             <p style='font-size: 16px; color: #475569;'>
-                Sol menüden eğitim seviyenizi, derslerinizi ve ünitelerinizi seçerek 
-                <b>"Soru Üretimini Başlat"</b> butonuna tıklayınız. Yapay zeka yeni nesil 
-                grafik, tablo ve harf uyumlu geometrik sorular hazırlayacaktır.
+                Sol menüden eğitim seviyenizi, sınav türünüzü, ders ve ünitelerinizi seçerek 
+                <b>"Soru Üretimini Başlat"</b> butonuna tıklayınız. Yapay zeka seçtiğiniz sınav formatına 
+                ve metin uyumuna kusursuz uyan sorular hazırlayacaktır.
             </p>
         </div>
     """, unsafe_allow_html=True)
@@ -652,7 +659,6 @@ else:
     quiz = st.session_state.quiz_data
     toplam_soru = len(quiz)
     
-    # Her soru başına 80 saniye olarak toplam süreyi saniye cinsinden hesapla
     hesaplanan_toplam_sure_sn = toplam_soru * 80
     hesaplanan_dk = hesaplanan_toplam_sure_sn // 60
     hesaplanan_sn = hesaplanan_toplam_sure_sn % 60
@@ -666,17 +672,15 @@ else:
             </div>
         """, unsafe_allow_html=True)
         
-        # --- YENİ NESİL, ŞIK VE MERKEZİ BAŞLATMA BUTONU ---
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
             if st.button("🚀 Sınavı Şimdi Başlat", type="primary", use_container_width=True):
                 st.session_state.exam_started = True
                 st.session_state.start_time = time.time()
-                st.session_state.total_duration = toplam_soru * 80  # Soru başı 80 saniye
+                st.session_state.total_duration = toplam_soru * 80
                 st.rerun()
     
     else:
-        # --- AKICI VE HATASIZ SAYAÇ İÇİN st.fragment (1 SANİYELİK GÜNCELLEME) ---
         @st.fragment(run_every=1)
         def render_live_timer_and_metrics():
             gecen_zaman = time.time() - st.session_state.start_time
