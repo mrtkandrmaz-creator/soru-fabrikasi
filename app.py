@@ -127,7 +127,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- GELİŞMİŞ VE DİNAMİK ÜÇGEN / FEN GÖRSEL ÇİZİCİ ---
+# --- GELİŞMİŞ VE DİNAMİK ÜÇGEN / FEN GÖRSEL ÇİZİCİ (HARFLENDİRME SENKRONİZE) ---
 def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
     if not isinstance(etiketler, dict):
         etiketler = {}
@@ -137,6 +137,11 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
     ax.axis('off')
     
     tip = str(gorsel_tipi).lower()
+    
+    # Güvenli Köşe Harflendirmesi (ABC Uyumsuzluğunu Önleme)
+    lbl_a = etiketler.get("A", "A")
+    lbl_b = etiketler.get("B", "B")
+    lbl_c = etiketler.get("C", "C")
     
     # 1. DÜNYA, GÜNEŞ, AY VE UZAY SİSTEMLERİ
     if "gunes_dunya_ay" in tip or "astronomi" in tip:
@@ -197,8 +202,6 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
         ax.text(3.1, 2.65, etiketler.get("M", "M"), fontsize=11, fontweight='bold', color='#0f172a')
         ax.plot([3.0, 4.5], [2.5, 2.5], color='#dc2626', linewidth=1.8, linestyle='--')
         ax.text(3.75, 2.7, etiketler.get("r", "r"), fontsize=10, fontweight='bold', color='#dc2626')
-        ax.plot([3.0, 1.9], [2.5, 3.5], color='#2563eb', linewidth=1.8)
-        ax.text(2.3, 3.1, etiketler.get("aci", ""), fontsize=10, fontweight='bold', color='#2563eb')
         ax.text(3.0, 0.4, etiketler.get("Aciklama", "Çember Geometrisi"), fontsize=9, fontweight='bold', ha='center', color='#475569')
 
     # 5. DİK ÜÇGEN
@@ -209,9 +212,9 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
         ax.plot([bx, cx, ax_val, bx], [by, cy, ay_val, by], color='#0f172a', linewidth=2.2, solid_capstyle='round')
         ax.plot([1.2, 1.5, 1.5, 1.2], [1.0, 1.0, 1.3, 1.3], color='#0f172a', linewidth=1.5) # Dik açı işareti (90°)
         
-        ax.text(ax_val - 0.25, ay_val + 0.1, etiketler.get("A", "A"), fontsize=11, fontweight='bold', color='#0f172a')
-        ax.text(bx - 0.25, by - 0.25, etiketler.get("B", "B"), fontsize=11, fontweight='bold', color='#0f172a')
-        ax.text(cx + 0.15, cy - 0.25, etiketler.get("C", "C"), fontsize=11, fontweight='bold', color='#0f172a')
+        ax.text(ax_val - 0.25, ay_val + 0.1, lbl_a, fontsize=11, fontweight='bold', color='#0f172a')
+        ax.text(bx - 0.25, by - 0.25, lbl_b, fontsize=11, fontweight='bold', color='#0f172a')
+        ax.text(cx + 0.15, cy - 0.25, lbl_c, fontsize=11, fontweight='bold', color='#0f172a')
         
         ax.text(2.0, 2.7, etiketler.get("c", ""), fontsize=10, fontweight='bold', color='#2563eb')
         ax.text(3.0, 0.7, etiketler.get("a", ""), fontsize=10, fontweight='bold', color='#dc2626')
@@ -226,9 +229,9 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
         ax_val, ay_val = 3.0, 1.0 + 1.5 * np.sqrt(3)
         ax.plot([bx, cx, ax_val, bx], [by, cy, ay_val, by], color='#0f172a', linewidth=2.2, solid_capstyle='round')
         
-        ax.text(ax_val, ay_val + 0.15, etiketler.get("A", "A"), fontsize=11, fontweight='bold', ha='center', color='#0f172a')
-        ax.text(bx - 0.25, by - 0.25, etiketler.get("B", "B"), fontsize=11, fontweight='bold', color='#0f172a')
-        ax.text(cx + 0.2, cy - 0.25, etiketler.get("C", "C"), fontsize=11, fontweight='bold', color='#0f172a')
+        ax.text(ax_val, ay_val + 0.15, lbl_a, fontsize=11, fontweight='bold', ha='center', color='#0f172a')
+        ax.text(bx - 0.25, by - 0.25, lbl_b, fontsize=11, fontweight='bold', color='#0f172a')
+        ax.text(cx + 0.2, cy - 0.25, lbl_c, fontsize=11, fontweight='bold', color='#0f172a')
         
         ax.text(3.0, 2.2, etiketler.get("aci", "60°"), fontsize=10, fontweight='bold', ha='center', color='#dc2626')
         ax.text(3.0, 0.3, "Eşkenar Üçgen (Tüm kenar ve açılar eşit)", fontsize=9, fontweight='bold', ha='center', color='#475569')
@@ -240,9 +243,9 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
         ax_val, ay_val = 3.0, 4.2
         ax.plot([bx, cx, ax_val, bx], [by, cy, ay_val, by], color='#0f172a', linewidth=2.2, solid_capstyle='round')
         
-        ax.text(ax_val, ay_val + 0.15, etiketler.get("A", "A"), fontsize=11, fontweight='bold', ha='center', color='#0f172a')
-        ax.text(bx - 0.25, by - 0.25, etiketler.get("B", "B"), fontsize=11, fontweight='bold', color='#0f172a')
-        ax.text(cx + 0.2, cy - 0.25, etiketler.get("C", "C"), fontsize=11, fontweight='bold', color='#0f172a')
+        ax.text(ax_val, ay_val + 0.15, lbl_a, fontsize=11, fontweight='bold', ha='center', color='#0f172a')
+        ax.text(bx - 0.25, by - 0.25, lbl_b, fontsize=11, fontweight='bold', color='#0f172a')
+        ax.text(cx + 0.2, cy - 0.25, lbl_c, fontsize=11, fontweight='bold', color='#0f172a')
         
         ax.text(2.0, 2.8, etiketler.get("kenar1", ""), fontsize=10, fontweight='bold', color='#2563eb')
         ax.text(4.0, 2.8, etiketler.get("kenar2", ""), fontsize=10, fontweight='bold', color='#2563eb')
@@ -256,9 +259,9 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
         ax_val, ay_val = 2.2, 4.0
         ax.plot([bx, cx, ax_val, bx], [by, cy, ay_val, by], color='#0f172a', linewidth=2.2, solid_capstyle='round')
         
-        ax.text(ax_val - 0.2, ay_val + 0.15, etiketler.get("A", "A"), fontsize=11, fontweight='bold', color='#0f172a')
-        ax.text(bx - 0.25, by - 0.25, etiketler.get("B", "B"), fontsize=11, fontweight='bold', color='#0f172a')
-        ax.text(cx + 0.2, cy - 0.25, etiketler.get("C", "C"), fontsize=11, fontweight='bold', color='#0f172a')
+        ax.text(ax_val - 0.2, ay_val + 0.15, lbl_a, fontsize=11, fontweight='bold', color='#0f172a')
+        ax.text(bx - 0.25, by - 0.25, lbl_b, fontsize=11, fontweight='bold', color='#0f172a')
+        ax.text(cx + 0.2, cy - 0.25, lbl_c, fontsize=11, fontweight='bold', color='#0f172a')
         
         ax.text(1.5, 2.6, etiketler.get("c", ""), fontsize=10, fontweight='bold', color='#2563eb')
         ax.text(3.6, 2.7, etiketler.get("b", ""), fontsize=10, fontweight='bold', color='#16a34a')
@@ -332,9 +335,9 @@ MUGREDAT = {
     },
     "6. Sınıf": {
         "Türkçe": ["Sözcükte Anlam", "Cümlede Anlam", "Paragraf Bilgisi", "Metin Türleri", "Fiiller"],
-        "Matematik": ["Çarpanlar ve Katlar", "Kümeler", "Tam Sayılar", "Kesirlerle İşlemler", "Cebirsel İfadeler", "Açılar", "Üçgende Açılar ve Alan", "Çember ve Daire", "Dörtgende Çevre og Alan"],
-        "Fen Bilimleri": ["Güneş Sistemi ve Tutulmalar", "Vücudumuzdaki Sistemler", "Kuvvet og Hareket", "Madde ve Isı", "Ses ve Özellikleri"],
-        "Sosyal Bilgiler": ["Biz og Toplum", "Yeryüzünde Yaşam", "Türklerin Tarihsel Yolculuk", "Ussal Ekonomi", "Yönetimimiz ve Demokrasi"],
+        "Matematik": ["Çarpanlar ve Katlar", "Kümeler", "Tam Sayılar", "Kesirlerle İşlemler", "Cebirsel İfadeler", "Açılar", "Üçgende Açılar ve Alan", "Çember ve Daire", "Dörtgende Çevre ve Alan"],
+        "Fen Bilimleri": ["Güneş Sistemi ve Tutulmalar", "Vücudumuzdaki Sistemler", "Kuvvet ve Hareket", "Madde ve Isı", "Ses ve Özellikleri"],
+        "Sosyal Bilgiler": ["Biz ve Toplum", "Yeryüzünde Yaşam", "Türklerin Tarihsel Yolculuğu", "Ussal Ekonomi", "Yönetimimiz ve Demokrasi"],
         "Din Kültürü": ["Peygamber ve İlahi Kitaplar", "Namaz İbadeti", "Hz. Muhammed'in Hayatı", "Ahlaki Tutum ve Davranışlar"],
         "İngilizce": ["Life", "Yummy Breakfast", "Downtown", "Weather and Emotions", "At the Fair", "Vacations"],
         "Almanca": ["Mein Körper und Gesundheit", "Kleidung", "Wetter und Jahreszeiten", "Freizeitaktivitäten", "Schule"]
@@ -500,19 +503,20 @@ with st.sidebar:
                 ders_unite_detay += f"- Ders/Kategori: {d}, Alt Başlıklar: {', '.join(u_list)}\n"
 
             gorsel_talimati = """
-            KESİN ÜÇGEN VE GÖRSEL ÇEŞİTLİLİK KURALLARI (Çok Önemli!):
-            Geometri veya üçgen içeren sorularda, soru metninde bahsedilen üçgen türü ile `gorsel_tipi` birebir örtüşmelidir:
-            - Eğer soru **dik üçgen** ile ilgiliyse: `gorsel_tipi`: "dik_ucgen" seçilmeli ve etiketler içinde dik açı/kenarlar belirtilmelidir.
-            - Eğer soru **eşkenar üçgen** ile ilgiliyse: `gorsel_tipi`: "eskenar_ucgen" seçilmeli (tüm kenarlar eşit görünmelidir).
-            - Eğer soru **ikizkenar üçgen** ile ilgiliyse: `gorsel_tipi`: "ikizkenar_ucgen" seçilmeli.
-            - Eğer soru **çeşitkenar üçgen** veya genel açı/alan soruları ile ilgiliyse: `gorsel_tipi`: "cesitkenar_ucgen" seçilmelidir.
-            - Çember / Daire soruları için: `gorsel_tipi`: "cember"
-            - Güneş-Dünya-Ay: `gorsel_tipi`: "gunes_dunya_ay"
-            - Dinamometre: `gorsel_tipi`: "dinamometre"
-            - Isı / Hal Değişimi: `gorsel_tipi`: "isitma_kababi"
-            - Basınç: `gorsel_tipi`: "basinc"
-            - Elektrik Devresi: `gorsel_tipi`: "devre"
-            - Görsel gerektirmeyen (paragraf, tarih, dil bilgisi vb.): `gorsel_tipi`: "yok"
+            KESİN ÜÇGEN VE HARFLENDİRME UYUMU KURALLARI (Çok Önemli!):
+            1. Soru metninde geçen üçgen ismi (örneğin "ABC üçgeni" veya "XYZ üçgeni") ile görseldeki köşe harfleri (A, B, C) birebir ve eksiksiz uyuşmalıdır. Asla harf uyumsuzluğu olmamalıdır.
+            2. Geometri veya üçgen sorularında, soru türüne göre `gorsel_tipi` doğru seçilmelidir:
+               - Dik üçgen için: `gorsel_tipi`: "dik_ucgen"
+               - Eşkenar üçgen için: `gorsel_tipi`: "eskenar_ucgen"
+               - İkizkenar üçgen için: `gorsel_tipi`: "ikizkenar_ucgen"
+               - Çeşitkenar / Genel üçgen için: `gorsel_tipi`: "cesitkenar_ucgen"
+               - Çember / Daire: `gorsel_tipi`: "cember"
+               - Güneş-Dünya-Ay: `gorsel_tipi`: "gunes_dunya_ay"
+               - Dinamometre: `gorsel_tipi`: "dinamometre"
+               - Isı / Hal Değişimi: `gorsel_tipi`: "isitma_kababi"
+               - Basınç: `gorsel_tipi`: "basinc"
+               - Elektrik Devresi: `gorsel_tipi`: "devre"
+               - Görsel gerektirmeyen (sözel, tarih, dil bilgisi vb.): `gorsel_tipi`: "yok"
             """
 
             prompt = f"""
@@ -612,7 +616,7 @@ Yanıtı kesinlikle ve sadece şu JSON formatında ver (başka hiçbir metin ekl
                 st.session_state.start_time = None
                 st.session_state.total_duration = None
                 st.session_state.current_question = 0
-                st.success(f"{len(ctx.quiz_data)} adet üçgen çeşitleriyle uyumlu soru başarıyla üretildi!")
+                st.success(f"{len(ctx.quiz_data)} adet harf uyumlu soru başarıyla üretildi!")
                 st.rerun()
             else:
                 st.error(f"Hata oluştu: {ctx.hata_mesaji or 'Geçerli veri alınamadı.'}")
