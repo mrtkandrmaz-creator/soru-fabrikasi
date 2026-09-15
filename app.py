@@ -146,6 +146,37 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# --- KALICI GÜNLÜK SAYAC YÖNETİMİ (DOSYA BAZLI) ---
+SAYAC_DOSYASI = "soru_sayac_veritabani.json"
+
+def veritabani_yukle():
+    if os.path.exists(SAYAC_DOSYASI):
+        try:
+            with open(SAYAC_DOSYASI, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            return {}
+    return {}
+
+def veritabani_kaydet(veri):
+    try:
+        with open(SAYAC_DOSYASI, "w", encoding="utf-8") as f:
+            json.dump(veri, f, ensure_ascii=False, indent=4)
+    except Exception:
+        pass
+
+def bugunku_soru_sayisini_getir():
+    bugun_str = datetime.now().strftime("%Y-%m-%d")
+    db = veritabani_yukle()
+    return db.get(bugun_str, 0)
+
+def soru_sayisini_artir(eklenecek_adet):
+    bugun_str = datetime.now().strftime("%Y-%m-%d")
+    db = veritabani_yukle()
+    mevcut = db.get(bugun_str, 0)
+    db[bugun_str] = mevcut + eklenecek_adet
+    veritabani_kaydet(db)
+
 # --- DİNAMİK HARF ÇIKARICI ---
 def get_custom_labels(etiketler, default_tuple=("A", "B", "C")):
     if not isinstance(etiketler, dict) or not etiketler:
@@ -278,6 +309,33 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
         ax.text(3.0, 0.7, etiketler.get("taban", ""), fontsize=10, fontweight='bold', color='#dc2626')
         ax.text(3.0, 0.3, "İkizkenar Üçgen", fontsize=9, fontweight='bold', ha='center', color='#475569')
 
+    elif "benzer_ucgen" in tip or "benzerlik" in tip:
+        lbl_a, lbl_b, lbl_c = get_custom_labels(etiketler, ("A", "B", "C"))
+        lbl_d, lbl_e, lbl_f = etiketler.get("D", "D"), etiketler.get("E", "E"), etiketler.get("F", "F")
+        
+        bx1, by1 = 0.8, 1.0
+        cx1, cy1 = 2.4, 1.0
+        ax1, ay1 = 1.6, 3.2
+        ax.plot([bx1, cx1, ax1, bx1], [by1, cy1, ay1, by1], color='#2563eb', linewidth=2)
+        ax.text(ax1, ay1 + 0.15, lbl_a, fontsize=10, fontweight='bold', ha='center', color='#2563eb')
+        ax.text(bx1 - 0.15, by1 - 0.2, lbl_b, fontsize=10, fontweight='bold', ha='center', color='#2563eb')
+        ax.text(cx1 + 0.15, by1 - 0.2, lbl_c, fontsize=10, fontweight='bold', ha='center', color='#2563eb')
+        
+        ax.text(1.6, 0.5, etiketler.get("oran1", "~"), fontsize=9, fontweight='bold', ha='center', color='#2563eb')
+
+        ax.text(3.0, 2.1, "∼", fontsize=18, fontweight='bold', ha='center', color='#0f172a')
+
+        bx2, by2 = 3.6, 1.0
+        cx2, cy2 = 5.4, 1.0
+        ax2, ay2 = 4.5, 3.8
+        ax.plot([bx2, cx2, ax2, bx2], [by2, cy2, ay2, by2], color='#dc2626', linewidth=2)
+        ax.text(ax2, ay2 + 0.15, lbl_d, fontsize=10, fontweight='bold', ha='center', color='#dc2626')
+        ax.text(bx2 - 0.15, by2 - 0.2, lbl_e, fontsize=10, fontweight='bold', ha='center', color='#dc2626')
+        ax.text(cx2 + 0.15, by2 - 0.2, lbl_f, fontsize=10, fontweight='bold', ha='center', color='#dc2626')
+        
+        ax.text(4.5, 0.5, etiketler.get("oran2", ""), fontsize=9, fontweight='bold', ha='center', color='#dc2626')
+        ax.text(3.0, 0.1, "Benzer Üçgenler", fontsize=9, fontweight='bold', ha='center', color='#475569')
+
     elif "cesitkenar_ucgen" in tip or "ucgen" in tip:
         lbl_a, lbl_b, lbl_c = get_custom_labels(etiketler, ("A", "B", "C"))
         bx, by = 1.0, 1.0
@@ -292,7 +350,7 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
         ax.text(1.5, 2.6, etiketler.get("c", ""), fontsize=10, fontweight='bold', color='#2563eb')
         ax.text(3.6, 2.7, etiketler.get("b", ""), fontsize=10, fontweight='bold', color='#16a34a')
         ax.text(3.0, 0.9, etiketler.get("a", ""), fontsize=10, fontweight='bold', color='#dc2626')
-        ax.text(3.0, 0.3, "Çeşitkenar Üçgen", fontsize=9, fontweight='bold', ha='center', color='#475569')
+        ax.text(3.0, 0.3, "Üçgen Geometrisi", fontsize=9, fontweight='bold', ha='center', color='#475569')
 
     elif "basinc" in tip:
         rect_blok = plt.Rectangle((1.5, 2.0), 3.0, 1.2, color='#cbd5e1', ec='#0f172a', linewidth=2)
@@ -427,14 +485,6 @@ def kararli_json_ayikla(raw_text):
     return []
 
 # --- SESSION STATE TANIMLARI ---
-bugun_str = datetime.now().strftime("%Y-%m-%d")
-if "gunluk_toplam_soru" not in st.session_state:
-    st.session_state.gunluk_toplam_soru = 0
-    st.session_state.kayit_tarihi = bugun_str
-elif st.session_state.kayit_tarihi != bugun_str:
-    st.session_state.gunluk_toplam_soru = 0
-    st.session_state.kayit_tarihi = bugun_str
-
 if "quiz_data" not in st.session_state:
     st.session_state.quiz_data = None
 if "user_answers" not in st.session_state:
@@ -461,7 +511,8 @@ with st.sidebar:
     st.markdown("### 🔮 Soru Fabrikası Soru Paneli")
     st.markdown("---")
 
-    st.metric(label="📅 Bugün Üretilen Toplam Soru", value=st.session_state.gunluk_toplam_soru)
+    bugunku_toplam = bugunku_soru_sayisini_getir()
+    st.metric(label="📅 Bugün Üretilen Toplam Soru", value=bugunku_toplam)
     st.markdown("---")
 
     if not API_KEYS or "buraya_gercek" in API_KEYS[0]:
@@ -526,10 +577,10 @@ with st.sidebar:
                 ders_unite_detay += f"- Ders/Kategori: {d}, Alt Başlıklar/Üniteler: {', '.join(u_list)}\n"
 
             gorsel_talimati = """
-            KESİN UYUM VE GÖRSEL TUTARLILIK KURALLARI (ÇOK ÖNEMLİ):
-            1. SADECE SEÇİLEN DERS VE ÜNİTE İLE DOĞRUDAN İLGİLİ VE GEREKLİ SORULAR ÜRET. Kesinlikle seçilen kapsam dışına çıkma.
-            2. Görsel gerektirmeyen sorularda `gorsel_tipi` kesinlikle "yok" olmalıdır.
-            3. Metinde anlatılan geometrik şekil veya kavram ile `gorsel_tipi` kusursuz uyuşmalıdır. Harf etiketleri metinle tam örtüşmelidir.
+            GEOMETRİK ÇİZİM VE GÖRSEL SORU KURALLARI (ÇOK ÖNEMLİ):
+            1. Üretilen soru havuzunda geometri (dik üçgen, eşkenar üçgen, ikizkenar üçgen, benzer üçgenler, açı veya çember), fen bilimleri (Güneş-Dünya-Ay, dinamometre, basınç vb.) veya veri analizi konularına denk gelen uygun sorular için MUTLAKA uygun `gorsel_tipi` atanmalıdır (Örn: "dik_ucgen", "eskenar_ucgen", "ikizkenar_ucgen", "benzer_ucgen", "cesitkenar_ucgen", "cember", "gunes_dunya_ay", "dinamometre", "grafik", "basinc"). 
+            2. Görsel gerektirmeyen tamamen sözel veya düz mantık sorularda `gorsel_tipi` kesinlikle "yok" olmalıdır.
+            3. Görsel içeren sorularda, soruda geçen köşe harfleri (örn. A, B, C, D vb.) ve değerler `etiketler` sözlüğünde eksiksiz olarak tanımlanmalı, soru metni ile görsel uyumlu olmalıdır.
             """
 
             prompt = f"""
@@ -551,8 +602,8 @@ Yanıtı kesinlikle ve sadece şu JSON formatında ver (saf JSON dizisi döndür
     "dogru_cevap": "A",
     "cozum_aciklamasi": "Çözüm açıklaması...",
     "ders": "Kategori/Ders Adı",
-    "gorsel_tipi": "yok", 
-    "etiketler": {{}}
+    "gorsel_tipi": "dik_ucgen", 
+    "etiketler": {{"A": "A", "B": "B", "C": "C", "c": "6 cm", "a": "8 cm"}}
   }}
 ]
 """
@@ -619,7 +670,7 @@ Yanıtı kesinlikle ve sadece şu JSON formatında ver (saf JSON dizisi döndür
                 progress_bar.progress(oran)
                 
                 if kalan_sure_sayaci > 0:
-                    status_placeholder.markdown(f"⏳ Müfredata tam uyumlu {soru_sayisi} soru üretiliyor... | Geriye Sayım: **{kalan_sure_sayaci}s**")
+                    status_placeholder.markdown(f"⏳ Müfredata tam uyumlu ve görselli {soru_sayisi} soru üretiliyor... | Geriye Sayım: **{kalan_sure_sayaci}s**")
                 else:
                     status_placeholder.markdown(f"⏳ Sunucu yanıtı bekleniyor (Son rötuşlar yapılıyor)...")
                 
@@ -635,9 +686,10 @@ Yanıtı kesinlikle ve sadece şu JSON formatında ver (saf JSON dizisi döndür
                 st.session_state.quiz_ready_to_start = True
                 st.session_state.exam_started = False
                 
-                st.session_state.gunluk_toplam_soru += len(ctx.quiz_data)
+                # Kalıcı disk tabanlı günlük sayaca ekleme yap
+                soru_sayisini_artir(len(ctx.quiz_data))
                 
-                status_placeholder.success("🎉 Sorular başarıyla üretildi!")
+                status_placeholder.success("🎉 Sorular ve görseller başarıyla üretildi!")
                 time.sleep(0.4)
                 st.rerun()
             else:
@@ -651,7 +703,7 @@ if not st.session_state.quiz_ready_to_start or not st.session_state.quiz_data:
             <h2>🎓 Soru Fabrikası Tablet Sınav Modülüne Hoş Geldiniz!</h2>
             <p style="font-size: 18px; color: #475569; margin-top: 15px;">
                 Sol panelden sınıf seviyenizi, sınav türünü ve ilgili dersleri/üniteleri seçerek 
-                yapay zeka destekli akıllı sınavınızı anında üretebilirsiniz.
+                yapay zeka destekli akıllı sınavınızı anında üretebilirsiniz. Şıklar varsayılan olarak boş gelir.
             </p>
         </div>
     """, unsafe_allow_html=True)
@@ -660,26 +712,24 @@ else:
     toplam_soru = len(quiz_list)
 
     if not st.session_state.exam_started and not st.session_state.quiz_submitted:
+        toplam_sure_saniye = toplam_soru * 80
+        toplam_sure_dakika = toplam_sure_saniye // 60
+        toplam_sure_artik_saniye = toplam_sure_saniye % 60
+
         st.markdown(f"""
             <div class="custom-card" style="text-align: center;">
                 <h3>🎯 Sınavınız Hazır!</h3>
                 <p style="font-size: 17px; color: #475569;">
-                    Seçtiğiniz kriterlere uygun toplam <b>{toplam_soru}</b> soru havuzu başarıyla oluşturuldu.
+                    Seçtiğiniz kriterlere uygun toplam <b>{toplam_soru}</b> soru havuzu başarıyla oluşturuldu.<br>
+                    Soru başına 80 saniye kuralına göre toplam sınav süreniz: <b>{toplam_sure_dakika} dakika {toplam_sure_artik_saniye} saniye ({toplam_sure_saniye} sn)</b> olarak otomatik hesaplanmıştır.
                 </p>
             </div>
         """, unsafe_allow_html=True)
         
-        sure_secenekleri = {
-            "1 Dakika / Soru (Hızlı Tarama)": toplam_soru * 60, 
-            "2 Dakika / Soru (İdeal Sınav)": toplam_soru * 120, 
-            "Sınırsız Süre": None
-        }
-        secilen_sure_adi = st.selectbox("⏱️ Sınav Süresi Belirleyin:", list(sure_secenekleri.keys()))
-        
         if st.button("🚀 Sınavı Başlat", type="primary", use_container_width=True):
             st.session_state.exam_started = True
             st.session_state.start_time = time.time()
-            st.session_state.total_duration = sure_secenekleri[secilen_sure_adi]
+            st.session_state.total_duration = toplam_soru * 80
             st.session_state.current_question = 0
             st.rerun()
 
@@ -722,17 +772,19 @@ else:
         secenekler = q_item.get("secenekler", {})
         secenek_anahtarlari = sorted(list(secenekler.keys()))
         
+        # Seçili gelmeme (index=None) mantığı
         mevcut_cevap = st.session_state.user_answers.get(q_idx, None)
-        secilen_index = secenek_anahtarlari.index(mevcut_cevap) if mevcut_cevap in secenek_anahtarlari else 0
+        radio_index = secenek_anahtarlari.index(mevcut_cevap) if mevcut_cevap in secenek_anahtarlari else None
 
         yeni_secim = st.radio(
             "Lütfen doğru seçeneği işaretleyin:",
             options=secenek_anahtarlari,
             format_func=lambda x: f"{x}) {temizle_latex_metin(secenekler[x])}",
             key=f"radio_soru_{q_idx}",
-            index=secilen_index if mevcut_cevap else 0
+            index=radio_index
         )
-        st.session_state.user_answers[q_idx] = yeni_secim
+        if yeni_secim is not None:
+            st.session_state.user_answers[q_idx] = yeni_secim
 
         st.markdown("---")
         col_nav1, col_nav2, col_nav3 = st.columns([1, 2, 1])
