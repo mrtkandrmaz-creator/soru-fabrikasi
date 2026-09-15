@@ -127,7 +127,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- GELİŞMİŞ FEN VE MATEMATİK GÖRSEL ÇİZİCİ (ScienceVisualWidget) ---
+# --- GELİŞMİŞ VE DİNAMİK ÜÇGEN / FEN GÖRSEL ÇİZİCİ ---
 def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
     if not isinstance(etiketler, dict):
         etiketler = {}
@@ -154,7 +154,7 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
         
         theta = np.linspace(0, 2*np.pi, 100)
         ax.plot(3.0 + 1.1*np.cos(theta), 2.5 + 0.7*np.sin(theta), color='#94a3b8', linestyle='--', linewidth=1)
-        ax.text(3.0, 3.4, etiketler.get("O", "Ay'ın Yörüngesi"), fontsize=8, color='#64748b', ha='center')
+        ax.text(3.0, 3.4, etiketler.get("O", "Yörünge"), fontsize=8, color='#64748b', ha='center')
 
     # 2. DİNAMOMETRE VE KUVVET ÖLÇÜM DÜZENEĞİ
     elif "dinamometre" in tip or "kuvvet_hareket" in tip:
@@ -175,7 +175,7 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
         ax.plot([3.0, 3.0], [1.8, 1.2], color='#475569', linewidth=2.5)
         weight_box = plt.Rectangle((2.5, 0.5), 1.0, 0.7, color='#cbd5e1', ec='#0f172a', linewidth=2)
         ax.add_patch(weight_box)
-        ax.text(3.0, 0.85, etiketler.get("Y", "Yük (G)"), fontsize=9, fontweight='bold', ha='center', color='#0f172a')
+        ax.text(3.0, 0.85, etiketler.get("Y", "Yük"), fontsize=9, fontweight='bold', ha='center', color='#0f172a')
         ax.text(3.6, 2.8, etiketler.get("N", "N"), fontsize=10, fontweight='bold', color='#dc2626')
 
     # 3. DÜNYA'NIN KATMANLARI
@@ -186,28 +186,88 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
         ax.add_patch(k_dis)
         ax.add_patch(k_manto)
         ax.add_patch(k_cekirdek)
-        ax.text(3.0, 4.0, etiketler.get("K1", "Hava Küre (Atmosfer)"), fontsize=8, fontweight='bold', ha='center', color='#0369a1')
+        ax.text(3.0, 4.0, etiketler.get("K1", "Atmosfer"), fontsize=8, fontweight='bold', ha='center', color='#0369a1')
         ax.text(3.0, 2.5, etiketler.get("K2", "Çekirdek"), fontsize=8, fontweight='bold', ha='center', color='#ffffff')
 
-    # 4. MATEMATİK: ÇEMBER VE DAİRE (KİRİŞ, ÇAP, YARIÇAP, MERKEZİ AÇI)
+    # 4. ÇEMBER VE DAİRE GEOMETRİSİ
     elif "cember" in tip or "daire" in tip:
-        cember = plt.Circle((3.0, 2.5), 1.6, color='#0f172a', fill=False, linewidth=2.2)
+        cember = plt.Circle((3.0, 2.5), 1.5, color='#0f172a', fill=False, linewidth=2.2)
         ax.add_patch(cember)
-        
         ax.plot(3.0, 2.5, 'ko', markersize=5)
-        ax.text(3.1, 2.65, etiketler.get("M", "M"), fontsize=10, fontweight='bold', color='#0f172a')
-        
-        ax.plot([3.0, 4.6], [2.5, 2.5], color='#dc2626', linewidth=1.8, linestyle='--')
-        ax.text(3.8, 2.7, etiketler.get("r", "r"), fontsize=10, fontweight='bold', color='#dc2626')
-        
-        ax.plot([3.0, 1.8], [2.5, 3.8], color='#2563eb', linewidth=1.8)
-        ax.text(2.3, 3.3, etiketler.get("R2", ""), fontsize=9, color='#2563eb')
-        
-        ax.text(3.0, 0.4, etiketler.get("Aciklama", "Çember ve Daire Geometrisi"), fontsize=9, fontweight='bold', ha='center', color='#475569')
+        ax.text(3.1, 2.65, etiketler.get("M", "M"), fontsize=11, fontweight='bold', color='#0f172a')
+        ax.plot([3.0, 4.5], [2.5, 2.5], color='#dc2626', linewidth=1.8, linestyle='--')
+        ax.text(3.75, 2.7, etiketler.get("r", "r"), fontsize=10, fontweight='bold', color='#dc2626')
+        ax.plot([3.0, 1.9], [2.5, 3.5], color='#2563eb', linewidth=1.8)
+        ax.text(2.3, 3.1, etiketler.get("aci", ""), fontsize=10, fontweight='bold', color='#2563eb')
+        ax.text(3.0, 0.4, etiketler.get("Aciklama", "Çember Geometrisi"), fontsize=9, fontweight='bold', ha='center', color='#475569')
 
-    # 5. ISITMA / HAL DEĞİŞTİRME / ISI
+    # 5. DİK ÜÇGEN
+    elif "dik_ucgen" in tip:
+        bx, by = 1.2, 1.0
+        cx, cy = 4.8, 1.0
+        ax_val, ay_val = 1.2, 4.0
+        ax.plot([bx, cx, ax_val, bx], [by, cy, ay_val, by], color='#0f172a', linewidth=2.2, solid_capstyle='round')
+        ax.plot([1.2, 1.5, 1.5, 1.2], [1.0, 1.0, 1.3, 1.3], color='#0f172a', linewidth=1.5) # Dik açı işareti (90°)
+        
+        ax.text(ax_val - 0.25, ay_val + 0.1, etiketler.get("A", "A"), fontsize=11, fontweight='bold', color='#0f172a')
+        ax.text(bx - 0.25, by - 0.25, etiketler.get("B", "B"), fontsize=11, fontweight='bold', color='#0f172a')
+        ax.text(cx + 0.15, cy - 0.25, etiketler.get("C", "C"), fontsize=11, fontweight='bold', color='#0f172a')
+        
+        ax.text(2.0, 2.7, etiketler.get("c", ""), fontsize=10, fontweight='bold', color='#2563eb')
+        ax.text(3.0, 0.7, etiketler.get("a", ""), fontsize=10, fontweight='bold', color='#dc2626')
+        ax.text(1.4, 2.5, etiketler.get("b", ""), fontsize=10, fontweight='bold', color='#16a34a')
+        ax.text(1.4, 1.3, etiketler.get("aci", ""), fontsize=9, fontweight='bold', color='#9333ea')
+        ax.text(3.0, 0.3, "Dik Üçgen", fontsize=9, fontweight='bold', ha='center', color='#475569')
+
+    # 6. EŞKENAR ÜÇGEN
+    elif "eskenar_ucgen" in tip:
+        bx, by = 1.5, 1.0
+        cx, cy = 4.5, 1.0
+        ax_val, ay_val = 3.0, 1.0 + 1.5 * np.sqrt(3)
+        ax.plot([bx, cx, ax_val, bx], [by, cy, ay_val, by], color='#0f172a', linewidth=2.2, solid_capstyle='round')
+        
+        ax.text(ax_val, ay_val + 0.15, etiketler.get("A", "A"), fontsize=11, fontweight='bold', ha='center', color='#0f172a')
+        ax.text(bx - 0.25, by - 0.25, etiketler.get("B", "B"), fontsize=11, fontweight='bold', color='#0f172a')
+        ax.text(cx + 0.2, cy - 0.25, etiketler.get("C", "C"), fontsize=11, fontweight='bold', color='#0f172a')
+        
+        ax.text(3.0, 2.2, etiketler.get("aci", "60°"), fontsize=10, fontweight='bold', ha='center', color='#dc2626')
+        ax.text(3.0, 0.3, "Eşkenar Üçgen (Tüm kenar ve açılar eşit)", fontsize=9, fontweight='bold', ha='center', color='#475569')
+
+    # 7. İKİZKENAR ÜÇGEN
+    elif "ikizkenar_ucgen" in tip:
+        bx, by = 1.3, 1.0
+        cx, cy = 4.7, 1.0
+        ax_val, ay_val = 3.0, 4.2
+        ax.plot([bx, cx, ax_val, bx], [by, cy, ay_val, by], color='#0f172a', linewidth=2.2, solid_capstyle='round')
+        
+        ax.text(ax_val, ay_val + 0.15, etiketler.get("A", "A"), fontsize=11, fontweight='bold', ha='center', color='#0f172a')
+        ax.text(bx - 0.25, by - 0.25, etiketler.get("B", "B"), fontsize=11, fontweight='bold', color='#0f172a')
+        ax.text(cx + 0.2, cy - 0.25, etiketler.get("C", "C"), fontsize=11, fontweight='bold', color='#0f172a')
+        
+        ax.text(2.0, 2.8, etiketler.get("kenar1", ""), fontsize=10, fontweight='bold', color='#2563eb')
+        ax.text(4.0, 2.8, etiketler.get("kenar2", ""), fontsize=10, fontweight='bold', color='#2563eb')
+        ax.text(3.0, 0.7, etiketler.get("taban", ""), fontsize=10, fontweight='bold', color='#dc2626')
+        ax.text(3.0, 0.3, "İkizkenar Üçgen", fontsize=9, fontweight='bold', ha='center', color='#475569')
+
+    # 8. ÇEŞİTKENAR ÜÇGEN
+    elif "cesitkenar_ucgen" in tip or "ucgen" in tip:
+        bx, by = 1.0, 1.0
+        cx, cy = 5.0, 1.2
+        ax_val, ay_val = 2.2, 4.0
+        ax.plot([bx, cx, ax_val, bx], [by, cy, ay_val, by], color='#0f172a', linewidth=2.2, solid_capstyle='round')
+        
+        ax.text(ax_val - 0.2, ay_val + 0.15, etiketler.get("A", "A"), fontsize=11, fontweight='bold', color='#0f172a')
+        ax.text(bx - 0.25, by - 0.25, etiketler.get("B", "B"), fontsize=11, fontweight='bold', color='#0f172a')
+        ax.text(cx + 0.2, cy - 0.25, etiketler.get("C", "C"), fontsize=11, fontweight='bold', color='#0f172a')
+        
+        ax.text(1.5, 2.6, etiketler.get("c", ""), fontsize=10, fontweight='bold', color='#2563eb')
+        ax.text(3.6, 2.7, etiketler.get("b", ""), fontsize=10, fontweight='bold', color='#16a34a')
+        ax.text(3.0, 0.9, etiketler.get("a", ""), fontsize=10, fontweight='bold', color='#dc2626')
+        ax.text(3.0, 0.3, "Çeşitkenar Üçgen", fontsize=9, fontweight='bold', ha='center', color='#475569')
+
+    # 9. ISITMA / HAL DEĞİŞTİRME
     elif "isitma_kababi" in tip or "hal_degisimi" in tip:
-        ax.plot([2.0, 2.0, 4.0, 4.0], [1.0, 3.5, 3.5, 1.0], color='#0f172a', linewidth=2.2, solid_capstyle='round')
+        ax.plot([2.0, 2.0, 4.0, 4.0], [1.0, 3.5, 3.5, 1.0], color='#0f172a', linewidth=2.2)
         rect = plt.Rectangle((2.05, 1.05), 1.9, 1.6, color='#38bdf8', alpha=0.5)
         ax.add_patch(rect)
         ax.plot([3.0, 3.0], [1.2, 4.3], color='#dc2626', linewidth=2.5)
@@ -217,36 +277,23 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
         ax.add_patch(rect_ocak)
         ax.text(3.3, 3.9, etiketler.get("T", "Termometre"), fontsize=9, fontweight='bold', color='#dc2626')
         ax.text(2.2, 1.9, etiketler.get("S", "Sıvı"), fontsize=9, fontweight='bold', color='#0369a1')
-        ax.text(3.0, 0.3, etiketler.get("K", "Isıtıcı Kaynak"), fontsize=9, fontweight='bold', ha='center', color='#0f172a')
 
-    # 6. BASINÇ (KATI / SIVI BASINCI)
+    # 10. BASINÇ
     elif "basinc" in tip:
         rect_blok = plt.Rectangle((1.5, 2.0), 3.0, 1.2, color='#cbd5e1', ec='#0f172a', linewidth=2)
         ax.add_patch(rect_blok)
         ax.arrow(3.0, 4.0, 0.0, -0.8, head_width=0.3, head_length=0.2, fc='#dc2626', ec='#dc2626')
-        ax.text(3.0, 4.25, etiketler.get("F", "Kuvvet (F)"), fontsize=10, fontweight='bold', ha='center', color='#dc2626')
-        ax.text(3.0, 2.6, etiketler.get("G", "Ağırlık (G)"), fontsize=11, fontweight='bold', ha='center', color='#0f172a')
-        ax.text(3.0, 1.4, etiketler.get("S", "Yüzey Alanı (S)"), fontsize=9, fontweight='bold', ha='center', color='#475569')
+        ax.text(3.0, 4.25, etiketler.get("F", "Kuvvet"), fontsize=10, fontweight='bold', ha='center', color='#dc2626')
+        ax.text(3.0, 2.6, etiketler.get("G", "Ağırlık"), fontsize=11, fontweight='bold', ha='center', color='#0f172a')
+        ax.text(3.0, 1.4, etiketler.get("S", "Yüzey"), fontsize=9, fontweight='bold', ha='center', color='#475569')
 
-    # 7. ELEKTRİK DEVRELERİ
+    # 11. ELEKTRİK DEVRELERİ
     elif "devre" in tip or "elektrik" in tip:
         ax.plot([1.2, 4.8, 4.8, 1.2, 1.2], [1.5, 1.5, 3.6, 3.6, 1.5], color='#0f172a', linewidth=2, linestyle='--')
         circle_ampul = plt.Circle((3.0, 3.6), 0.38, color='#f59e0b', fill=True, ec='#0f172a', linewidth=2)
         ax.add_patch(circle_ampul)
         ax.text(3.0, 3.6, etiketler.get("A", "💡"), fontsize=12, ha='center', va='center')
-        ax.text(3.0, 1.15, etiketler.get("P", "Güç Kaynağı / Pil"), fontsize=9, fontweight='bold', ha='center', color='#0f172a')
-
-    # 8. GEOMETRİ: DİK ÜÇGEN / ÜÇGENLER
-    elif "dik_ucgen" in tip or "ucgen" in tip:
-        bx, by = 1.2, 1.0
-        cx, cy = 4.8, 1.0
-        ax_val, ay_val = 1.2, 4.0
-        ax.plot([bx, cx, ax_val, bx], [by, cy, ay_val, by], color='#0f172a', linewidth=2.2, solid_capstyle='round')
-        ax.plot([1.2, 1.5, 1.5, 1.2], [1.0, 1.0, 1.3, 1.3], color='#0f172a', linewidth=1.5) # Dik açı işareti
-        ax.text(ax_val - 0.2, ay_val + 0.15, etiketler.get("A", "A"), fontsize=11, fontweight='bold', color='#0f172a')
-        ax.text(bx - 0.25, by - 0.25, etiketler.get("B", "B"), fontsize=10, fontweight='bold', color='#0f172a')
-        ax.text(cx + 0.2, cy - 0.25, etiketler.get("C", "C"), fontsize=10, fontweight='bold', color='#0f172a')
-        ax.text(3.0, 0.4, etiketler.get("Aciklama", "Dik Üçgen Geometrisi"), fontsize=9, fontweight='bold', ha='center', color='#475569')
+        ax.text(3.0, 1.15, etiketler.get("P", "Güç Kaynağı"), fontsize=9, fontweight='bold', ha='center', color='#0f172a')
         
     else:
         circle_def = plt.Circle((3, 2.5), 1.5, color='#0f172a', fill=False, linewidth=2.2)
@@ -287,7 +334,7 @@ MUGREDAT = {
         "Türkçe": ["Sözcükte Anlam", "Cümlede Anlam", "Paragraf Bilgisi", "Metin Türleri", "Fiiller"],
         "Matematik": ["Çarpanlar ve Katlar", "Kümeler", "Tam Sayılar", "Kesirlerle İşlemler", "Cebirsel İfadeler", "Açılar", "Üçgende Açılar ve Alan", "Çember ve Daire", "Dörtgende Çevre og Alan"],
         "Fen Bilimleri": ["Güneş Sistemi ve Tutulmalar", "Vücudumuzdaki Sistemler", "Kuvvet og Hareket", "Madde ve Isı", "Ses ve Özellikleri"],
-        "Sosyal Bilgiler": ["Biz ve Toplum", "Yeryüzünde Yaşam", "Türklerin Tarihsel Yolculuk", "Ussal Ekonomi", "Yönetimimiz ve Demokrasi"],
+        "Sosyal Bilgiler": ["Biz og Toplum", "Yeryüzünde Yaşam", "Türklerin Tarihsel Yolculuk", "Ussal Ekonomi", "Yönetimimiz ve Demokrasi"],
         "Din Kültürü": ["Peygamber ve İlahi Kitaplar", "Namaz İbadeti", "Hz. Muhammed'in Hayatı", "Ahlaki Tutum ve Davranışlar"],
         "İngilizce": ["Life", "Yummy Breakfast", "Downtown", "Weather and Emotions", "At the Fair", "Vacations"],
         "Almanca": ["Mein Körper und Gesundheit", "Kleidung", "Wetter und Jahreszeiten", "Freizeitaktivitäten", "Schule"]
@@ -445,40 +492,42 @@ with st.sidebar:
                 if ilgili_yanlislar:
                     ek_baglam = "Öğrencinin geçmişte hata yaptığı benzer soru örnekleri üzerinden benzer nitelikte sorular üret.\n"
             elif "LGS Çıkmış" in sinav_turu or "LGS Çıkmış Sorular" in secili_ders_unite_haritasi.keys():
-                ek_baglam = "Bu sorular MEB tarafından LGS'de sorulmuş gerçek çıkmış soru mantığına, soru köklerine ve beceri temelli (mantık-muhakeme) yapıya birebir uygun olmalıdır.\n"
+                ek_baglam = "Bu sorular MEB tarafından LGS'de sorulmuş gerçek çıkmış soru mantığına ve beceri temelli yapıya birebir uygun olmalıdır.\n"
 
             ders_unite_detay = ""
             aktif_dersler_listesi = list(secili_ders_unite_haritasi.keys())
             for d, u_list in secili_ders_unite_haritasi.items():
-                ders_unite_detay += f"- Ders/Kategori: {d}, İstenen Alt Başlıklar/Kapsam: {', '.join(u_list)}\n"
+                ders_unite_detay += f"- Ders/Kategori: {d}, Alt Başlıklar: {', '.join(u_list)}\n"
 
             gorsel_talimati = """
-            KESİN GÖRSEL UYUM KURALLARI (Görsel Uyumsuzluklarını Önleme Talimatı):
-            Ürettiğin her sorunun konusuyla `gorsel_tipi` alanı tam olarak eşleşmelidir. Kesinlikle yanlış veya alakasız görsel seçme!
-            Kullanabileceğin `gorsel_tipi` değerleri ve tam eşleşme kuralları:
-            - Eğer soru Güneş, Dünya, Ay veya uzay/yörünge hareketleri ile ilgiliyse: `gorsel_tipi`: "gunes_dunya_ay"
-            - Eğer soru dinamometre, yay, ağırlık asma veya kuvvet/hareket ölçümü ile ilgiliyse: `gorsel_tipi`: "dinamometre"
-            - Eğer soru Dünya'nın katmanları (atmosfer, manto, çekirdek) ile ilgiliyse: `gorsel_tipi`: "dunya_katmanlari"
-            - Eğer soru matematik çember, daire, yarıçap, kiriş, merkez açı ile ilgiliyse: `gorsel_tipi`: "cember"
-            - Eğer soru dik üçgen, üçgende açılar veya Pisagor bağıntısı ile ilgiliyse: `gorsel_tipi`: "dik_ucgen"
-            - Eğer soru ısı, sıcaklık, hal değişimi veya kaynama kapları ile ilgiliyse: `gorsel_tipi`: "isitma_kababi"
-            - Eğer soru basınç (katı veya sıvı basıncı) ile ilgiliyse: `gorsel_tipi`: "basinc"
-            - Eğer soru elektrik devreleri, pil ve lamba ile ilgiliyse: `gorsel_tipi`: "devre"
-            - Görsel gerektirmeyen (sadece metin içeren dil bilgisi, paragraf veya tarih/sosyal/din) sorular için: `gorsel_tipi`: "yok"
+            KESİN ÜÇGEN VE GÖRSEL ÇEŞİTLİLİK KURALLARI (Çok Önemli!):
+            Geometri veya üçgen içeren sorularda, soru metninde bahsedilen üçgen türü ile `gorsel_tipi` birebir örtüşmelidir:
+            - Eğer soru **dik üçgen** ile ilgiliyse: `gorsel_tipi`: "dik_ucgen" seçilmeli ve etiketler içinde dik açı/kenarlar belirtilmelidir.
+            - Eğer soru **eşkenar üçgen** ile ilgiliyse: `gorsel_tipi`: "eskenar_ucgen" seçilmeli (tüm kenarlar eşit görünmelidir).
+            - Eğer soru **ikizkenar üçgen** ile ilgiliyse: `gorsel_tipi`: "ikizkenar_ucgen" seçilmeli.
+            - Eğer soru **çeşitkenar üçgen** veya genel açı/alan soruları ile ilgiliyse: `gorsel_tipi`: "cesitkenar_ucgen" seçilmelidir.
+            - Çember / Daire soruları için: `gorsel_tipi`: "cember"
+            - Güneş-Dünya-Ay: `gorsel_tipi`: "gunes_dunya_ay"
+            - Dinamometre: `gorsel_tipi`: "dinamometre"
+            - Isı / Hal Değişimi: `gorsel_tipi`: "isitma_kababi"
+            - Basınç: `gorsel_tipi`: "basinc"
+            - Elektrik Devresi: `gorsel_tipi`: "devre"
+            - Görsel gerektirmeyen (paragraf, tarih, dil bilgisi vb.): `gorsel_tipi`: "yok"
             """
 
             prompt = f"""
-Sen MEB müfredatına ve LGS sınav sistemine tam hakim profesyonel bir soru hazırlama yapay zekasısın.
-{secili_sinif} seviyesinde, {sinav_turu} kapsamında, TOPLAM {soru_sayisi} adet son derece nitelikli, özgün ve birbirini tekrar etmeyen çoktan seçmeli soru üret. 
+Sen MEB müfredatına ve LGS sistemine tam hakim profesyonel bir soru hazırlama yapay zekasısın.
+{secili_sinif} seviyesinde, {sinav_turu} kapsamında, TOPLAM {soru_sayisi} adet nitelikli ve özgün soru üret. 
+Matematik ve geometri sorularında dik üçgen, eşkenar üçgen, ikizkenar üçgen ve çeşitkenar üçgen türlerinin tamamından dengeli ve çeşitlendirilmiş sorular hazırlamaya özen göster.
 
 {gorsel_talimati}
 
 GENEL KURALLAR:
-- Derece ifadeleri için LaTeX (`\\circ`) yerine doğrudan derece sembolü (°) kullan.
-- Almanca sorular için Almanca dil kurallarına ve kelime dağarcığına tam uygunluk sağla.
+- Derece ifadeleri için LaTeX yerine doğrudan derece sembolü (°) kullan.
+- Almanca sorular için dil kurallarına tam uyum sağla.
 
 Zorluk Seviyesi: {zorluk_seviyesi}
-Seçilen Alanlar ve Alt Başlıklar:
+Seçilen Alanlar:
 {ders_unite_detay}
 {ek_baglam}
 
@@ -490,8 +539,8 @@ Yanıtı kesinlikle ve sadece şu JSON formatında ver (başka hiçbir metin ekl
     "dogru_cevap": "A",
     "cozum_aciklamasi": "Çözüm açıklaması...",
     "ders": "Kategori/Ders Adı",
-    "gorsel_tipi": "cember", 
-    "etiketler": {{"M": "M", "r": "r", "Aciklama": "O Merkezli Çember"}}
+    "gorsel_tipi": "dik_ucgen", 
+    "etiketler": {{"A": "A", "B": "B", "C": "C", "a": "8 cm", "b": "6 cm", "c": "10 cm"}}
   }}
 ]
 """
@@ -546,14 +595,12 @@ Yanıtı kesinlikle ve sadece şu JSON formatında ver (başka hiçbir metin ekl
             while not ctx.api_tamamlandi:
                 gecen_sure = time.time() - baslangic_zamani
                 kalan_tahmin = max(0, tahmini_sure_sn - int(gecen_sure))
-                
                 oran = min(0.95, gecen_sure / tahmini_sure_sn)
                 progress_bar.progress(oran)
-                status_placeholder.markdown(f"⏳ **Sorular üretiliyor...** Tahmini kalan süre: **{kalan_tahmin} saniye** (Soru Sayısı: {soru_sayisi})")
+                status_placeholder.markdown(f"⏳ **Sorular üretiliyor...** Tahmini kalan süre: **{kalan_tahmin} saniye**")
                 time.sleep(0.1)
 
             t.join()
-
             progress_bar.progress(1.0)
             status_placeholder.empty()
 
@@ -565,7 +612,7 @@ Yanıtı kesinlikle ve sadece şu JSON formatında ver (başka hiçbir metin ekl
                 st.session_state.start_time = None
                 st.session_state.total_duration = None
                 st.session_state.current_question = 0
-                st.success(f"{len(ctx.quiz_data)} adet LGS ve Almanca destekli soru başarıyla üretildi!")
+                st.success(f"{len(ctx.quiz_data)} adet üçgen çeşitleriyle uyumlu soru başarıyla üretildi!")
                 st.rerun()
             else:
                 st.error(f"Hata oluştu: {ctx.hata_mesaji or 'Geçerli veri alınamadı.'}")
@@ -592,7 +639,7 @@ elif not st.session_state.exam_started:
 
     st.markdown(f"""
     <div class="custom-card">
-        <h2>✨ LGS ve Almanca Destekli Sınavınız Hazır!</h2>
+        <h2>✨ Sınavınız Hazır!</h2>
         <p style="color: #64748b; font-size: 16px;">Üretilen Soru Sayısı: <b>{toplam_soru_sayisi}</b> | Süre: <b>{dakika_gosterim} Dakika</b></p>
     </div>
     """, unsafe_allow_html=True)
@@ -719,7 +766,6 @@ else:
             yeni_yanlislar.append(q)
 
     toplam_s = len(quiz_data)
-    net_sayisi = max(0.0, dogru_sayisi - (yanlis_sayisi * 0.25))
     basari_orani = (dogru_sayisi / toplam_s) * 100 if toplam_s > 0 else 0
 
     st.session_state.yanlis_sorular_arsivi.extend(yeni_yanlislar)
