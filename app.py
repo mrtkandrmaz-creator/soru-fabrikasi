@@ -110,7 +110,7 @@ st.markdown("""
         box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
     }
     div[data-testid="stMetric"] div[data-testid="stMetricValue"] {
-        color: #dc2626 !important;
+        color: #4f46e5 !important;
     }
     h1, h2, h3, h4, h5, h6 {
         color: #0f172a;
@@ -523,11 +523,11 @@ with st.sidebar:
             ders_unite_detay = ""
             aktif_dersler_listesi = list(secili_ders_unite_haritasi.keys())
             for d, u_list in secili_ders_unite_haritasi.items():
-                ders_unite_detay += f"- Ders/Kategori: {d}, Alt Başlıklar: {', '.join(u_list)}\n"
+                ders_unite_detay += f"- Ders/Kategori: {d}, Alt Başlıklar/Üniteler: {', '.join(u_list)}\n"
 
             gorsel_talimati = """
             KESİN UYUM VE GÖRSEL TUTARLILIK KURALLARI (ÇOK ÖNEMLİ):
-            1. SADECE SEÇİLEN DERS VE ÜNİTE İLE DOĞRUDAN İLGİLİ VE GEREKLİ SORULAR ÜRET. Alakasız görseller ekleme.
+            1. SADECE SEÇİLEN DERS VE ÜNİTE İLE DOĞRUDAN İLGİLİ VE GEREKLİ SORULAR ÜRET. Kesinlikle seçilen kapsam dışına çıkma.
             2. Görsel gerektirmeyen sorularda `gorsel_tipi` kesinlikle "yok" olmalıdır.
             3. Metinde anlatılan geometrik şekil veya kavram ile `gorsel_tipi` kusursuz uyuşmalıdır. Harf etiketleri metinle tam örtüşmelidir.
             """
@@ -539,7 +539,7 @@ Sen MEB müfredatına ve LGS sistemine tam hakim profesyonel bir soru hazırlama
 {gorsel_talimati}
 
 Zorluk Seviyesi: {zorluk_seviyesi}
-Seçilen Alanlar:
+Seçilen Dersler ve Hedef Üniteler (MUTLAKA BU KAPSAMA BAĞLI KAL):
 {ders_unite_detay}
 {ek_baglam}
 
@@ -595,7 +595,7 @@ Yanıtı kesinlikle ve sadece şu JSON formatında ver (saf JSON dizisi döndür
                                 ctx.quiz_data = parsed
                                 for idx, item in enumerate(ctx.quiz_data):
                                     item["soru_no"] = idx + 1
-                                    if "ders" not in item:
+                                    if "ders" not in item or not item["ders"]:
                                         item["ders"] = aktif_dersler_listesi[0]
                                     if "gorsel_tipi" not in item:
                                         item["gorsel_tipi"] = "yok"
@@ -619,7 +619,7 @@ Yanıtı kesinlikle ve sadece şu JSON formatında ver (saf JSON dizisi döndür
                 progress_bar.progress(oran)
                 
                 if kalan_sure_sayaci > 0:
-                    status_placeholder.markdown(f"⏳ Sunucu durumu analiz ediliyor ve {soru_sayisi} soru üretiliyor... | Geriye Sayım: **{kalan_sure_sayaci}s**")
+                    status_placeholder.markdown(f"⏳ Müfredata tam uyumlu {soru_sayisi} soru üretiliyor... | Geriye Sayım: **{kalan_sure_sayaci}s**")
                 else:
                     status_placeholder.markdown(f"⏳ Sunucu yanıtı bekleniyor (Son rötuşlar yapılıyor)...")
                 
@@ -637,8 +637,8 @@ Yanıtı kesinlikle ve sadece şu JSON formatında ver (saf JSON dizisi döndür
                 
                 st.session_state.gunluk_toplam_soru += len(ctx.quiz_data)
                 
-                status_placeholder.success("🎉 Sorular başarıyla üretildi! Sınavı başlatabilirsiniz.")
-                time.sleep(0.5)
+                status_placeholder.success("🎉 Sorular başarıyla üretildi!")
+                time.sleep(0.4)
                 st.rerun()
             else:
                 status_placeholder.empty()
@@ -664,8 +664,7 @@ else:
             <div class="custom-card" style="text-align: center;">
                 <h3>🎯 Sınavınız Hazır!</h3>
                 <p style="font-size: 17px; color: #475569;">
-                    Toplam <b>{toplam_soru}</b> soru başarıyla oluşturuldu. Sınav esnasında her soru için seçenekleri işaretleyebilir, 
-                    süre takibini yapabilir ve sınav sonunda ayrıntılı çözüm analizlerini inceleyebilirsiniz.
+                    Seçtiğiniz kriterlere uygun toplam <b>{toplam_soru}</b> soru havuzu başarıyla oluşturuldu.
                 </p>
             </div>
         """, unsafe_allow_html=True)
@@ -677,19 +676,12 @@ else:
         }
         secilen_sure_adi = st.selectbox("⏱️ Sınav Süresi Belirleyin:", list(sure_secenekleri.keys()))
         
-        col_basla1, col_basla2 = st.columns([1, 1])
-        with col_basla1:
-            if st.button("🚀 Sınavı Başlat", type="primary", use_container_width=True):
-                st.session_state.exam_started = True
-                st.session_state.start_time = time.time()
-                st.session_state.total_duration = sure_secenekleri[secilen_sure_adi]
-                st.session_state.current_question = 0
-                st.rerun()
-        with col_basla2:
-            if st.button("🔄 Yeni Soru Havuzu Oluştur", use_container_width=True):
-                st.session_state.quiz_ready_to_start = False
-                st.session_state.quiz_data = None
-                st.rerun()
+        if st.button("🚀 Sınavı Başlat", type="primary", use_container_width=True):
+            st.session_state.exam_started = True
+            st.session_state.start_time = time.time()
+            st.session_state.total_duration = sure_secenekleri[secilen_sure_adi]
+            st.session_state.current_question = 0
+            st.rerun()
 
     elif st.session_state.exam_started and not st.session_state.quiz_submitted:
         if st.session_state.total_duration is not None:
