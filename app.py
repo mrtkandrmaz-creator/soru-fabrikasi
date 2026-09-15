@@ -736,21 +736,35 @@ else:
             st.rerun()
 
     elif st.session_state.exam_started and not st.session_state.quiz_submitted:
-        if st.session_state.total_duration is not None:
-            gecen_zaman = time.time() - st.session_state.start_time
-            kalan_zaman = st.session_state.total_duration - gecen_zaman
-            if kalan_zaman <= 0:
-                st.warning("⏰ Süre doldu! Sınavınız otomatik olarak gönderiliyor...")
-                st.session_state.quiz_submitted = True
-                st.session_state.exam_started = False
-                st.rerun()
-            else:
-                dakika = int(kalan_zaman // 60)
-                saniye = int(kalan_zaman % 60)
-                # Anlık sayaç gösterimi ve akış yenilemesi
-                st.markdown(f'<div class="timer-box">⏳ Kalan Süre: {dakika:02d}:{saniye:02d}</div>', unsafe_allow_html=True)
-                time.sleep(0.9)
-                st.rerun()
+        # Tarayıcı tabanlı sıfır gecikmeli akıcı JS Sayaç Entegrasyonu
+        kalan_sure_baslangic = max(0, int(st.session_state.total_duration - (time.time() - st.session_state.start_time)))
+        
+        timer_component_html = f"""
+        <div class="timer-box" id="live-timer">⏳ Kalan Süre: --:--</div>
+        <script>
+        (function() {{
+            let timeLeft = {kalan_sure_baslangic};
+            const timerElement = document.getElementById('live-timer');
+            
+            function updateClock() {{
+                if (timeLeft <= 0) {{
+                    timerElement.innerHTML = "⏰ Süre Doldu!";
+                    return;
+                }}
+                let m = Math.floor(timeLeft / 60);
+                let s = timeLeft % 60;
+                timerElement.innerHTML = "⏳ Kalan Süre: " + String(m).padStart(2, '0') + ":" + String(s).padStart(2, '0');
+                timeLeft--;
+            }}
+            updateClock();
+            if (window.examCountdownInterval) {{
+                clearInterval(window.examCountdownInterval);
+            }}
+            window.examCountdownInterval = setInterval(updateClock, 1000);
+        }})();
+        </script>
+        """
+        st.markdown(timer_component_html, unsafe_allow_html=True)
 
         q_idx = st.session_state.current_question
         q_item = quiz_list[q_idx]
