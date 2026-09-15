@@ -505,6 +505,8 @@ if "performance_history" not in st.session_state:
     st.session_state.performance_history = []
 if "yanlis_sorular_arsivi" not in st.session_state:
     st.session_state.yanlis_sorular_arsivi = []
+if "secim_sifirla_tetikleyici" not in st.session_state:
+    st.session_state.secim_sifirla_tetikleyici = 0
 
 # --- KENAR ÇUBUĞU ---
 with st.sidebar:
@@ -518,7 +520,7 @@ with st.sidebar:
     if not API_KEYS or "buraya_gercek" in API_KEYS[0]:
         st.warning("⚠️ `.streamlit/secrets.toml` dosyasına geçerli Gemini API anahtarınızı ekleyin.")
 
-    secili_sinif = st.selectbox("Eğitim Seviyesi / Kategori:", list(MUGREDAT.keys()))
+    secili_sinif = st.selectbox("Eğitim Seviyesi / Kategori:", list(MUGREDAT.keys()), key=f"sinif_secim_{st.session_state.secim_sifirla_tetikleyici}")
     
     sinav_turu = st.selectbox("Sınav Türü:", [
         "Genel Tarama Sınavı",
@@ -527,9 +529,9 @@ with st.sidebar:
         "LGS Geçmiş Yıllar Çıkmış Sorular",
         "Hazır Bulunuşluk Sınavı",
         "Yeni Nesil Sorular"
-    ])
+    ], key=f"tur_secim_{st.session_state.secim_sifirla_tetikleyici}")
 
-    zorluk_seviyesi = st.selectbox("🎯 Soru Zorluk Seviyesi:", ["Kolay", "Orta", "Zor", "Karma / Dengeli"])
+    zorluk_seviyesi = st.selectbox("🎯 Soru Zorluk Seviyesi:", ["Kolay", "Orta", "Zor", "Karma / Dengeli"], key=f"zorluk_secim_{st.session_state.secim_sifirla_tetikleyici}")
 
     st.markdown("---")
     st.markdown("📚 **Dersler ve Üniteler**")
@@ -539,17 +541,17 @@ with st.sidebar:
 
     for ders_adi, uniteler_listesi in mevcut_dersler.items():
         with st.expander(f"📘 {ders_adi}"):
-            ders_secildi = st.checkbox(f"Tüm {ders_adi} Kategorisini Dahil Et", key=f"chk_ders_{secili_sinif}_{ders_adi}")
+            ders_secildi = st.checkbox(f"Tüm {ders_adi} Kategorisini Dahil Et", key=f"chk_ders_{st.session_state.secim_sifirla_tetikleyici}_{secili_sinif}_{ders_adi}")
             secili_alt_uniteler = []
             for unite in uniteler_listesi:
-                if st.checkbox(unite, key=f"chk_unite_{secili_sinif}_{ders_adi}_{unite}"):
+                if st.checkbox(unite, key=f"chk_unite_{st.session_state.secim_sifirla_tetikleyici}_{secili_sinif}_{ders_adi}_{unite}"):
                     secili_alt_uniteler.append(unite)
             
             if ders_secildi or secili_alt_uniteler:
                 secili_ders_unite_haritasi[ders_adi] = secili_alt_uniteler if secili_alt_uniteler else uniteler_listesi
 
     st.markdown("---")
-    soru_sayisi = st.slider("🔢 Soru Sayısı:", 1, 100, 5)
+    soru_sayisi = st.slider("🔢 Soru Sayısı:", 1, 100, 5, key=f"slider_soru_{st.session_state.secim_sifirla_tetikleyici}")
 
     if st.button("🚀 Soruları Üret", use_container_width=True, type="primary"):
         if not API_KEYS or "buraya_gercek" in API_KEYS[0]:
@@ -745,7 +747,10 @@ else:
             else:
                 dakika = int(kalan_zaman // 60)
                 saniye = int(kalan_zaman % 60)
+                # Anlık sayaç gösterimi ve akış yenilemesi
                 st.markdown(f'<div class="timer-box">⏳ Kalan Süre: {dakika:02d}:{saniye:02d}</div>', unsafe_allow_html=True)
+                time.sleep(0.9)
+                st.rerun()
 
         q_idx = st.session_state.current_question
         q_item = quiz_list[q_idx]
@@ -862,8 +867,10 @@ else:
                 st.session_state.quiz_ready_to_start = False
                 st.session_state.quiz_data = None
                 st.session_state.quiz_submitted = False
+                st.session_state.secim_sifirla_tetikleyici += 1  # Önceki ders/ünite seçimlerini sıfırla
                 st.rerun()
         with col_bitti2:
             if st.button("🧹 Oturumu Sıfırla", use_container_width=True):
                 st.session_state.clear()
+                st.session_state.secim_sifirla_tetikleyici += 1  # Önceki ders/ünite seçimlerini sıfırla
                 st.rerun()
