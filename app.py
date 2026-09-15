@@ -461,7 +461,6 @@ with st.sidebar:
     st.markdown("### 🔮 Soru Fabrikası Soru Paneli")
     st.markdown("---")
 
-    # Günlük üretilen toplam soru sayacı metriği
     st.metric(label="📅 Bugün Üretilen Toplam Soru", value=st.session_state.gunluk_toplam_soru)
     st.markdown("---")
 
@@ -566,7 +565,6 @@ Yanıtı kesinlikle ve sadece şu JSON formatında ver (saf JSON dizisi döndür
 
             ctx = WorkerContext()
             
-            # Sunucu durumu ve soru sayısına göre +5 sn eklemeli gerçekçi tahmini süre hesaplaması
             tahmini_sure_sn = int((soru_sayisi * 1.5) + 5)
             
             progress_bar = st.progress(0.0)
@@ -637,7 +635,6 @@ Yanıtı kesinlikle ve sadece şu JSON formatında ver (saf JSON dizisi döndür
                 st.session_state.quiz_ready_to_start = True
                 st.session_state.exam_started = False
                 
-                # Günlük üretilen soru sayacını artır
                 st.session_state.gunluk_toplam_soru += len(ctx.quiz_data)
                 
                 status_placeholder.success("🎉 Sorular başarıyla üretildi! Sınavı başlatabilirsiniz.")
@@ -650,199 +647,179 @@ Yanıtı kesinlikle ve sadece şu JSON formatında ver (saf JSON dizisi döndür
 # --- ANA EKRAN & SINAV MODÜLÜ ---
 if not st.session_state.quiz_ready_to_start or not st.session_state.quiz_data:
     st.markdown("""
-    <div class="custom-card" style="text-align: center; padding: 40px;">
-        <h1>🎓 Soru Fabrikası Tablet Sınav Modülü</h1>
-        <p style="font-size: 19px; color: #475569; margin-top: 15px;">
-            Sol menüden sınıfınızı, sınav türünü ve dersleri seçip <b>"Soruları Üret"</b> butonuna tıklayın. 
-            Sorular hazırlandığında burada modern sınav başlatma ekranı belirecektir.
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
-
-elif st.session_state.quiz_ready_to_start and not st.session_state.exam_started:
-    st.markdown(f"""
-    <div class="custom-card" style="text-align: center; padding: 45px;">
-        <h2 style="color: #4f46e5; margin-bottom: 15px;">🚀 Sınavınız Hazır!</h2>
-        <p style="font-size: 18px; color: #475569; margin-bottom: 25px;">
-            Seçilen Kriterler: <b>{sinav_turu}</b> | Toplam Soru Sayısı: <b>{len(st.session_state.quiz_data)}</b>
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    col_b1, col_b2, col_b3 = st.columns([1, 2, 1])
-    with col_b2:
-        if st.button("🎯 Sınavı Şimdi Başlat", type="primary", use_container_width=True):
-            st.session_state.exam_started = True
-            st.session_state.start_time = datetime.now()
-            st.session_state.total_duration = len(st.session_state.quiz_data) * 90  # Soru başı 90 saniye
-            st.session_state.current_question = 0
-            st.rerun()
-
-elif st.session_state.exam_started and st.session_state.quiz_data:
-    quiz_listesi = st.session_state.quiz_data
-    toplam_soru = len(quiz_listesi)
-    
-    # Süre Hesaplama
-    gecen_sure = (datetime.now() - st.session_state.start_time).total_seconds()
-    kalan_sure = max(0, st.session_state.total_duration - int(gecen_sure))
-    dakika = kalan_sure // 60
-    saniye = kalan_sure % 60
-
-    if kalan_sure <= 0 and not st.session_state.quiz_submitted:
-        st.session_state.quiz_submitted = True
-        st.rerun()
-
-    col_info1, col_info2 = st.columns([3, 2])
-    with col_info1:
-        st.markdown(f"**📚 Sınav Türü:** {sinav_turu} | **Toplam Soru:** {toplam_soru}")
-    with col_info2:
-        if not st.session_state.quiz_submitted:
-            st.markdown(f'<div class="timer-box">⏳ Kalan Süre: {dakika:02d}:{saniye:02d}</div>', unsafe_allow_html=True)
-
-    st.markdown("---")
-
-    secilen_soru_index = st.radio(
-        "Sorular Arası Geçiş:",
-        range(toplam_soru),
-        format_func=lambda x: f"Soru {x+1}",
-        horizontal=True,
-        label_visibility="collapsed"
-    )
-    st.session_state.current_question = secilen_soru_index
-    idx = st.session_state.current_question
-    soru = quiz_listesi[idx]
-
-    st.markdown(f"### 📌 Soru {idx + 1} / {toplam_soru} <span style='font-size:14px; color:#64748b; background:#e2e8f0; padding:4px 10px; border-radius:6px; margin-left:10px;'>{soru.get('ders', 'Genel')}</span>", unsafe_allow_html=True)
-
-    col_soru, col_gorsel = st.columns([1.2, 1])
-
-    with col_soru:
-        st.markdown(f"""
-        <div class="custom-card" style="text-align: left; padding: 25px; margin-bottom: 15px;">
-            <div class="soru-metni-kutusu">{temizle_latex_metin(soru.get('soru_metni', ''))}</div>
+        <div class="custom-card" style="text-align: center; padding: 50px;">
+            <h2>🎓 Soru Fabrikası Tablet Sınav Modülüne Hoş Geldiniz!</h2>
+            <p style="font-size: 18px; color: #475569; margin-top: 15px;">
+                Sol panelden sınıf seviyenizi, sınav türünü ve ilgili dersleri/üniteleri seçerek 
+                yapay zeka destekli akıllı sınavınızı anında üretebilirsiniz.
+            </p>
         </div>
+    """, unsafe_allow_html=True)
+else:
+    quiz_list = st.session_state.quiz_data
+    toplam_soru = len(quiz_list)
+
+    if not st.session_state.exam_started and not st.session_state.quiz_submitted:
+        st.markdown(f"""
+            <div class="custom-card" style="text-align: center;">
+                <h3>🎯 Sınavınız Hazır!</h3>
+                <p style="font-size: 17px; color: #475569;">
+                    Toplam <b>{toplam_soru}</b> soru başarıyla oluşturuldu. Sınav esnasında her soru için seçenekleri işaretleyebilir, 
+                    süre takibini yapabilir ve sınav sonunda ayrıntılı çözüm analizlerini inceleyebilirsiniz.
+                </p>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        sure_secenekleri = {
+            "1 Dakika / Soru (Hızlı Tarama)": toplam_soru * 60, 
+            "2 Dakika / Soru (İdeal Sınav)": toplam_soru * 120, 
+            "Sınırsız Süre": None
+        }
+        secilen_sure_adi = st.selectbox("⏱️ Sınav Süresi Belirleyin:", list(sure_secenekleri.keys()))
+        
+        col_basla1, col_basla2 = st.columns([1, 1])
+        with col_basla1:
+            if st.button("🚀 Sınavı Başlat", type="primary", use_container_width=True):
+                st.session_state.exam_started = True
+                st.session_state.start_time = time.time()
+                st.session_state.total_duration = sure_secenekleri[secilen_sure_adi]
+                st.session_state.current_question = 0
+                st.rerun()
+        with col_basla2:
+            if st.button("🔄 Yeni Soru Havuzu Oluştur", use_container_width=True):
+                st.session_state.quiz_ready_to_start = False
+                st.session_state.quiz_data = None
+                st.rerun()
+
+    elif st.session_state.exam_started and not st.session_state.quiz_submitted:
+        if st.session_state.total_duration is not None:
+            gecen_zaman = time.time() - st.session_state.start_time
+            kalan_zaman = st.session_state.total_duration - gecen_zaman
+            if kalan_zaman <= 0:
+                st.warning("⏰ Süre doldu! Sınavınız otomatik olarak gönderiliyor...")
+                st.session_state.quiz_submitted = True
+                st.session_state.exam_started = False
+                st.rerun()
+            else:
+                dakika = int(kalan_zaman // 60)
+                saniye = int(kalan_zaman % 60)
+                st.markdown(f'<div class="timer-box">⏳ Kalan Süre: {dakika:02d}:{saniye:02d}</div>', unsafe_allow_html=True)
+
+        q_idx = st.session_state.current_question
+        q_item = quiz_list[q_idx]
+
+        st.markdown(f"### 📌 Soru {q_idx + 1} / {toplam_soru} &nbsp;&nbsp;|&nbsp;&nbsp; <span style='font-size:16px; color:#4f46e5;'>Ders: {q_item.get('ders', 'Genel')}</span>", unsafe_allow_html=True)
+        
+        st.markdown(f"""
+            <div class="custom-card">
+                <div class="soru-metni-kutusu">{temizle_latex_metin(q_item.get('soru_metni', ''))}</div>
+            </div>
         """, unsafe_allow_html=True)
 
-        secenekler = soru.get("secenekler", {})
-        secenek_anahtarlari = list(secenekler.keys())
-        
-        mevcut_cevap = st.session_state.user_answers.get(idx, None)
-        secilen_index = secenek_anahtarlari.index(mevcut_cevap) if mevcut_cevap in secenek_anahtarlari else None
-
-        yeni_cevap = st.radio(
-            "Seçenekler:",
-            options=secenek_anahtarlari,
-            index=secilen_index,
-            format_func=lambda x: f"{x}) {temizle_latex_metin(secenekler[x])}",
-            key=f"radio_soru_{idx}",
-            disabled=st.session_state.quiz_submitted
-        )
-
-        if yeni_cevap:
-            st.session_state.user_answers[idx] = yeni_cevap
-
-    with col_gorsel:
-        gorsel_tipi = soru.get("gorsel_tipi", "yok")
-        etiketler = soru.get("etiketler", {})
-        
-        if gorsel_tipi and gorsel_tipi != "yok":
-            img_data = ciz_vektorel_gorsel(gorsel_tipi, etiketler)
-            if img_data:
+        gorsel_tip = q_item.get("gorsel_tipi", "yok")
+        etiketler = q_item.get("etiketler", {})
+        if gorsel_tip and gorsel_tip != "yok":
+            img_data_uri = ciz_vektorel_gorsel(gorsel_tip, etiketler)
+            if img_data_uri:
                 st.markdown(f"""
-                <div class="gorsel-sema-kutusu">
-                    <img src="{img_data}" style="max-width: 100%; border-radius: 8px;" />
-                    <div style="font-size: 11px; color: #64748b; margin-top: 6px;">Vektörel Soru Şeması</div>
-                </div>
+                    <div class="gorsel-sema-kutusu">
+                        <img src="{img_data_uri}" style="max-height: 260px; border-radius: 8px;">
+                    </div>
                 """, unsafe_allow_html=True)
-        else:
-            st.markdown("""
-            <div style="background-color: #f1f5f9; border-radius: 12px; padding: 40px; text-align: center; color: #64748b; border: 1px dashed #cbd5e1;">
-                <p style="font-size: 16px; font-weight: 600; margin: 0;">Bu soru metin odaklıdır, görsel şema gerektirmez.</p>
-            </div>
-            """, unsafe_allow_html=True)
 
-    col_nav1, col_nav2, col_nav3 = st.columns([1, 2, 1])
-    with col_nav1:
-        if idx > 0:
-            if st.button("⬅️ Önceki Soru", use_container_width=True):
-                st.session_state.current_question = idx - 1
-                st.rerun()
-    with col_nav3:
-        if idx < toplam_soru - 1:
-            if st.button("Sonraki Soru ➡️", use_container_width=True):
-                st.session_state.current_question = idx + 1
-                st.rerun()
+        secenekler = q_item.get("secenekler", {})
+        secenek_anahtarlari = sorted(list(secenekler.keys()))
+        
+        mevcut_cevap = st.session_state.user_answers.get(q_idx, None)
+        secilen_index = secenek_anahtarlari.index(mevcut_cevap) if mevcut_cevap in secenek_anahtarlari else 0
 
-    st.markdown("---")
+        yeni_secim = st.radio(
+            "Lütfen doğru seçeneği işaretleyin:",
+            options=secenek_anahtarlari,
+            format_func=lambda x: f"{x}) {temizle_latex_metin(secenekler[x])}",
+            key=f"radio_soru_{q_idx}",
+            index=secilen_index if mevcut_cevap else 0
+        )
+        st.session_state.user_answers[q_idx] = yeni_secim
 
-    if not st.session_state.quiz_submitted:
-        if st.button("🏁 Sınavı Tamamla ve Puanı Hesapla", type="primary", use_container_width=True):
-            st.session_state.quiz_submitted = True
-            
-            dogru_sayisi = 0
-            for i, q in enumerate(quiz_listesi):
-                u_cevap = st.session_state.user_answers.get(i)
-                d_cevap = q.get("dogru_cevap")
-                if u_cevap == d_cevap:
-                    dogru_sayisi += 1
-                else:
-                    if q not in st.session_state.yanlis_sorular_arsivi:
-                        st.session_state.yanlis_sorular_arsivi.append(q)
-            
-            puan = int((dogru_sayisi / toplam_soru) * 100)
-            st.session_state.performance_history.append({
-                "tarih": datetime.now().strftime("%Y-%m-%d %H:%M"),
-                "sinav_turu": sinav_turu,
-                "dogru": dogru_sayisi,
-                "toplam": toplam_soru,
-                "puan": puan
-            })
-            st.rerun()
-
-    if st.session_state.quiz_submitted:
         st.markdown("---")
-        st.markdown("## 📊 Sınav Sonuç Karnesi ve Çözüm Analizi")
+        col_nav1, col_nav2, col_nav3 = st.columns([1, 2, 1])
+        with col_nav1:
+            if q_idx > 0:
+                if st.button("⬅️ Önceki Soru", use_container_width=True):
+                    st.session_state.current_question -= 1
+                    st.rerun()
+        with col_nav3:
+            if q_idx < toplam_soru - 1:
+                if st.button("Sonraki Soru ➡️", type="primary", use_container_width=True):
+                    st.session_state.current_question += 1
+                    st.rerun()
+            else:
+                if st.button("🏁 Sınavı Tamamla", type="primary", use_container_width=True):
+                    st.session_state.quiz_submitted = True
+                    st.session_state.exam_started = False
+                    st.rerun()
+
+    elif st.session_state.quiz_submitted:
+        st.markdown("## 📊 Sınav Sonuç ve Performans Raporu")
         
         dogru_sayisi = 0
         yanlis_sayisi = 0
         bos_sayisi = 0
-        
-        for i, q in enumerate(quiz_listesi):
-            u_cevap = st.session_state.user_answers.get(i)
-            d_cevap = q.get("dogru_cevap")
-            if not u_cevap:
+        yeni_yanlislar = []
+
+        for idx, item in enumerate(quiz_list):
+            user_ans = st.session_state.user_answers.get(idx, None)
+            correct_ans = item.get("dogru_cevap", "").strip().upper()
+            
+            if not user_ans:
                 bos_sayisi += 1
-            elif u_cevap == d_cevap:
+            elif user_ans.strip().upper() == correct_ans:
                 dogru_sayisi += 1
             else:
                 yanlis_sayisi += 1
-                
-        basari_puani = int((dogru_sayisi / toplam_soru) * 100)
-        
+                yeni_yanlislar.append(item)
+
+        if yeni_yanlislar:
+            st.session_state.yanlis_sorular_arsivi.extend(yeni_yanlislar)
+
+        basari_orani = (dogru_sayisi / toplam_soru) * 100 if toplam_soru > 0 else 0
+
         col_m1, col_m2, col_m3, col_m4 = st.columns(4)
-        col_m1.metric("Toplam Soru", toplam_soru)
-        col_m2.metric("Doğru Sayısı", dogru_sayisi, delta=f"+{dogru_sayisi}")
-        col_m3.metric("Yanlış / Boş", yanlis_sayisi + bos_sayisi, delta=f"-{yanlis_sayisi}", delta_color="inverse")
-        col_m4.metric("Başarı Puanı", f"{basari_puani} Puan")
+        col_m1.metric("✅ Doğru Sayısı", dogru_sayisi)
+        col_m2.metric("❌ Yanlış Sayısı", yanlis_sayisi)
+        col_m3.metric("⚠️ Boş Sayısı", bos_sayisi)
+        col_m4.metric("🎯 Başarı Puanı", f"{basari_orani:.1f}%")
 
-        st.markdown("### 📝 Soru Detaylı Çözüm İncelemesi")
-        for i, q in enumerate(quiz_listesi):
-            u_cevap = st.session_state.user_answers.get(i, "Boş")
-            d_cevap = q.get("dogru_cevap")
-            durum_ikonu = "✅" if u_cevap == d_cevap else "❌"
-            
-            with st.expander(f"{durum_ikonu} Soru {i+1} ({q.get('ders', 'Genel')}) - Öğrencinin Cevabı: {u_cevap} | Doğru Cevap: {d_cevap}"):
-                st.markdown(f"**Soru:** {temizle_latex_metin(q.get('soru_metni', ''))}")
-                secenekler = q.get("secenekler", {})
+        st.markdown("---")
+        st.markdown("### 📝 Soru Çözümleri ve Detaylı Analiz")
+
+        for idx, item in enumerate(quiz_list):
+            user_ans = st.session_state.user_answers.get(idx, "Boş")
+            correct_ans = item.get("dogru_cevap", "").strip().upper()
+            is_correct = (user_ans == correct_ans)
+
+            durum_metni = "DOĞRU" if is_correct else ("BOŞ" if user_ans == "Boş" else "YANLIŞ")
+
+            with st.expander(f"Soru {idx + 1} [{durum_metni}] - {item.get('ders', '')}"):
+                st.markdown(f"**Soru:** {temizle_latex_metin(item.get('soru_metni', ''))}")
+                
+                secenekler = item.get("secenekler", {})
                 for k, v in secenekler.items():
-                    isaret = " ⭐ (Doğru Cevap)" if k == d_cevap else (" 👈 (Senin Cevabın)" if k == u_cevap else "")
+                    isaret = " 👈 (Seçiminiz)" if k == user_ans else (" ✅ (Doğru Cevap)" if k == correct_ans else "")
                     st.markdown(f"- **{k})** {temizle_latex_metin(v)}{isaret}")
-                st.markdown(f"💡 **Çözüm Açıklaması:**\n{temizle_latex_metin(q.get('cozum_aciklamasi', 'Açıklama bulunmuyor.'))}")
+                
+                st.markdown(f"💡 **Çözüm Açıklaması:** {temizle_latex_metin(item.get('cozum_aciklamasi', 'Açıklama girilmemiş.'))}")
 
-        if st.button("🔄 Yeni Sınav Ayarla", type="primary"):
-            st.session_state.exam_started = False
-            st.session_state.quiz_ready_to_start = False
-            st.session_state.quiz_data = None
-            st.session_state.user_answers = {}
-            st.session_state.quiz_submitted = False
-            st.rerun()
+        st.markdown("---")
+        col_bitti1, col_bitti2 = st.columns(2)
+        with col_bitti1:
+            if st.button("🔄 Yeni Sınav Oluştur", type="primary", use_container_width=True):
+                st.session_state.quiz_ready_to_start = False
+                st.session_state.quiz_data = None
+                st.session_state.quiz_submitted = False
+                st.rerun()
+        with col_bitti2:
+            if st.button("🧹 Oturumu Sıfırla", use_container_width=True):
+                st.session_state.clear()
+                st.rerun()
