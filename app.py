@@ -772,9 +772,16 @@ elif st.session_state.exam_started and st.session_state.quiz_data and not st.ses
                 st.rerun()
                 
     with col_nav3:
+        # Önceki soru butonu (ilk soru hariç her yerde görünecek)
         if q_idx > 0:
             if st.button("⬅️ Önceki Soru", key=f"btn_prev_{q_idx}", use_container_width=True, type="secondary"):
                 st.session_state.current_question -= 1
+                st.rerun()
+        
+        # Sınavı tamamlama butonu (sadece en son soruda görünecek)
+        if q_idx == toplam_soru - 1:
+            if st.button("✅ Sınavı Tamamla", key=f"btn_finish_{q_idx}", use_container_width=True, type="primary"):
+                st.session_state.quiz_submitted = True
                 st.rerun()
         else:
             if st.button("✅ Sınavı Tamamla", key=f"btn_finish_{q_idx}", use_container_width=True, type="primary"):
