@@ -766,15 +766,15 @@ elif st.session_state.exam_started and st.session_state.quiz_data and not st.ses
     col_nav1, col_nav2, col_nav3 = st.columns(3)
     
     with col_nav1:
-        if q_idx > 0:
-            if st.button("⬅️ Önceki Soru", key=f"btn_prev_{q_idx}", use_container_width=True, type="secondary"):
-                st.session_state.current_question -= 1
-                st.rerun()
-                
-    with col_nav3:
         if q_idx < toplam_soru - 1:
             if st.button("Sonraki Soru ➡️", key=f"btn_next_{q_idx}", use_container_width=True, type="secondary"):
                 st.session_state.current_question += 1
+                st.rerun()
+                
+    with col_nav3:
+        if q_idx > 0:
+            if st.button("⬅️ Önceki Soru", key=f"btn_prev_{q_idx}", use_container_width=True, type="secondary"):
+                st.session_state.current_question -= 1
                 st.rerun()
         else:
             if st.button("✅ Sınavı Tamamla", key=f"btn_finish_{q_idx}", use_container_width=True, type="primary"):
