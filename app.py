@@ -415,7 +415,7 @@ def güvenli_api_cagrisi_yap(api_key, prompt):
     if LEGACY_SDK_AVAILABLE:
         try:
             legacy_genai.configure(api_key=api_key)
-            model = legacy_genai.GenerativeModel("gemini-1.5-flash")
+            model = legacy_genai.GenerativeModel("gemini-3.6-flash")
             response = model.generate_content(
                 prompt,
                 generation_config={"temperature": 0.1, "max_output_tokens": 2560}
