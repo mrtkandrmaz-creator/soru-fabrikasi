@@ -602,7 +602,7 @@ Yanıtı sadece şu JSON formatında ver (saf JSON dizisi döndür):
                     ⚡ SORU FABRİKASI YAPAY ZEKA MOTORU
                 </div>
                 <div style="font-size: 13px; color: #9a3412; margin-bottom: 12px;">
-                    📊 Sunucu Durumu: <b>{sunucu_durumu}</b> | Soru Adedi: <b>{soru_sayisi}</b> | Tolerans: <b>+6 sn</b>
+                    📊 Sunucu Durumu: <b>{sunucu_durumu}</b> | Soru Adedi: <b>{soru_sayisi}</b> | Sabır: <b>+5 sn</b>
                 </div>
                 <div style="
                     font-size: 34px;
@@ -613,7 +613,7 @@ Yanıtı sadece şu JSON formatında ver (saf JSON dizisi döndür):
                     ⏳ <span id="gen-timer">{tahmini_sure:02d}</span> saniye
                 </div>
                 <div style="font-size: 13px; color: #ea580c; font-weight: 600; margin-top: 8px;">
-                    Sorularınız hazırlanıyor, lütfen bekleyiniz...
+                    Sorularınız Hazırlanıyor, Lütfen Bekleyiniz...
                 </div>
             </div>
 
