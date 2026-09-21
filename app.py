@@ -11,6 +11,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import io
 import base64
+import threading
 import numpy as np
 from concurrent.futures import ThreadPoolExecutor
 
@@ -301,31 +302,31 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
 # --- MEB MÜFREDATI ---
 MUGREDAT = {
     "4. Sınıf": {
-        "Türkçe": ["Sözcükte Anlam", "Cümle Bilgisi", "Paragraf Yorumlama", "Yazım Kuralları ve Noktalama", "Metin Türleri ve Söz Sanatları"],
-        "Matematik": ["Doğal Sayılar ve İşlemler", "Geometrik Şekiller ve Cisimler", "Kesirler", "Zaman Ölçme", "Veri Toplama ve Değerlendirme"],
-        "Fen Bilimleri": ["Yer Kabuğu ve Dünyamız", "Besinlerimiz", "Kuvvetin Etkileri", "Maddenin Özellikleri", "Aydınlatma ve Ses Teknolojileri"],
-        "Sosyal Bilgiler": ["Birey ve Toplum", "Kültür ve Miras", "İnsanlar ve Yerler", "Üretim, Dağıtım ve Tüketim", "Etkin Vatandaşlık"],
-        "Din Kültürü": ["Dinimiz Hayatımız", "İslam'ın İnanç Esasları", "Hz. Muhammed'i Tanıyalım", "Ahlaki Değerler"],
-        "İngilizce": ["Classroom Rules", "Nationality", "Cartoon Characters", "Free Time", "My Day", "Body Parts"],
-        "Almanca": ["Hallo!", "Sich vorstellen", "Zahlen und Farben", "Familie und Freunde"]
+        "Türkçe": ["Sözcükte Anlam", "Cümle Bilgisi", "Paragraf Yorumlama", "Yazım Kuralları ve Noktalama"],
+        "Matematik": ["Doğal Sayılar ve İşlemler", "Geometrik Şekiller ve Cisimler", "Kesirler", "Zaman Ölçme"],
+        "Fen Bilimleri": ["Yer Kabuğu ve Dünyamız", "Besinlerimiz", "Kuvvetin Etkileri", "Maddenin Özellikleri"],
+        "Sosyal Bilgiler": ["Birey ve Toplum", "Kültür ve Miras", "İnsanlar ve Yerler"],
+        "Din Kültürü": ["Dinimiz Hayatımız", "İslam'ın İnanç Esasları"],
+        "İngilizce": ["Classroom Rules", "Nationality", "Free Time"],
+        "Almanca": ["Hallo!", "Sich vorstellen", "Zahlen und Farben"]
     },
     "5. Sınıf": {
-        "Türkçe": ["Sözcükte Anlam", "Cümlede Anlam", "Metin Yorumlama ve Paragraf", "Yazım Kuralları", "Noktalama İşaretleri"],
-        "Matematik": ["Doğal Sayılarla İşlemler", "Kesirler", "Ondalık Gösterimler", "Yüzdeler", "Üçgen ve Dörtgenler", "Veri İşleme", "Çember ve Daire", "Açı çeşitleri ve Dörtgende Açılar", "Temel Geometrik Kavramlar ve Doğrular"],
-        "Fen Bilimleri": ["Güneş, Dünya ve Ay", "Canlılar Dünyası", "Kuvvetin Uygulanması ve Sürtünme", "Maddenin Hâl Değişimi ve Isı", "Kuvveti Tanıyalım", "Işığın Yayılması"],
-        "Sosyal Bilgiler": ["Birey ve Toplum", "Kültür ve Miras", "İnsanlar, Yerler ve Çevre", "Bilim, Teknoloji ve Toplum", "Üretim, Dağıtım ve Tüketim"],
-        "Din Kültürü": ["Allah İnancı ve İnsan", "Hz. Muhammed ve Aile Hayatı", "İslam'ın Temel İbadetleri", "Ahlaki Değerler"],
-        "İngilizce": ["Hello!", "My Town", "Games and Hobbies", "My Daily Routine", "Health", "Movies"],
-        "Almanca": ["Guten Tag!", "Hobbys", "Tagesablauf", "Essen und Trinken", "Wohnen"]
+        "Türkçe": ["Sözcükte Anlam", "Cümlede Anlam", "Metin Yorumlama ve Paragraf"],
+        "Matematik": ["Doğal Sayılarla İşlemler", "Kesirler", "Ondalık Gösterimler", "Açı çeşitleri"],
+        "Fen Bilimleri": ["Güneş, Dünya ve Ay", "Canlılar Dünyası", "Kuvvetin Uygulanması"],
+        "Sosyal Bilgiler": ["Birey ve Toplum", "Kültür ve Miras", "İnsanlar, Yerler ve Çevre"],
+        "Din Kültürü": ["Allah İnancı ve İnsan", "Hz. Muhammed ve Aile Hayatı"],
+        "İngilizce": ["Hello!", "My Town", "Games and Hobbies"],
+        "Almanca": ["Guten Tag!", "Hobbys", "Tagesablauf"]
     },
     "6. Sınıf": {
-        "Türkçe": ["Sözcükte Anlam", "Cümlede Anlam", "Paragraf Bilgisi", "Metin Türleri", "Fiiller"],
-        "Matematik": ["Çarpanlar ve Katlar", "Kümeler", "Tam Sayılar", "Kesirlerle İşlemler", "Cebirsel İfadeler", "Açılar", "Üçgende Açılar ve Alan", "Çember ve Daire", "Dörtgende Çevre ve Alan"],
-        "Fen Bilimleri": ["Güneş Sistemi ve Tutulmalar", "Vücudumuzdaki Sistemler", "Kuvvet ve Hareket", "Madde ve Isı", "Ses ve Özellikleri"],
-        "Sosyal Bilgiler": ["Biz ve Toplum", "Yeryüzünde Yaşam", "Türklerin Tarihsel Yolculuğu", "Ussal Ekonomi", "Yönetimimiz ve Demokrasi"],
-        "Din Kültürü": ["Peygamber ve İlahi Kitaplar", "Namaz İbadeti", "Hz. Muhammed'in Hayatı", "Ahlaki Tutum ve Davranışlar"],
-        "İngilizce": ["Life", "Yummy Breakfast", "Downtown", "Weather and Emotions", "At the Fair", "Vacations"],
-        "Almanca": ["Mein Körper und Gesundheit", "Kleidung", "Wetter und Jahreszeiten", "Freizeitaktivitäten", "Schule"]
+        "Türkçe": ["Sözcükte Anlam", "Cümlede Anlam", "Paragraf Bilgisi"],
+        "Matematik": ["Çarpanlar ve Katlar", "Tam Sayılar", "Kesirlerle İşlemler", "Açılar"],
+        "Fen Bilimleri": ["Güneş Sistemi ve Tutulmalar", "Vücudumuzdaki Sistemler", "Kuvvet ve Hareket"],
+        "Sosyal Bilgiler": ["Biz ve Toplum", "Yeryüzünde Yaşam"],
+        "Din Kültürü": ["Peygamber ve İlahi Kitaplar", "Namaz İbadeti"],
+        "İngilizce": ["Life", "Yummy Breakfast"],
+        "Almanca": ["Mein Körper und Gesundheit", "Kleidung"]
     },
     "7. Sınıf": {
         "Türkçe": ["Sözcükte Anlam", "Cümlede Anlam", "Fiilimsiler"],
@@ -389,9 +390,9 @@ def kararli_json_ayikla(raw_text):
         pass
     return []
 
-# Hata Toleranslı Çoklu SDK Destekli Hızlandırılmış API Çağrısı
+# Hata Toleranslı Çoklu SDK Destekli API Çağrısı
 def güvenli_api_cagrisi_yap(api_key, prompt):
-    # 1. Yöntem: Yeni SDK (google-genai) - Maksimum Hız Konfigürasyonu
+    # 1. Yöntem: Yeni SDK (google-genai)
     if NEW_SDK_AVAILABLE:
         try:
             client = genai.Client(api_key=api_key)
@@ -400,8 +401,8 @@ def güvenli_api_cagrisi_yap(api_key, prompt):
                 contents=prompt,
                 config=types.GenerateContentConfig(
                     response_mime_type="application/json",
-                    temperature=0.1,
-                    max_output_tokens=2560
+                    temperature=0.2,
+                    max_output_tokens=3072
                 )
             )
             if response and response.text:
@@ -415,10 +416,10 @@ def güvenli_api_cagrisi_yap(api_key, prompt):
     if LEGACY_SDK_AVAILABLE:
         try:
             legacy_genai.configure(api_key=api_key)
-            model = legacy_genai.GenerativeModel("gemini-3.6-flash")
+            model = legacy_genai.GenerativeModel("gemini-1.5-flash")
             response = model.generate_content(
                 prompt,
-                generation_config={"temperature": 0.1, "max_output_tokens": 2560}
+                generation_config={"temperature": 0.2, "max_output_tokens": 3072}
             )
             if response and response.text:
                 return response.text, None
@@ -426,44 +427,6 @@ def güvenli_api_cagrisi_yap(api_key, prompt):
             return None, f"İstek Hatası: {str(e)}"
 
     return None, "Desteklenen Gemini SDK kütüphanesi yüklenemedi veya anahtar geçersiz."
-
-# Paralele Yakın/Hızlı API Çağrısı Yöneticisi
-def hizli_soru_uretimi_yap(prompt):
-    if not API_KEYS:
-        return None, ["API Anahtarı eksik!"]
-    
-    # Anahtar havuzunu paralelleştirilmiş biçimde dene
-    with ThreadPoolExecutor(max_workers=min(len(API_KEYS), 4)) as executor:
-        futures = [executor.submit(güvenli_api_cagrisi_yap, key, prompt) for key in API_KEYS]
-        hata_kayitlari = []
-        for future in futures:
-            res_text, err_detay = future.result()
-            if res_text:
-                questions = kararli_json_ayikla(res_text)
-                if questions:
-                    return questions, None
-            if err_detay:
-                hata_kayitlari.append(err_detay)
-    return None, hata_kayitlari
-
-# SUNUCU YÜKÜ VE TAHMİNİ SÜRE HESAPLAYICI (Soru Sayısı + Sunucu Durumu + 6 Saniye)
-def tahmini_uretim_suresi_hesapla(adet):
-    # Temel soru başı ortalama üretme süresi (Hızlandırılmış model için ~0.75s)
-    soru_basi_saniye = 0.75
-    
-    # Sunucu Yükü / Gecikme Gözlemi (Peak Saatler / Rastgele Yoğunluk Simülasyonu)
-    saat = datetime.now().hour
-    if 13 <= saat <= 22:
-        sunucu_gecikme_faktoru = 1.3  # Yoğun saatler
-        sunucu_durumu = "Orta / Yoğun"
-    else:
-        sunucu_gecikme_faktoru = 1.0  # Normal saatler
-        sunucu_durumu = "Hızlı / Akıcı"
-        
-    hesaplanan_barem = (adet * soru_basi_saniye) * sunucu_gecikme_faktoru
-    # İstediğiniz Sabit 6 Saniye Payı
-    toplam_tahmin = int(np.ceil(hesaplanan_barem + 6))
-    return max(toplam_tahmin, 8), sunucu_durumu
 
 # --- SESSION STATE TANIMLARI ---
 if "quiz_data" not in st.session_state:
@@ -584,86 +547,44 @@ Yanıtı sadece şu JSON formatında ver (saf JSON dizisi döndür):
   }}
 ]
 """
-            # Tahmini Süre & Sunucu Durumu Hesaplaması (+ 6 Saniye dahil)
-            tahmini_sure, sunucu_durumu = tahmini_uretim_suresi_hesapla(soru_sayisi)
-
-            # TURUNCU RENKLİ DİNAMİK GERİ SAYIM SAYAÇ BİLEŞENİ (HTML / JS)
-            countdown_html = f"""
-            <div style="
-                background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
-                border: 2px solid #f97316;
-                border-radius: 14px;
-                padding: 18px;
-                text-align: center;
-                box-shadow: 0 4px 12px rgba(249, 115, 22, 0.15);
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                margin-bottom: 20px;">
-                <div style="font-size: 16px; color: #c2410c; font-weight: 700; margin-bottom: 6px;">
-                    ⚡ SORU FABRİKASI YAPAY ZEKA MOTORU
-                </div>
-                <div style="font-size: 13px; color: #9a3412; margin-bottom: 12px;">
-                    📊 Sunucu Durumu: <b>{sunucu_durumu}</b> | Soru Adedi: <b>{soru_sayisi}</b> | Sabır: <b>+5 sn</b>
-                </div>
-                <div style="
-                    font-size: 34px;
-                    font-weight: 900;
-                    color: #ea580c;
-                    letter-spacing: 1px;
-                    text-shadow: 0 2px 4px rgba(234, 88, 12, 0.2);">
-                    ⏳ <span id="gen-timer">{tahmini_sure:02d}</span> saniye
-                </div>
-                <div style="font-size: 13px; color: #ea580c; font-weight: 600; margin-top: 8px;">
-                    Sorularınız Hazırlanıyor, Lütfen Bekleyiniz...
-                </div>
-            </div>
-
-            <script>
-                var secondsLeft = {tahmini_sure};
-                var timerSpan = document.getElementById('gen-timer');
-                var timerInterval = setInterval(function() {{
-                    secondsLeft--;
-                    if (secondsLeft <= 0) {{
-                        clearInterval(timerInterval);
-                        timerSpan.innerHTML = "00";
-                    }} else {{
-                        timerSpan.innerHTML = (secondsLeft < 10 ? "0" : "") + secondsLeft;
-                    }}
-                }}, 1000);
-            </script>
-            """
-            
-            # Ekran Geri Sayım Widget'ı Render Et
-            gen_counter_placeholder = st.empty()
-            with gen_counter_placeholder.container():
-                components.html(countdown_html, height=165)
-
-            # Hızlandırılmış Paralel API Çağrısı
-            questions, hata_kayitlari = hizli_soru_uretimi_yap(prompt)
-
-            # İşlem Tamamlandı, Sayacı Temizle
-            gen_counter_placeholder.empty()
-
-            if questions:
-                for q in questions:
-                    q["soru_metni"] = temizle_latex_metin(q.get("soru_metni", ""))
-                    if "secenekler" in q and isinstance(q["secenekler"], dict):
-                        for k_sec, v_sec in q["secenekler"].items():
-                            q["secenekler"][k_sec] = temizle_latex_metin(v_sec)
-                    q["cozum_aciklamasi"] = temizle_latex_metin(q.get("cozum_aciklamasi", ""))
+            with st.spinner("🚀 Sorular üretiliyor, lütfen bekleyiniz..."):
+                basarili = False
+                hata_kayitlari = []
                 
-                st.session_state.quiz_data = questions
-                st.session_state.user_answers = {}
-                st.session_state.quiz_submitted = False
-                st.session_state.quiz_ready_to_start = True
-                st.session_state.exam_started = False
-                st.session_state.current_question = 0
-                soru_sayisini_artir(len(questions))
-                st.success("🎉 Sorular başarıyla üretildi! Sınava başlayabilirsiniz.")
-                st.rerun()
-            else:
-                st.error("Sorular üretilirken bir hata oluştu.")
-                if hata_kayitlari:
-                    st.info(f"🔍 Alınan Hata Detayı: {hata_kayitlari[0]}")
+                # Yedekli API Havuzu Sıralı Çağrısı
+                for single_key in API_KEYS:
+                    res_text, err_detay = güvenli_api_cagrisi_yap(single_key, prompt)
+                    if res_text:
+                        questions = kararli_json_ayikla(res_text)
+                        if questions:
+                            for q in questions:
+                                q["soru_metni"] = temizle_latex_metin(q.get("soru_metni", ""))
+                                if "secenekler" in q and isinstance(q["secenekler"], dict):
+                                    for k_sec, v_sec in q["secenekler"].items():
+                                        q["secenekler"][k_sec] = temizle_latex_metin(v_sec)
+                                q["cozum_aciklamasi"] = temizle_latex_metin(q.get("cozum_aciklamasi", ""))
+                            
+                            st.session_state.quiz_data = questions
+                            st.session_state.user_answers = {}
+                            st.session_state.quiz_submitted = False
+                            st.session_state.quiz_ready_to_start = True
+                            st.session_state.exam_started = False
+                            st.session_state.current_question = 0
+                            soru_sayisini_artir(len(questions))
+                            basarili = True
+                            break
+                    else:
+                        if err_detay:
+                            hata_kayitlari.append(err_detay)
+
+                if basarili:
+                    st.success("🎉 Sorular başarıyla üretildi! Sınava başlayabilirsiniz.")
+                    st.rerun()
+                else:
+                    st.error("Sorular üretilirken bir hata oluştu.")
+                    if hata_kayitlari:
+                        st.info(f"🔍 Alınan Hata Detayı: {hata_kayitlari[0]}")
+                        st.caption("Not: Google AI Studio üzerinden 'AIzaSy...' ile başlayan geçerli bir API anahtarı eklediğinizden emin olunuz.")
 
 # --- ANA EKRAN / SINAV YÖNETİMİ ---
 st.title("🎓 Soru Fabrikası Tablet Sınav Modülü")
@@ -715,7 +636,7 @@ elif st.session_state.exam_started and not st.session_state.quiz_submitted:
     with c2:
         st.markdown(f"**Ders:** {quiz_data[curr_idx].get('ders', 'Genel')}")
     with c3:
-        # Dinamik Gerçek Zamanlı HTML/JS Sınav Sayaç Bileşeni
+        # Dinamik Gerçek Zamanlı HTML/JS Sayaç Bileşeni
         timer_code = f"""
         <div id="timer-box" style="
             font-size: 20px; 
