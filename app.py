@@ -13,7 +13,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import io
 import base64
-import threading
 import numpy as np
 
 # --- RENDER / SAYFA AYARI ---
@@ -587,10 +586,13 @@ with st.sidebar:
             rastgele_tohum = random.randint(10000, 99999)
 
             prompt = f"""
-Sen MEB müfredatına ve soru hazırlama sistemine tam hakim profesyonel bir yapay zekasısın.
-[ÖNEMLİ KURAL - ÇEŞİTLİLİK VE ÖZGÜNLÜK GARANTİSİ]: Her defasında tamamen ÖZGÜN, YARATICI, bir önceki testen FARKLI ve DAHA ÖNCE ÜRETİLMEMİŞ benzersiz rastgele sorular tasarla. Özellikle Bilgi Yarışması, trivia ve genel kültür modüllerinde birbirini tekrar eden klasik sorular yerine az bilinen, şaşırtıcı, güncel ve nitelikli detaylara yer ver. Asla klişe veya birbirinin kopyası sorular üretme. (Üretim Varyasyon Kodu: {rastgele_tohum})
+MEB müfredatına uygun, hızlı ve kaliteli soru üret.
+Her soru diğerlerinden farklı, özgün ve tekrarsız olsun. Aynı bilgi, senaryo veya soru kalıbını yeniden kullanma.
+Üretim kodu: {rastgele_tohum}
 
-{secili_sinif} seviyesinde, '{sinav_turu}' konseptinde, TOPLAM {soru_sayisi} adet nitelikli, her defansında bir önceki testen tamamen özgün,farklı,birbirini tekrarlamayan soru üret. 
+Seviye: {secili_sinif}
+Sınav türü: {sinav_turu}
+Tam olarak {soru_sayisi} soru üret.
 
 {gorsel_talimati}
 
@@ -599,91 +601,86 @@ Seçilen Dersler ve Hedef Üniteler (MUTLAKA BU KAPSAMA BAĞLI KAL):
 {ders_unite_detay}
 {ek_baglam}
 
-Yanıtı kesinlikle ve sadece şu JSON formatında ver (saf JSON dizisi döndür):
+SADECE geçerli JSON dizisi döndür; markdown veya açıklama ekleme.
+Her sorunun çözümünü 1-2 kısa cümleyle yaz.
+Alanlar:
 [
   {{
-    "soru_metni": "Soru metni...",
+    "soru_metni": "...",
     "secenekler": {{"A": "...", "B": "...", "C": "...", "D": "..."}},
     "dogru_cevap": "A",
-    "cozum_aciklamasi": "Çözüm açıklaması...",
-    "ders": "Kategori/Ders Adı",
-    "gorsel_tipi": "dik_ucgen", 
-    "etiketler": {{"A": "A", "B": "B", "C": "C", "c": "6 cm", "a": "8 cm"}}
+    "cozum_aciklamasi": "...",
+    "ders": "...",
+    "gorsel_tipi": "yok",
+    "etiketler": {{}}
   }}
 ]
 """
-            class WorkerContext:
-                def __init__(self):
-                    self.quiz_data = []
-                    self.basarili = False
-                    self.hata_mesaji = None
-                    self.api_tamamlandi = False
+            # --- HIZLI SORU ÜRETİM MOTORU ---
+            # Tek bir API isteği + yapılandırılmış JSON kullanılır.
+            # Önceki sürümdeki ayrı thread ve 0.5 sn polling döngüsü kaldırıldı;
+            # bunlar API yanıtını hızlandırmıyor, sadece arayüzü bekletiyordu.
 
-            ctx = WorkerContext()
-            tahmini_sure_sn = int((soru_sayisi * 1.4) + 5)
-            
-            status_placeholder = st.empty()
-            baslangic_zamani = time.time()
-            
-            def api_cagirici():
-                max_deneme = len(API_KEYS) * 2 if API_KEYS else 3
-                deneme = 0
-                while deneme < max_deneme and not ctx.basarili:
+            max_output_tokens = min(7500, max(1800, soru_sayisi * 300))
+            hata_detayi = None
+            quiz_data = []
+
+            with st.spinner(f"🤖 {soru_sayisi} soru hızlıca hazırlanıyor..."):
+                max_deneme = max(2, len(API_KEYS) * 2)
+
+                for deneme in range(max_deneme):
                     current_key = api_manager.get_next_key()
+
                     if not current_key:
-                        ctx.hata_mesaji = "Kullanılabilir API anahtarı bulunamadı."
+                        hata_detayi = "Kullanılabilir API anahtarı bulunamadı."
                         break
+
                     try:
                         client = genai.Client(api_key=current_key)
+
                         response = client.models.generate_content(
-                            model='gemini-3.6-flash',
+                            model="gemini-3.6-flash",
                             contents=prompt,
                             config=types.GenerateContentConfig(
-                                temperature=0.7,
-                                max_output_tokens=8192,
-                            )
+                                temperature=0.55,
+                                max_output_tokens=max_output_tokens,
+                                response_mime_type="application/json",
+                            ),
                         )
+
                         if response and response.text:
                             parsed_data = kararli_json_ayikla(response.text)
-                            if parsed_data and len(parsed_data) > 0:
-                                ctx.quiz_data = parsed_data
-                                ctx.basarili = True
+
+                            # Tam istenen sayıya ulaşmadıysa eksik veriyi başarısız
+                            # kabul edip bir sonraki anahtarla tekrar dene.
+                            if len(parsed_data) >= soru_sayisi:
+                                quiz_data = parsed_data[:soru_sayisi]
                                 break
+
+                            # Model birkaç soru eksik döndürdüyse, mevcut sonucu
+                            # tamamen çöpe atmak yerine yalnızca geçerli sonucu kullan.
+                            if len(parsed_data) > 0:
+                                quiz_data = parsed_data
+                                hata_detayi = (
+                                    f"Model {soru_sayisi} yerine {len(parsed_data)} soru döndürdü."
+                                )
+                                break
+
                     except Exception as e:
-                        ctx.hata_mesaji = str(e)
-                    deneme += 1
-                ctx.api_tamamlandi = True
+                        hata_detayi = str(e)
 
-            t = threading.Thread(target=api_cagirici)
-            t.start()
-
-            while not ctx.api_tamamlandi:
-                gecen_sn = int(time.time() - baslangic_zamani)
-                kalan_tahmin = max(1, tahmini_sure_sn - gecen_sn)
-                status_placeholder.markdown(f"""
-                <div style="background-color: #ffffff; border: 2px solid #cbd5e1; padding: 22px; border-radius: 14px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px;">
-                    <h4 style="color: #4f46e5; margin-bottom: 8px;">🤖 Soru Fabrikası Üretim Aşamasında</h4>
-                    <p style="font-size: 17px; color: #1e293b; font-weight: 600;">Yapay zeka senin için harika soruları özenle tasarlıyor ve derliyor...</p>
-                    <p style="font-size: 18px; color: #f97316; font-weight: 700; margin-top: 10px;">⏳ Tahmini Kalan Süre: {kalan_tahmin} saniye <span style="font-size: 14px; color: #64748b; font-weight: normal;">(Geçen: {gecen_sn} sn)</span></p>
-                </div>
-                """, unsafe_allow_html=True)
-                time.sleep(0.5)
-
-            status_placeholder.empty()
-            t.join()
-
-            if ctx.basarili and ctx.quiz_data:
-                st.session_state.quiz_data = ctx.quiz_data
+            if quiz_data:
+                st.session_state.quiz_data = quiz_data
                 st.session_state.user_answers = {}
                 st.session_state.quiz_submitted = False
                 st.session_state.exam_started = False
                 st.session_state.quiz_ready_to_start = True
                 st.session_state.current_question = 0
-                soru_sayisini_artir(len(ctx.quiz_data))
-                st.success(f"🎉 Başarıyla {len(ctx.quiz_data)} adet özgün soru üretildi!")
+                soru_sayisini_artir(len(quiz_data))
+                st.success(f"🎉 Başarıyla {len(quiz_data)} adet özgün soru üretildi!")
                 st.rerun()
             else:
-                hata_detay = ctx.hata_mesaji if ctx.hata_mesaji else "Bilinmeyen API hatası."
+                hata_detay = hata_detayi if hata_detayi else "Bilinmeyen API hatası."
                 st.error(f"❌ Sorular üretilemedi. Hata: {hata_detay}")
 
 # --- ANA EKRAN / SINAV AKIŞI ---
