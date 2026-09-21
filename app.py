@@ -84,9 +84,9 @@ st.markdown("""
     }
     div.stButton > button:hover {
         transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(249, 115, 22, 0.35);
     }
-    div.stButton > button[kind="secondary"] {
+    /* Secondary (İkincil / Önceki-Sonraki) Buton Stili */
+    div.stButton > button[data-testid="stBaseButton-secondary"] {
         background: linear-gradient(135deg, #f97316 0%, #ea580c) !important;
         border: none !important;
         color: #ffffff !important;
@@ -95,11 +95,12 @@ st.markdown("""
         font-weight: 700 !important;
         box-shadow: 0 8px 16px -4px rgba(249, 115, 22, 0.4);
     }
-    div.stButton > button[kind="secondary"]:hover {
+    div.stButton > button[data-testid="stBaseButton-secondary"]:hover {
         background: linear-gradient(135deg, #ea580c 0%, #c2410c) !important;
         box-shadow: 0 12px 20px -4px rgba(249, 115, 22, 0.6);
     }
-    div.stButton > button[kind="primary"] {
+    /* Primary (Ana) Buton Stili */
+    div.stButton > button[data-testid="stBaseButton-primary"] {
         background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
         border: none !important;
         color: #ffffff !important;
@@ -111,7 +112,7 @@ st.markdown("""
         border-radius: 14px !important;
         transition: all 0.3s ease;
     }
-    div.stButton > button[kind="primary"]:hover {
+    div.stButton > button[data-testid="stBaseButton-primary"]:hover {
         background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%) !important;
         box-shadow: 0 14px 24px -4px rgba(124, 58, 237, 0.6);
         transform: translateY(-3px);
@@ -659,13 +660,13 @@ elif st.session_state.exam_started and not st.session_state.quiz_submitted:
     
     with nav_col1:
         if curr_idx > 0:
-            if st.button("⬅️ Önceki Soru", kind="secondary", use_container_width=True):
+            if st.button("⬅️ Önceki Soru", type="secondary", use_container_width=True):
                 st.session_state.current_question -= 1
                 st.rerun()
                 
     with nav_col2:
         if curr_idx < total_q - 1:
-            if st.button("Sonraki Soru ➡️", kind="secondary", use_container_width=True):
+            if st.button("Sonraki Soru ➡️", type="secondary", use_container_width=True):
                 st.session_state.current_question += 1
                 st.rerun()
                 
