@@ -7,8 +7,6 @@ import os
 import sys
 import time
 from datetime import datetime
-from google import genai
-from google.genai import types
 import pandas as pd
 import matplotlib.pyplot as plt
 import io
@@ -16,6 +14,20 @@ import base64
 import threading
 import numpy as np
 from concurrent.futures import ThreadPoolExecutor
+
+# Yeni ve Eski SDK Uyumluluk Kontrolü
+try:
+    from google import genai
+    from google.genai import types
+    NEW_SDK_AVAILABLE = True
+except ImportError:
+    NEW_SDK_AVAILABLE = False
+
+try:
+    import google.generativeai as legacy_genai
+    LEGACY_SDK_AVAILABLE = True
+except ImportError:
+    LEGACY_SDK_AVAILABLE = False
 
 # Matplotlib çizim hızını artırmak için hızlı stil seçimi
 plt.style.use('fast')
@@ -74,7 +86,6 @@ st.markdown("""
         transform: translateY(-2px);
         box-shadow: 0 6px 16px rgba(249, 115, 22, 0.35);
     }
-    /* Sınav İçi Navigasyon Butonları (Turuncu Dolgulu ve Büyük) */
     div.stButton > button[kind="secondary"] {
         background: linear-gradient(135deg, #f97316 0%, #ea580c) !important;
         border: none !important;
@@ -88,7 +99,6 @@ st.markdown("""
         background: linear-gradient(135deg, #ea580c 0%, #c2410c) !important;
         box-shadow: 0 12px 20px -4px rgba(249, 115, 22, 0.6);
     }
-    /* Birincil Butonlar (Mor/Gradient) */
     div.stButton > button[kind="primary"] {
         background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
         border: none !important;
@@ -150,7 +160,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- KALICI GÜNLÜK SAYAC YÖNETİMİ (DOSYA BAZLI) ---
+# --- KALICI GÜNLÜK SAYAC YÖNETİMİ ---
 SAYAC_DOSYASI = "soru_sayac_veritabani.json"
 
 def veritabani_yukle():
@@ -194,7 +204,7 @@ def get_custom_labels(etiketler, default_tuple=("A", "B", "C")):
         )
     return default_tuple
 
-# --- VEKTÖREL GÖRSEL ÇİZİCİ (HIZLANDIRILMIŞ) ---
+# --- VEKTÖREL GÖRSEL ÇİZİCİ ---
 @st.cache_data(show_spinner=False)
 def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
     if not isinstance(etiketler, dict):
@@ -254,9 +264,6 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
         ax.set_ylim(0, 6)
         ax.axhline(0, color='#0f172a', linewidth=1.5)
         ax.text(3.0, 5.5, etiketler.get("Baslik", "Veri Analizi Grafiği"), fontsize=9, fontweight='bold', ha='center', color='#0f172a')
-        ax.text(1.5, 0.3, etiketler.get("X1", "A"), fontsize=9, fontweight='bold', ha='center', color='#ffffff')
-        ax.text(3.0, 0.3, etiketler.get("X2", "B"), fontsize=9, fontweight='bold', ha='center', color='#ffffff')
-        ax.text(4.5, 0.3, etiketler.get("X3", "C"), fontsize=9, fontweight='bold', ha='center', color='#ffffff')
 
     elif "cember" in tip or "daire" in tip:
         cember = plt.Circle((3.0, 2.5), 1.5, color='#0f172a', fill=False, linewidth=2.2)
@@ -265,7 +272,6 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
         ax.text(3.1, 2.65, etiketler.get("M", "M"), fontsize=11, fontweight='bold', color='#0f172a')
         ax.plot([3.0, 4.5], [2.5, 2.5], color='#dc2626', linewidth=1.8, linestyle='--')
         ax.text(3.75, 2.7, etiketler.get("r", "r"), fontsize=10, fontweight='bold', color='#dc2626')
-        ax.text(3.0, 0.4, etiketler.get("Aciklama", "Çember Geometrisi"), fontsize=9, fontweight='bold', ha='center', color='#475569')
 
     elif "dik_ucgen" in tip:
         lbl_a, lbl_b, lbl_c = get_custom_labels(etiketler, ("A", "B", "C"))
@@ -274,96 +280,9 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
         ax_val, ay_val = 1.2, 4.0
         ax.plot([bx, cx, ax_val, bx], [by, cy, ay_val, by], color='#0f172a', linewidth=2.2, solid_capstyle='round')
         ax.plot([1.2, 1.5, 1.5, 1.2], [1.0, 1.0, 1.3, 1.3], color='#0f172a', linewidth=1.5)
-        
         ax.text(ax_val - 0.25, ay_val + 0.1, lbl_a, fontsize=11, fontweight='bold', color='#0f172a')
         ax.text(bx - 0.25, by - 0.25, lbl_b, fontsize=11, fontweight='bold', color='#0f172a')
         ax.text(cx + 0.15, cy - 0.25, lbl_c, fontsize=11, fontweight='bold', color='#0f172a')
-        
-        ax.text(2.0, 2.7, etiketler.get("c", ""), fontsize=10, fontweight='bold', color='#2563eb')
-        ax.text(3.0, 0.7, etiketler.get("a", ""), fontsize=10, fontweight='bold', color='#dc2626')
-        ax.text(1.4, 2.5, etiketler.get("b", ""), fontsize=10, fontweight='bold', color='#16a34a')
-        ax.text(3.0, 0.3, "Dik Üçgen", fontsize=9, fontweight='bold', ha='center', color='#475569')
-
-    elif "eskenar_ucgen" in tip:
-        lbl_a, lbl_b, lbl_c = get_custom_labels(etiketler, ("A", "B", "C"))
-        bx, by = 1.5, 1.0
-        cx, cy = 4.5, 1.0
-        ax_val, ay_val = 3.0, 1.0 + 1.5 * np.sqrt(3)
-        ax.plot([bx, cx, ax_val, bx], [by, cy, ay_val, by], color='#0f172a', linewidth=2.2, solid_capstyle='round')
-        
-        ax.text(ax_val, ay_val + 0.15, lbl_a, fontsize=11, fontweight='bold', ha='center', color='#0f172a')
-        ax.text(bx - 0.25, by - 0.25, lbl_b, fontsize=11, fontweight='bold', color='#0f172a')
-        ax.text(cx + 0.2, cy - 0.25, lbl_c, fontsize=11, fontweight='bold', color='#0f172a')
-        
-        ax.text(3.0, 2.2, etiketler.get("aci", "60°"), fontsize=10, fontweight='bold', ha='center', color='#dc2626')
-        ax.text(3.0, 0.3, "Eşkenar Üçgen", fontsize=9, fontweight='bold', ha='center', color='#475569')
-
-    elif "ikizkenar_ucgen" in tip:
-        lbl_a, lbl_b, lbl_c = get_custom_labels(etiketler, ("A", "B", "C"))
-        bx, by = 1.3, 1.0
-        cx, cy = 4.7, 1.0
-        ax_val, ay_val = 3.0, 4.2
-        ax.plot([bx, cx, ax_val, bx], [by, cy, ay_val, by], color='#0f172a', linewidth=2.2, solid_capstyle='round')
-        
-        ax.text(ax_val, ay_val + 0.15, lbl_a, fontsize=11, fontweight='bold', ha='center', color='#0f172a')
-        ax.text(bx - 0.25, by - 0.25, lbl_b, fontsize=11, fontweight='bold', color='#0f172a')
-        ax.text(cx + 0.2, cy - 0.25, lbl_c, fontsize=11, fontweight='bold', color='#0f172a')
-        
-        ax.text(2.0, 2.8, etiketler.get("kenar1", ""), fontsize=10, fontweight='bold', color='#2563eb')
-        ax.text(4.0, 2.8, etiketler.get("kenar2", ""), fontsize=10, fontweight='bold', color='#2563eb')
-        ax.text(3.0, 0.7, etiketler.get("taban", ""), fontsize=10, fontweight='bold', color='#dc2626')
-        ax.text(3.0, 0.3, "İkizkenar Üçgen", fontsize=9, fontweight='bold', ha='center', color='#475569')
-
-    elif "benzer_ucgen" in tip or "benzerlik" in tip:
-        lbl_a, lbl_b, lbl_c = get_custom_labels(etiketler, ("A", "B", "C"))
-        lbl_d, lbl_e, lbl_f = etiketler.get("D", "D"), etiketler.get("E", "E"), etiketler.get("F", "F")
-        
-        bx1, by1 = 0.8, 1.0
-        cx1, cy1 = 2.4, 1.0
-        ax1, ay1 = 1.6, 3.2
-        ax.plot([bx1, cx1, ax1, bx1], [by1, cy1, ay1, by1], color='#2563eb', linewidth=2)
-        ax.text(ax1, ay1 + 0.15, lbl_a, fontsize=10, fontweight='bold', ha='center', color='#2563eb')
-        ax.text(bx1 - 0.15, by1 - 0.2, lbl_b, fontsize=10, fontweight='bold', ha='center', color='#2563eb')
-        ax.text(cx1 + 0.15, by1 - 0.2, lbl_c, fontsize=10, fontweight='bold', ha='center', color='#2563eb')
-        
-        ax.text(1.6, 0.5, etiketler.get("oran1", "~"), fontsize=9, fontweight='bold', ha='center', color='#2563eb')
-
-        ax.text(3.0, 2.1, "∼", fontsize=18, fontweight='bold', ha='center', color='#0f172a')
-
-        bx2, by2 = 3.6, 1.0
-        cx2, cy2 = 5.4, 1.0
-        ax2, ay2 = 4.5, 3.8
-        ax.plot([bx2, cx2, ax2, bx2], [by2, cy2, ay2, by2], color='#dc2626', linewidth=2)
-        ax.text(ax2, ay2 + 0.15, lbl_d, fontsize=10, fontweight='bold', ha='center', color='#dc2626')
-        ax.text(bx2 - 0.15, by2 - 0.2, lbl_e, fontsize=10, fontweight='bold', ha='center', color='#dc2626')
-        ax.text(cx2 + 0.15, cy2 - 0.2, lbl_f, fontsize=10, fontweight='bold', ha='center', color='#dc2626')
-        
-        ax.text(4.5, 0.5, etiketler.get("oran2", ""), fontsize=9, fontweight='bold', ha='center', color='#dc2626')
-        ax.text(3.0, 0.1, "Benzer Üçgenler", fontsize=9, fontweight='bold', ha='center', color='#475569')
-
-    elif "cesitkenar_ucgen" in tip or "ucgen" in tip:
-        lbl_a, lbl_b, lbl_c = get_custom_labels(etiketler, ("A", "B", "C"))
-        bx, by = 1.0, 1.0
-        cx, cy = 5.0, 1.2
-        ax_val, ay_val = 2.2, 4.0
-        ax.plot([bx, cx, ax_val, bx], [by, cy, ay_val, by], color='#0f172a', linewidth=2.2, solid_capstyle='round')
-        
-        ax.text(ax_val - 0.2, ay_val + 0.15, lbl_a, fontsize=11, fontweight='bold', color='#0f172a')
-        ax.text(bx - 0.25, by - 0.25, lbl_b, fontsize=11, fontweight='bold', color='#0f172a')
-        ax.text(cx + 0.2, cy - 0.25, lbl_c, fontsize=11, fontweight='bold', color='#0f172a')
-        
-        ax.text(1.5, 2.6, etiketler.get("c", ""), fontsize=10, fontweight='bold', color='#2563eb')
-        ax.text(3.6, 2.7, etiketler.get("b", ""), fontsize=10, fontweight='bold', color='#16a34a')
-        ax.text(3.0, 0.9, etiketler.get("a", ""), fontsize=10, fontweight='bold', color='#dc2626')
-        ax.text(3.0, 0.3, "Üçgen Geometrisi", fontsize=9, fontweight='bold', ha='center', color='#475569')
-
-    elif "basinc" in tip:
-        rect_blok = plt.Rectangle((1.5, 2.0), 3.0, 1.2, color='#cbd5e1', ec='#0f172a', linewidth=2)
-        ax.add_patch(rect_blok)
-        ax.arrow(3.0, 4.0, 0.0, -0.8, head_width=0.3, head_length=0.2, fc='#dc2626', ec='#dc2626')
-        ax.text(3.0, 4.25, etiketler.get("F", "Kuvvet"), fontsize=10, fontweight='bold', ha='center', color='#dc2626')
-        ax.text(3.0, 2.6, etiketler.get("G", "Ağırlık"), fontsize=11, fontweight='bold', ha='center', color='#0f172a')
-        ax.text(3.0, 1.4, etiketler.get("S", "Yüzey"), fontsize=9, fontweight='bold', ha='center', color='#475569')
 
     else:
         plt.close(fig)
@@ -379,67 +298,62 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
     plt.close(fig)
     return f"data:image/png;base64,{img_str}"
 
-# --- MEB MÜFREDATI VE ÖZEL MODÜLLER ---
+# --- MEB MÜFREDATI ---
 MUGREDAT = {
     "4. Sınıf": {
-        "Türkçe": ["Sözcükte Anlam", "Cümle Bilgisi", "Paragraf Yorumlama", "Yazım Kuralları ve Noktalama", "Metin Türleri ve Söz Sanatları"],
-        "Matematik": ["Doğal Sayılar ve İşlemler", "Geometrik Şekiller ve Cisimler", "Kesirler", "Zaman Ölçme", "Veri Toplama ve Değerlendirme"],
-        "Fen Bilimleri": ["Yer Kabuğu ve Dünyamız", "Besinlerimiz", "Kuvvetin Etkileri", "Maddenin Özellikleri", "Aydınlatma ve Ses Teknolojileri"],
-        "Sosyal Bilgiler": ["Birey ve Toplum", "Kültür ve Miras", "İnsanlar ve Yerler", "Üretim, Dağıtım ve Tüketim", "Etkin Vatandaşlık"],
-        "Din Kültürü": ["Dinimiz Hayatımız", "İslam'ın İnanç Esasları", "Hz. Muhammed'i Tanıyalım", "Ahlaki Değerler"],
-        "İngilizce": ["Classroom Rules", "Nationality", "Cartoon Characters", "Free Time", "My Day", "Body Parts"],
-        "Almanca": ["Hallo!", "Sich vorstellen", "Zahlen und Farben", "Familie und Freunde"]
+        "Türkçe": ["Sözcükte Anlam", "Cümle Bilgisi", "Paragraf Yorumlama", "Yazım Kuralları ve Noktalama"],
+        "Matematik": ["Doğal Sayılar ve İşlemler", "Geometrik Şekiller ve Cisimler", "Kesirler", "Zaman Ölçme"],
+        "Fen Bilimleri": ["Yer Kabuğu ve Dünyamız", "Besinlerimiz", "Kuvvetin Etkileri", "Maddenin Özellikleri"],
+        "Sosyal Bilgiler": ["Birey ve Toplum", "Kültür ve Miras", "İnsanlar ve Yerler"],
+        "Din Kültürü": ["Dinimiz Hayatımız", "İslam'ın İnanç Esasları"],
+        "İngilizce": ["Classroom Rules", "Nationality", "Free Time"],
+        "Almanca": ["Hallo!", "Sich vorstellen", "Zahlen und Farben"]
     },
     "5. Sınıf": {
-        "Türkçe": ["Sözcükte Anlam", "Cümlede Anlam", "Metin Yorumlama ve Paragraf", "Yazım Kuralları", "Noktalama İşaretleri"],
-        "Matematik": ["Doğal Sayılarla İşlemler", "Kesirler", "Ondalık Gösterimler", "Yüzdeler", "Üçgen ve Dörtgenler", "Veri İşleme", "Çember ve Daire", "Açı çeşitleri ve Dörtgende Açılar", "Temel Geometrik Kavramlar ve Doğrular"],
-        "Fen Bilimleri": ["Güneş, Dünya ve Ay", "Canlılar Dünyası", "Kuvvetin Uygulanması ve Sürtünme", "Maddenin Hâl Değişimi ve Isı", "Kuvveti Tanıyalım", "Işığın Yayılması"],
-        "Sosyal Bilgiler": ["Birey ve Toplum", "Kültür ve Miras", "İnsanlar, Yerler ve Çevre", "Bilim, Teknoloji ve Toplum", "Üretim, Dağıtım ve Tüketim"],
-        "Din Kültürü": ["Allah İnancı ve İnsan", "Hz. Muhammed ve Aile Hayatı", "İslam'ın Temel İbadetleri", "Ahlaki Değerler"],
-        "İngilizce": ["Hello!", "My Town", "Games and Hobbies", "My Daily Routine", "Health", "Movies"],
-        "Almanca": ["Guten Tag!", "Hobbys", "Tagesablauf", "Essen und Trinken", "Wohnen"]
+        "Türkçe": ["Sözcükte Anlam", "Cümlede Anlam", "Metin Yorumlama ve Paragraf"],
+        "Matematik": ["Doğal Sayılarla İşlemler", "Kesirler", "Ondalık Gösterimler", "Açı çeşitleri"],
+        "Fen Bilimleri": ["Güneş, Dünya ve Ay", "Canlılar Dünyası", "Kuvvetin Uygulanması"],
+        "Sosyal Bilgiler": ["Birey ve Toplum", "Kültür ve Miras", "İnsanlar, Yerler ve Çevre"],
+        "Din Kültürü": ["Allah İnancı ve İnsan", "Hz. Muhammed ve Aile Hayatı"],
+        "İngilizce": ["Hello!", "My Town", "Games and Hobbies"],
+        "Almanca": ["Guten Tag!", "Hobbys", "Tagesablauf"]
     },
     "6. Sınıf": {
-        "Türkçe": ["Sözcükte Anlam", "Cümlede Anlam", "Paragraf Bilgisi", "Metin Türleri", "Fiiller"],
-        "Matematik": ["Çarpanlar ve Katlar", "Kümeler", "Tam Sayılar", "Kesirlerle İşlemler", "Cebirsel İfadeler", "Açılar", "Üçgende Açılar ve Alan", "Çember ve Daire", "Dörtgende Çevre ve Alan"],
-        "Fen Bilimleri": ["Güneş Sistemi ve Tutulmalar", "Vücudumuzdaki Sistemler", "Kuvvet ve Hareket", "Madde ve Isı", "Ses ve Özellikleri"],
-        "Sosyal Bilgiler": ["Biz ve Toplum", "Yeryüzünde Yaşam", "Türklerin Tarihsel Yolculuğu", "Ussal Ekonomi", "Yönetimimiz ve Demokrasi"],
-        "Din Kültürü": ["Peygamber ve İlahi Kitaplar", "Namaz İbadeti", "Hz. Muhammed'in Hayatı", "Ahlaki Tutum ve Davranışlar"],
-        "İngilizce": ["Life", "Yummy Breakfast", "Downtown", "Weather and Emotions", "At the Fair", "Vacations"],
-        "Almanca": ["Mein Körper und Gesundheit", "Kleidung", "Wetter und Jahreszeiten", "Freizeitaktivitäten", "Schule"]
+        "Türkçe": ["Sözcükte Anlam", "Cümlede Anlam", "Paragraf Bilgisi"],
+        "Matematik": ["Çarpanlar ve Katlar", "Tam Sayılar", "Kesirlerle İşlemler", "Açılar"],
+        "Fen Bilimleri": ["Güneş Sistemi ve Tutulmalar", "Vücudumuzdaki Sistemler", "Kuvvet ve Hareket"],
+        "Sosyal Bilgiler": ["Biz ve Toplum", "Yeryüzünde Yaşam"],
+        "Din Kültürü": ["Peygamber ve İlahi Kitaplar", "Namaz İbadeti"],
+        "İngilizce": ["Life", "Yummy Breakfast"],
+        "Almanca": ["Mein Körper und Gesundheit", "Kleidung"]
     },
     "7. Sınıf": {
-        "Türkçe": ["Sözcükte Anlam", "Cümlede Anlam", "Cümlenin Ögeleri", "Fiilimsiler", "Anlatım Bozuklukları"],
-        "Matematik": ["Tam Sayılarla İşlemler", "Rasyonel Sayılar", "Cebirsel İfadeler", "Eşitlik ve Denklem", "Oran ve Orantı", "Açılar ve Çokgenler", "Üçgende Açılar", "Çemberde Açı ve Alan", "Dörtgenler ve Çevre"],
-        "Fen Bilimleri": ["Güneş Sistemi ve Ötesi", "Hücre ve Bölünmeler", "Kuvvet ve Enerji", "Saf Madde ve Karışımlar", "Işığın Soğurulması"],
-        "Sosyal Bilgiler": ["Birlikte Yaşamak", "Ülkemizde Nüfus", "Tarihte Yolculuk", "Ekonomi ve Sosyal Hayat", "Yaşayan Demokrasi"],
-        "Din Kültürü": ["Melek ve Ahiret İnancı", "Hac ve Kurban", "Ahlaki Davranışlar", "İslam Düşüncesinde Yorumlar"],
-        "İngilizce": ["Appearance and Personality", "Sports", "Biographies", "Wild Animals", "Television", "Celebrations"],
-        "Almanca": ["Reisen und Urlaub", "Berufe", "Technologie", "Umwelt und Natur", "Feste und Traditionen"]
+        "Türkçe": ["Sözcükte Anlam", "Cümlede Anlam", "Fiilimsiler"],
+        "Matematik": ["Tam Sayılarla İşlemler", "Rasyonel Sayılar", "Eşitlik ve Denklem", "Açılar ve Çokgenler"],
+        "Fen Bilimleri": ["Güneş Sistemi ve Ötesi", "Hücre ve Bölünmeler", "Kuvvet ve Enerji"],
+        "Sosyal Bilgiler": ["Birlikte Yaşamak", "Ülkemizde Nüfus"],
+        "Din Kültürü": ["Melek ve Ahiret İnancı", "Hac ve Kurban"],
+        "İngilizce": ["Appearance and Personality", "Sports"],
+        "Almanca": ["Reisen und Urlaub", "Berufe"]
     },
     "8. Sınıf": {
-        "Türkçe": ["Fiilimsiler", "Cümlenin Ögeleri", "Cümle Türleri", "Yazım Kuralları", "Sözel Mantık ve Muhakeme", "Paragraf Analizi"],
-        "Matematik": ["Çarpanlar ve Katlar", "Üslü İfadeler", "Kareköklü İfadeler", "Veri Analizi", "Basit Olayların Olma Olasılığı", "Doğrusal Denklemler", "Üçgenler ve Üçgende Açılar", "Çember ve Daire", "Dörtgenler ve Çevre Bağıntıları"],
-        "Fen Bilimleri": ["Mevsimlerin Oluşumu ve İklim", "DNA ve Genetik Kod", "Basınç", "Madde ve Endüstri", "Basit Makineler", "Enerji Dönüşümleri"],
-        "Sosyal Bilgiler": ["Bir Demokrasi Kahramanı: Atatürk", "Milli Uyanış", "Ya İstiklal Ya Ölüm", "Atatürkçülük ve Çağdaşlaşan Türkiye"],
-        "Din Kültürü": ["Kader İnancı", "Zekat ve Sadaka", "Din ve Hayat", "Hz. Muhammed'in Örnekliği"],
-        "İngilizce": ["Friendship", "Teen Life", "In the Kitchen", "On the Phone", "The Internet", "Adventures"],
-        "Almanca": ["Kommunikation", "Medien", "Zukunftspläne", "Freizeit und Hobbys"]
+        "Türkçe": ["Fiilimsiler", "Cümlenin Ögeleri", "Sözel Mantık ve Muhakeme"],
+        "Matematik": ["Çarpanlar ve Katlar", "Üslü İfadeler", "Kareköklü İfadeler", "Doğrusal Denklemler"],
+        "Fen Bilimleri": ["Mevsimlerin Oluşumu ve İklim", "DNA ve Genetik Kod", "Basınç"],
+        "Sosyal Bilgiler": ["Bir Demokrasi Kahramanı: Atatürk", "Milli Uyanış"],
+        "Din Kültürü": ["Kader İnancı", "Zekat ve Sadaka"],
+        "İngilizce": ["Friendship", "Teen Life"],
+        "Almanca": ["Kommunikation", "Medien"]
     },
     "Genel Yetenek & Aktiviteler": {
-        "Bilgi Yarışması": ["Sanat ve Dünya Tarihi", "Az Bilinen Coğrafya ve Doğa Mucizeleri", "Bilim, Uzay ve Nobel Ödüllü Keşifler", "Tarih", "Teknoloji", "Hayvanlar Alemi", "Geleneksel Yemek Kültürü", "Mitoloji, Edebiyat ve Felsefe Kuramları", "Güncel Konular", "Dünya Haritası", "Spor ve Müzik","Ülkeler Tarihi", "Ülke,Şehir ve Başkentler", "Dünya Mutfağı", "Coğrafi Konum", "Genel Kültür","İcatlar", "Şaşırtıcı Bilimsel Gerçekler ve Trivia"],
-        "Zihinden Dört İşlem": ["Hızlı Toplama ve Çıkarma", "Çarpım Tablosu Hakimiyeti", "Kademeli Zincir İşlemler", "Zihinden Bölme ve Kat Problemleri"],
-        "Almanca Pratik": ["Temel Kelimeler", "Günlük Diyaloglar", "Grammatik Grundlagen"]
+        "Bilgi Yarışması": ["Genel Kültür", "Tarih", "Coğrafya", "Bilim ve Uzay", "Spor ve Sanat"],
+        "Zihinden Dört İşlem": ["Hızlı Toplama ve Çıkarma", "Çarpım Tablosu Hakimiyeti"],
+        "Almanca Pratik": ["Temel Kelimeler", "Günlük Diyaloglar"]
     },
     "LGS Hazırlık": {
-        "LGS Çıkmış Sorular": ["MEB LGS Çıkmış Türkçe Soruları", "MEB LGS Çıkmış Matematik Soruları", "MEB LGS Çıkmış Fen Bilimleri Soruları", "MEB LGS Çıkmış T.C. İnkılap Tarihi Soruları", "MEB LGS Çıkmış Din Kültürü Soruları", "MEB LGS Çıkmış İngilizce Soruları", "MEB LGS Çıkmış Almanca Örnek ve Beceri Temelli Sorular"],
-        "Türkçe": ["Sözel Mantık ve Muhakeme", "Paragraf Analizi", "Dil Bilgisi Karma Denemeleri"],
-        "Matematik": ["LGS Pro Matematik Karma", "Yeni Nesil Beceri Temelli Sorular", "Geometri ve Üçgende Açılar Denemeleri", "Çember, Daire ve Çevre Problemleri"],
-        "Fen Bilimleri": ["LGS Fen Bilimleri Kapsamlı Karma Denemeler", "Mevsimler, DNA ve Basınç Tekrarı"],
-        "Sosyal Bilgiler": ["T.C. İnkılap Tarihi ve Atatürkçülük Karma Tekrar"],
-        "Din Kültürü": ["LGS Din Kültürü Karma Denemeleri ve Yorum Soruları"],
-        "İngilizce": ["LGS İngilizce Vocabulary & Reading Comprehension Testleri"],
-        "Almanca": ["LGS Almanca Kelime, Cümle Yapısı ve Paragraf Soruları"]
+        "Türkçe": ["Sözel Mantık ve Muhakeme", "Paragraf Analizi"],
+        "Matematik": ["Yeni Nesil Beceri Temelli Sorular", "Geometri ve Üçgende Açılar"],
+        "Fen Bilimleri": ["LGS Fen Bilimleri Kapsamlı Karma Denemeler"]
     }
 }
 
@@ -451,20 +365,6 @@ elif isinstance(raw_keys, list):
     API_KEYS = [str(k).strip() for k in raw_keys if str(k).strip()]
 else:
     API_KEYS = []
-
-class APIKeyManager:
-    def __init__(self, keys):
-        self.keys = keys
-        self.current_index = 0
-
-    def get_next_key(self):
-        if not self.keys:
-            return None
-        key = self.keys[self.current_index]
-        self.current_index = (self.current_index + 1) % len(self.keys)
-        return key
-
-api_manager = APIKeyManager(API_KEYS)
 
 def temizle_latex_metin(text):
     if not isinstance(text, str):
@@ -489,22 +389,43 @@ def kararli_json_ayikla(raw_text):
         pass
     return []
 
-# Hızlı API İsteği Gönderici Fonksiyon
-def api_cagrisi_yap(api_key, prompt):
-    try:
-        client = genai.Client(api_key=api_key)
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json",
-                temperature=0.7,
-                max_output_tokens=3072
+# Hata Toleranslı Çoklu SDK Destekli API Çağrısı
+def güvenli_api_cagrisi_yap(api_key, prompt):
+    # 1. Yöntem: Yeni SDK (google-genai)
+    if NEW_SDK_AVAILABLE:
+        try:
+            client = genai.Client(api_key=api_key)
+            response = client.models.generate_content(
+                model="gemini-3.6-flash",
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    temperature=0.7,
+                    max_output_tokens=3072
+                )
             )
-        )
-        return response.text
-    except Exception:
-        return None
+            if response and response.text:
+                return response.text, None
+        except Exception as e:
+            err_msg = str(e)
+            if "API_KEY_INVALID" in err_msg or "400" in err_msg or "401" in err_msg:
+                return None, f"Geçersiz API Anahtarı ({api_key[:8]}...)"
+
+    # 2. Yöntem: Eski/Klasik SDK Fallback (google-generativeai)
+    if LEGACY_SDK_AVAILABLE:
+        try:
+            legacy_genai.configure(api_key=api_key)
+            model = legacy_genai.GenerativeModel("gemini-1.5-flash")
+            response = model.generate_content(
+                prompt,
+                generation_config={"temperature": 0.7, "max_output_tokens": 3072}
+            )
+            if response and response.text:
+                return response.text, None
+        except Exception as e:
+            return None, f"İstek Hatası: {str(e)}"
+
+    return None, "Desteklenen Gemini SDK kütüphanesi yüklenemedi veya anahtar geçersiz."
 
 # --- SESSION STATE TANIMLARI ---
 if "quiz_data" not in st.session_state:
@@ -548,7 +469,6 @@ with st.sidebar:
         "Genel Tarama Sınavı",
         "Konu Tarama Sınavı",
         "Yanlışlardan Üretilen Sorular",
-        "LGS Geçmiş Yıllar Çıkmış Sorular",
         "Hazır Bulunuşluk Sınavı",
         "Yeni Nesil Sorular"
     ], key=f"tur_secim_{st.session_state.secim_sifirla_tetikleyici}")
@@ -581,47 +501,29 @@ with st.sidebar:
         elif not secili_ders_unite_haritasi:
             st.error("Lütfen en az bir ders veya ünite seçiniz!")
         else:
-            ek_baglam = ""
-            if sinav_turu == "Yanlışlardan Üretilen Sorular":
-                ek_baglam = "Öğrencinin zorlandığı kritik kazanımlardan oluşan pekiştirici sorular üret.\n"
-            elif sinav_turu == "Genel Tarama Sınavı":
-                ek_baglam = "Seçilen tüm ders ve üniteleri kapsayan dengeli bir genel tarama sınavı olmalıdır.\n"
-            elif sinav_turu == "Konu Tarama Sınavı":
-                ek_baglam = "Seçilen alt başlıkları ve konuları derinlemesine irdeleyen konu tarama sınavı olmalıdır.\n"
-            elif sinav_turu == "LGS Geçmiş Yıllar Çıkmış Sorular":
-                ek_baglam = "MEB LGS'de çıkmış gerçek soruların mantığına, zorluk derecesine ve yapısına birebir uygun benzer sorular olmalıdır.\n"
-            elif sinav_turu == "Hazır Bulunuşluk Sınavı":
-                ek_baglam = "Öğrencinin yeni döneme başlarken bilmesi gereken ön koşul temel kavramları ölçen sınav olmalıdır.\n"
-            elif sinav_turu == "Yeni Nesil Sorular":
-                ek_baglam = "Günlük yaşam problemleri içeren, grafik, tablo, şema veya görsel yorumlama becerisine dayalı yeni nesil beceri temelli sorular olmalıdır.\n"
-
             ders_unite_detay = ""
             for d, u_list in secili_ders_unite_haritasi.items():
                 ders_unite_detay += f"- Ders/Kategori: {d}, Alt Başlıklar/Üniteler: {', '.join(u_list)}\n"
 
             gorsel_talimati = """
-            GEOMETRİK ÇİZİM VE GÖRSEL SORU KURALLARI (ÇOK ÖNEMLİ):
-            1. Üretilen soru havuzunda geometri (dik üçgen, eşkenar üçgen, ikizkenar üçgen, benzer üçgenler, açı veya çember), fen bilimleri (Güneş-Dünya-Ay, dinamometre, basınç vb.) veya veri analizi konularına denk gelen uygun sorular için MUTLAKA uygun `gorsel_tipi` atanmalıdır (Örn: "dik_ucgen", "eskenar_ucgen", "ikizkenar_ucgen", "benzer_ucgen", "cesitkenar_ucgen", "cember", "gunes_dunya_ay", "dinamometre", "grafik", "basinc"). 
-            2. Görsel gerektirmeyen tamamen sözel veya düz mantık sorularda `gorsel_tipi` kesinlikle "yok" olmalıdır.
-            3. Görsel içeren sorularda, soruda geçen köşe harfleri (örn. A, B, C, D vb.) ve değerler `etiketler` sözlüğünde eksiksiz olarak tanımlanmalı, soru metni ile görsel uyumlu olmalıdır.
+            GEOMETRİK ÇİZİM VE GÖRSEL SORU KURALLARI:
+            Uygun sorular için `gorsel_tipi` ataması yapın ("dik_ucgen", "eskenar_ucgen", "cember", "gunes_dunya_ay", "dinamometre", "grafik", "basinc"). 
+            Görsel gerektirmeyen sorularda `gorsel_tipi` "yok" olmalıdır.
             """
 
             rastgele_tohum = random.randint(10000, 99999)
 
             prompt = f"""
-Sen MEB müfredatına ve soru hazırlama sistemine tam hakim profesyonel bir yapay zekasısın.
-[ÖNEMLİ KURAL - ÇEŞİTLİLİK VE ÖZGÜNLÜK GARANTİSİ]: Her defasında tamamen ÖZGÜN, YARATICI, bir önceki testen FARKLI ve DAHA ÖNCE ÜRETİLMEMİŞ benzersiz rastgele sorular tasarla. Özellikle Bilgi Yarışması, trivia ve genel kültür modüllerinde birbirini tekrar eden klasik sorular yerine az bilinen, şaşırtıcı, güncel ve nitelikli detaylara yer ver. Asla klişe veya birbirinin kopyası sorular üretme. (Üretim Varyasyon Kodu: {rastgele_tohum})
-
-{secili_sinif} seviyesinde, '{sinav_turu}' konseptinde, TOPLAM {soru_sayisi} adet nitelikli, her defansında bir önceki testen tamamen özgün,farklı,birbirini tekrarlamayan soru üret. 
+Sen MEB müfredatına tam hakim profesyonel bir soru hazırlama yapay zekasısın.
+{secili_sinif} seviyesinde, '{sinav_turu}' konseptinde, TOPLAM {soru_sayisi} adet nitelikli, özgün soru üret. (Varyasyon koda: {rastgele_tohum})
 
 {gorsel_talimati}
 
 Zorluk Seviyesi: {zorluk_seviyesi}
-Seçilen Dersler ve Hedef Üniteler (MUTLAKA BU KAPSAMA BAĞLI KAL):
+Seçilen Dersler:
 {ders_unite_detay}
-{ek_baglam}
 
-Yanıtı kesinlikle ve sadece şu JSON formatında ver (saf JSON dizisi döndür):
+Yanıtı sadece şu JSON formatında ver (saf JSON dizisi döndür):
 [
   {{
     "soru_metni": "Soru metni...",
@@ -629,48 +531,49 @@ Yanıtı kesinlikle ve sadece şu JSON formatında ver (saf JSON dizisi döndür
     "dogru_cevap": "A",
     "cozum_aciklamasi": "Çözüm açıklaması...",
     "ders": "Kategori/Ders Adı",
-    "gorsel_tipi": "dik_ucgen", 
-    "etiketler": {{"A": "A", "B": "B", "C": "C", "c": "6 cm", "a": "8 cm"}}
+    "gorsel_tipi": "yok", 
+    "etiketler": {{}}
   }}
 ]
 """
-            with st.spinner("🚀 Sorular hazırlanıyor ve görseller işleniyor, lütfen bekleyin..."):
+            with st.spinner("🚀 Sorular üretiliyor, lütfen bekleyiniz..."):
                 basarili = False
-                raw_data = None
+                hata_kayitlari = []
                 
-                # Paralel asenkron API çağrı yönetimi ile maksimum hızlandırma
-                with ThreadPoolExecutor(max_workers=min(len(API_KEYS), 4)) as executor:
-                    futures = [executor.submit(api_cagrisi_yap, key, prompt) for key in API_KEYS]
-                    for future in futures:
-                        res = future.result()
-                        if res:
-                            raw_data = res
-                            break
+                # Yedekli API Havuzu Sıralı Çağrısı
+                for single_key in API_KEYS:
+                    res_text, err_detay = güvenli_api_cagrisi_yap(single_key, prompt)
+                    if res_text:
+                        questions = kararli_json_ayikla(res_text)
+                        if questions:
+                            for q in questions:
+                                q["soru_metni"] = temizle_latex_metin(q.get("soru_metni", ""))
+                                if "secenekler" in q and isinstance(q["secenekler"], dict):
+                                    for k_sec, v_sec in q["secenekler"].items():
+                                        q["secenekler"][k_sec] = temizle_latex_metin(v_sec)
+                                q["cozum_aciklamasi"] = temizle_latex_metin(q.get("cozum_aciklamasi", ""))
                             
-                if raw_data:
-                    questions = kararli_json_ayikla(raw_data)
-                    if questions:
-                        for q in questions:
-                            q["soru_metni"] = temizle_latex_metin(q.get("soru_metni", ""))
-                            if "secenekler" in q and isinstance(q["secenekler"], dict):
-                                for k_sec, v_sec in q["secenekler"].items():
-                                    q["secenekler"][k_sec] = temizle_latex_metin(v_sec)
-                            q["cozum_aciklamasi"] = temizle_latex_metin(q.get("cozum_aciklamasi", ""))
-                        
-                        st.session_state.quiz_data = questions
-                        st.session_state.user_answers = {}
-                        st.session_state.quiz_submitted = False
-                        st.session_state.quiz_ready_to_start = True
-                        st.session_state.exam_started = False
-                        st.session_state.current_question = 0
-                        soru_sayisini_artir(len(questions))
-                        basarili = True
+                            st.session_state.quiz_data = questions
+                            st.session_state.user_answers = {}
+                            st.session_state.quiz_submitted = False
+                            st.session_state.quiz_ready_to_start = True
+                            st.session_state.exam_started = False
+                            st.session_state.current_question = 0
+                            soru_sayisini_artir(len(questions))
+                            basarili = True
+                            break
+                    else:
+                        if err_detay:
+                            hata_kayitlari.append(err_detay)
 
                 if basarili:
                     st.success("🎉 Sorular başarıyla üretildi! Sınava başlayabilirsiniz.")
                     st.rerun()
                 else:
-                    st.error("Sorular üretilirken bir hata oluştu. Lütfen tekrar deneyiniz veya API anahtarınızı kontrol ediniz.")
+                    st.error("Sorular üretilirken bir hata oluştu.")
+                    if hata_kayitlari:
+                        st.info(f"🔍 Alınan Hata Detayı: {hata_kayitlari[0]}")
+                        st.caption("Not: Google AI Studio üzerinden 'AIzaSy...' ile başlayan geçerli bir API anahtarı eklediğinizden emin olunuz.")
 
 # --- ANA EKRAN / SINAV YÖNETİMİ ---
 st.title("🎓 Soru Fabrikası Tablet Sınav Modülü")
@@ -695,7 +598,6 @@ elif st.session_state.exam_started and not st.session_state.quiz_submitted:
     total_q = len(quiz_data)
     curr_idx = st.session_state.current_question
     
-    # İlerleme çubuğu ve üst bilgi
     st.progress((curr_idx + 1) / total_q)
     
     c1, c2, c3 = st.columns([2, 2, 2])
@@ -719,7 +621,6 @@ elif st.session_state.exam_started and not st.session_state.quiz_submitted:
     </div>
     """, unsafe_allow_html=True)
     
-    # Vektörel Görsel Çizimi
     gorsel_tipi = q.get("gorsel_tipi", "yok")
     etiketler = q.get("etiketler", {})
     if gorsel_tipi and gorsel_tipi != "yok":
@@ -819,7 +720,6 @@ elif st.session_state.quiz_submitted:
         user_ans = st.session_state.user_answers.get(i, "Boş")
         correct_ans = q.get("dogru_cevap", "")
         
-        durum_renk = "#16a34a" if user_ans == correct_ans else ("#dc2626" if user_ans != "Boş" else "#d97706")
         durum_metin = "✅ Doğru" if user_ans == correct_ans else ("❌ Yanlış" if user_ans != "Boş" else "⚠️ Boş")
         
         with st.expander(f"Soru {i+1}: {durum_metin} (Sizin Cevabınız: {user_ans} | Doğru Cevap: {correct_ans})"):
