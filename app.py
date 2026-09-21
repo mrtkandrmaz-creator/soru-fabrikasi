@@ -401,7 +401,7 @@ def güvenli_api_cagrisi_yap(api_key, prompt):
                 contents=prompt,
                 config=types.GenerateContentConfig(
                     response_mime_type="application/json",
-                    temperature=0.7,
+                    temperature=0.2,
                     max_output_tokens=3072
                 )
             )
@@ -419,7 +419,7 @@ def güvenli_api_cagrisi_yap(api_key, prompt):
             model = legacy_genai.GenerativeModel("gemini-1.5-flash")
             response = model.generate_content(
                 prompt,
-                generation_config={"temperature": 0.7, "max_output_tokens": 3072}
+                generation_config={"temperature": 0.2, "max_output_tokens": 3072}
             )
             if response and response.text:
                 return response.text, None
@@ -451,6 +451,16 @@ if "yanlis_sorular_arsivi" not in st.session_state:
     st.session_state.yanlis_sorular_arsivi = []
 if "secim_sifirla_tetikleyici" not in st.session_state:
     st.session_state.secim_sifirla_tetikleyici = 0
+
+# URL Parametresi ile Zaman Aşımı Kontrolü
+query_params = st.query_params
+if "time_out" in query_params and query_params["time_out"] == "true":
+    if st.session_state.exam_started and not st.session_state.quiz_submitted:
+        st.session_state.quiz_submitted = True
+        st.session_state.exam_started = False
+        st.session_state.total_duration = int(time.time() - (st.session_state.start_time or time.time()))
+        st.query_params.clear()
+        st.rerun()
 
 # --- KENAR ÇUBUĞU ---
 with st.sidebar:
@@ -580,10 +590,15 @@ Yanıtı sadece şu JSON formatında ver (saf JSON dizisi döndür):
 st.title("🎓 Soru Fabrikası Tablet Sınav Modülü")
 
 if st.session_state.quiz_ready_to_start and not st.session_state.exam_started and not st.session_state.quiz_submitted:
-    st.markdown("""
+    toplam_sure_saniye = len(st.session_state.quiz_data) * 80
+    dakika_hesap = toplam_sure_saniye // 60
+    saniye_hesap = toplam_sure_saniye % 60
+    
+    st.markdown(f"""
     <div class="custom-card" style="text-align: center;">
         <h2>📋 Sınavınız Hazır!</h2>
-        <p style="font-size: 18px; color: #475569;">Sorularınız özenle oluşturuldu. Hazır olduğunuzda aşağıdaki butona basarak sınavı başlatabilirsiniz.</p>
+        <p style="font-size: 18px; color: #475569;">Sorularınız özenle oluşturuldu. Her soru için <b>80 saniye</b> olmak üzere toplam süreniz <b>{dakika_hesap:02d}:{saniye_hesap:02d}</b> olarak belirlenmiştir.</p>
+        <p style="font-size: 16px; color: #64748b;">Hazır olduğunuzda aşağıdaki butona basarak sınavı başlatabilirsiniz.</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -592,6 +607,7 @@ if st.session_state.quiz_ready_to_start and not st.session_state.exam_started an
         if st.button("▶️ Sınavı Başlat", type="primary", use_container_width=True):
             st.session_state.exam_started = True
             st.session_state.start_time = time.time()
+            st.session_state.total_duration = len(st.session_state.quiz_data) * 80
             st.rerun()
 
 elif st.session_state.exam_started and not st.session_state.quiz_submitted:
@@ -599,6 +615,19 @@ elif st.session_state.exam_started and not st.session_state.quiz_submitted:
     total_q = len(quiz_data)
     curr_idx = st.session_state.current_question
     
+    # Toplam Süre Hesaplama (Soru Sayısı * 80 saniye)
+    if st.session_state.total_duration is None:
+        st.session_state.total_duration = total_q * 80
+
+    toplam_sure_saniye = st.session_state.total_duration
+    gecen_sure = time.time() - st.session_state.start_time
+    kalan_sure = int(toplam_sure_saniye - gecen_sure)
+
+    if kalan_sure <= 0:
+        st.session_state.quiz_submitted = True
+        st.session_state.exam_started = False
+        st.rerun()
+
     st.progress((curr_idx + 1) / total_q)
     
     c1, c2, c3 = st.columns([2, 2, 2])
@@ -607,10 +636,41 @@ elif st.session_state.exam_started and not st.session_state.quiz_submitted:
     with c2:
         st.markdown(f"**Ders:** {quiz_data[curr_idx].get('ders', 'Genel')}")
     with c3:
-        gecen_sure = int(time.time() - st.session_state.start_time)
-        dakika = gecen_sure // 60
-        saniye = gecen_sure % 60
-        st.markdown(f"**⏱️ Süre:** {dakika:02d}:{saniye:02d}")
+        # Dinamik Gerçek Zamanlı HTML/JS Sayaç Bileşeni
+        timer_code = f"""
+        <div id="timer-box" style="
+            font-size: 20px; 
+            font-weight: bold; 
+            color: #dc2626; 
+            background-color: #fef2f2; 
+            padding: 8px 16px; 
+            border-radius: 10px; 
+            border: 1px solid #fca5a5;
+            display: inline-block;
+            text-align: center;
+            font-family: sans-serif;">
+            ⏱️ Kalan Süre: <span id="countdown">{kalan_sure // 60:02d}:{kalan_sure % 60:02d}</span>
+        </div>
+        <script>
+            var timeLeft = {kalan_sure};
+            var timerElement = document.getElementById('countdown');
+            var interval = setInterval(function() {{
+                timeLeft--;
+                if (timeLeft <= 0) {{
+                    clearInterval(interval);
+                    timerElement.innerHTML = "00:00";
+                    window.parent.postMessage({{type: 'streamlit:setComponentValue', value: true}}, '*');
+                    var currentUrl = window.parent.location.href.split('?')[0];
+                    window.parent.location.href = currentUrl + '?time_out=true';
+                }} else {{
+                    var minutes = Math.floor(timeLeft / 60);
+                    var seconds = timeLeft % 60;
+                    timerElement.innerHTML = (minutes < 10 ? "0" : "") + minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
+                }}
+            }}, 1000);
+        </script>
+        """
+        components.html(timer_code, height=55)
     
     st.markdown("---")
     
@@ -644,10 +704,11 @@ elif st.session_state.exam_started and not st.session_state.quiz_submitted:
                 default_idx = idx
                 break
                 
+    # Şıkların varsayılan olarak seçimsiz (boş) gelmesi sağlandı
     selected_opt = st.radio(
         "Cevabınızı Seçiniz:",
         options,
-        index=default_idx if default_idx is not None else 0,
+        index=default_idx if default_idx is not None else None,
         key=f"radio_q_{curr_idx}"
     )
     
