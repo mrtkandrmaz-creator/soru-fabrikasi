@@ -701,7 +701,7 @@ with st.sidebar:
 
     st.markdown("---")
     
-    if st.button("🚀 Soru Setini Üret ve Başlat", type="primary", use_container_width=True):
+    if st.button("🚀 Soruları Üret ", type="primary", use_container_width=True):
         if not secilen_dersler:
             st.warning("Lütfen en az bir ders ve konu seçiniz!")
         else:
@@ -826,13 +826,6 @@ elif st.session_state.exam_started and not st.session_state.quiz_submitted:
             if st.button("⬅️ Önceki Soru"):
                 st.session_state.current_question -= 1
                 st.rerun()
-
-    with col_b2:
-        if st.button("🗑️ Seçimi Temizle"):
-            if idx in st.session_state.user_answers:
-                del st.session_state.user_answers[idx]
-            st.session_state.secim_sifirla_tetikleyici += 1
-            st.rerun()
 
     with col_b3:
         if idx < len(st.session_state.quiz_data) - 1:
