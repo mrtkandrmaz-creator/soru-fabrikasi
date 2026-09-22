@@ -837,13 +837,6 @@ elif st.session_state.exam_started and not st.session_state.quiz_submitted:
                 st.session_state.current_question -= 1
                 st.rerun()
 
-    with col_b2:
-        if st.button("🗑️ Seçimi Temizle"):
-            if idx in st.session_state.user_answers:
-                del st.session_state.user_answers[idx]
-            st.session_state.secim_sifirla_tetikleyici += 1
-            st.rerun()
-
     with col_b3:
         if idx < len(st.session_state.quiz_data) - 1:
             if st.button("Sonraki Soru ➡️"):
