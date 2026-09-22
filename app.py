@@ -783,7 +783,7 @@ elif st.session_state.exam_started and not st.session_state.quiz_submitted:
     with col_t2:
         st.markdown(f"""
         <div class='timer-container {warning_class}'>
-            <span>⏳ KALAN SÜRE</span>
+            <span>⏳ KALAN TOPLAM SÜRE</span>
             <span class='timer-value'>{k_dakika:02d}:{k_saniye:02d}</span>
         </div>
         """, unsafe_allow_html=True)
@@ -814,37 +814,39 @@ elif st.session_state.exam_started and not st.session_state.quiz_submitted:
         key=f"q_radio_{idx}_{st.session_state.secim_sifirla_tetikleyici}"
     )
 
+    # Soru gösterimi ve seçenek seçimi kodlarınızın hemen altı:
+    
     if secilen:
-    st.session_state.user_answers[idx] = secilen
+        st.session_state.user_answers[idx] = secilen
 
-st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
-# Buton alanları için eşit oranlı 3 sütun
-col_b1, col_b2, col_b3 = st.columns([1, 1, 1])
+    col_b1, col_b2, col_b3 = st.columns([1, 1, 1])
 
-with col_b1:
-    if idx > 0:
-        if st.button("⬅️ Önceki Soru", use_container_width=True):
-            st.session_state.current_question -= 1
-            st.rerun()
+    with col_b1:
+        if idx > 0:
+            if st.button("⬅️ Önceki Soru", use_container_width=True):
+                st.session_state.current_question -= 1
+                st.rerun()
 
-with col_b2:
-    # İsteğe bağlı: Orta sütunda soru sayısı veya ilerleme çubuğu gösterilebilir
-    st.markdown(
-        f"<div style='text-align: center; line-height: 2.5;'>Soru {idx + 1} / {len(st.session_state.quiz_data)}</div>", 
-        unsafe_allow_html=True
-    )
+    with col_b2:
+        st.markdown(
+            f"<div style='text-align: center; line-height: 2.5;'>"
+            f"Soru {idx + 1} / {len(st.session_state.quiz_data)}"
+            f"</div>", 
+            unsafe_allow_html=True
+        )
 
-with col_b3:
-    if idx < len(st.session_state.quiz_data) - 1:
-        if st.button("Sonraki Soru ➡️", use_container_width=True):
-            st.session_state.current_question += 1
-            st.rerun()
-    else:
-        if st.button("🏁 Sınavı Bitir ve Değerlendir", type="primary", use_container_width=True):
-            st.session_state.quiz_submitted = True
-            st.session_state.exam_started = False
-            st.rerun()
+    with col_b3:
+        if idx < len(st.session_state.quiz_data) - 1:
+            if st.button("Sonraki Soru ➡️", use_container_width=True):
+                st.session_state.current_question += 1
+                st.rerun()
+        else:
+            if st.button("🏁 Sınavı Bitir ve Değerlendir", type="primary", use_container_width=True):
+                st.session_state.quiz_submitted = True
+                st.session_state.exam_started = False
+                st.rerun()
 
 # 3. Sonuç ve Değerlendirme Ekranı
 elif st.session_state.quiz_submitted:
