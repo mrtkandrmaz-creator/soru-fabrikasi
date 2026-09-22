@@ -823,21 +823,8 @@ elif st.session_state.exam_started and not st.session_state.quiz_submitted:
 
     col_b1, col_b2, col_b3 = st.columns([1, 1, 1])
 
+    # SOL SÜTUN: Sonraki Soru veya Sınavı Bitir
     with col_b1:
-        if idx > 0:
-            if st.button("⬅️ Önceki Soru", use_container_width=True):
-                st.session_state.current_question -= 1
-                st.rerun()
-
-    with col_b2:
-        st.markdown(
-            f"<div style='text-align: center; line-height: 2.5;'>"
-            f"Soru {idx + 1} / {len(st.session_state.quiz_data)}"
-            f"</div>", 
-            unsafe_allow_html=True
-        )
-
-    with col_b3:
         if idx < len(st.session_state.quiz_data) - 1:
             if st.button("Sonraki Soru ➡️", use_container_width=True):
                 st.session_state.current_question += 1
@@ -846,6 +833,17 @@ elif st.session_state.exam_started and not st.session_state.quiz_submitted:
             if st.button("🏁 Sınavı Bitir ve Değerlendir", type="primary", use_container_width=True):
                 st.session_state.quiz_submitted = True
                 st.session_state.exam_started = False
+                st.rerun()
+
+    # ORTA SÜTUN: İptal edildi (Boş alan)
+    with col_b2:
+        st.empty()
+
+    # SAĞ SÜTUN: Önceki Soru
+    with col_b3:
+        if idx > 0:
+            if st.button("⬅️ Önceki Soru", use_container_width=True):
+                st.session_state.current_question -= 1
                 st.rerun()
 
 # 3. Sonuç ve Değerlendirme Ekranı
