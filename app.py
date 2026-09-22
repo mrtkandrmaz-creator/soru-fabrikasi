@@ -577,7 +577,7 @@ SADECE VE SADECE JSON FORMATINDA CEVAP VER:
             client = genai.Client(api_key=selected_key)
             # Kararlı model olan gemini-2.5-flash kullanılıyor
             response = client.models.generate_content(
-                model='gemini-2.5-flash',
+                model='gemini-3.6-flash',
                 contents=prompt,
                 config=types.GenerateContentConfig(
                     response_mime_type="application/json",
