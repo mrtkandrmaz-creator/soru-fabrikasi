@@ -142,6 +142,34 @@ st.markdown("""
         font-weight: 600 !important;
         font-size: 15px !important;
     }
+    /* Modern Canlı Zamanlayıcı Kartı */
+    .timer-container {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        border: 2px solid #38bdf8;
+        border-radius: 12px;
+        padding: 8px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: #ffffff;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    .timer-value {
+        font-size: 22px;
+        font-weight: 800;
+        color: #38bdf8;
+        font-family: monospace;
+    }
+    .timer-warning {
+        border-color: #ef4444 !important;
+    }
+    .timer-warning .timer-value {
+        color: #ef4444 !important;
+        animation: blinker 1s linear infinite;
+    }
+    @keyframes blinker {
+        50% { opacity: 0.3; }
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -483,7 +511,7 @@ def kararli_json_ayikla(raw_text):
         pass
     return []
 
-# --- DİNAMİK GERİ SAYIM BİLEŞENİ ---
+# --- DİNAMİK GERİ SAYIM BİLEŞENİ (YÜKLEME EKRANI) ---
 def dinamik_geri_sayim_bileseni_yayinla(toplam_saniye, soru_sayisi):
     html_code = f"""
     <div id="countdown-card" style="
@@ -539,7 +567,7 @@ def dinamik_geri_sayim_bileseni_yayinla(toplam_saniye, soru_sayisi):
     """
     components.html(html_code, height=210)
 
-# --- GEMINI AI SORU ÜRETİM MOTORU (GÜNCELLENMİŞ VE HATALARDAN ARINDIRILMIŞ) ---
+# --- GEMINI AI SORU ÜRETİM MOTORU ---
 def ai_soru_uret(seviye, harita, adet, zorluk, ek_baglam=""):
     max_deneme = max(3, len(API_KEYS) * 2)
     deneme = 0
@@ -575,7 +603,6 @@ SADECE VE SADECE JSON FORMATINDA CEVAP VER:
 
         try:
             client = genai.Client(api_key=selected_key)
-            # Kararlı model olan gemini-2.5-flash kullanılıyor
             response = client.models.generate_content(
                 model='gemini-3.6-flash',
                 contents=prompt,
@@ -591,10 +618,8 @@ SADECE VE SADECE JSON FORMATINDA CEVAP VER:
                 deneme += 1
                 time.sleep(1)
         except APIError as e:
-            # 429 RESOURCE_EXHAUSTED Hata Yakalama ve Rotasyon
             if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e):
                 deneme += 1
-                # Kota aşımında bekleme süresi veya anahtar değiştirme
                 time.sleep(3)
                 continue
             else:
@@ -668,7 +693,12 @@ with st.sidebar:
 
     soru_sayisi = st.slider("Üretilecek Soru Sayısı:", min_value=1, max_value=20, value=5, step=1)
     
-    sure_dakika = st.number_input("Sınav Süresi (Dakika):", min_value=1, max_value=180, value=soru_sayisi * 2)
+    # KURAL: HER SORU İÇİN TAM 80 SANİYE
+    hesaplanan_toplam_saniye = soru_sayisi * 80
+    hesaplanan_dakika = hesaplanan_toplam_saniye // 60
+    hesaplanan_kalan_sn = hesaplanan_toplam_saniye % 60
+    
+    st.info(f"⏱️ **Otomatik Sınav Süresi:**\n\nHer soru için **80 saniye** olmak üzere toplam **{hesaplanan_toplam_saniye} saniye** ({hesaplanan_dakika} dk {hesaplanan_kalan_sn} sn) süre verilecektir.")
 
     ek_notlar = st.text_area("Ek Sınav Yönergesi / Özel İstekler:", placeholder="Örn: 8. Sınıf LGS tarzı, mantık muhakeme ağırlıklı olsun.")
 
@@ -697,7 +727,8 @@ with st.sidebar:
                     st.session_state.quiz_ready_to_start = True
                     st.session_state.exam_started = False
                     st.session_state.current_question = 0
-                    st.session_state.total_duration = sure_dakika * 60
+                    # Sınav Süresi: Soru Sayısı x 80 Saniye
+                    st.session_state.total_duration = len(sorular) * 80
                     
                     soru_sayisini_artir(len(sorular))
                     st.success(f"{len(sorular)} adet soru başarıyla üretildi!")
@@ -709,22 +740,26 @@ st.title("🎓 Soru Fabrikası Tablet Sınav Modülü")
 if not st.session_state.quiz_ready_to_start and st.session_state.quiz_data is None:
     st.info("👈 Sınavı başlatmak için sol taraftaki panelden ders/konu seçimi yapıp 'Soru Setini Üret' butonuna basınız.")
     
-    # İstatistiksel / Tanıtım Kartları
     col1, col2, col3 = st.columns(3)
     with col1:
         st.markdown("<div class='custom-card'><h4>🎯 MEB Uyumlu</h4><p>Müfredat kazanımlarına ve LGS sınav standartlarına tam uyumlu sorular.</p></div>", unsafe_allow_html=True)
     with col2:
         st.markdown("<div class='custom-card'><h4>📐 Görsel Desteği</h4><p>Geometri, Basınç ve Dinamometre gibi konularda otomatik vektörel çizim desteği.</p></div>", unsafe_allow_html=True)
     with col3:
-        st.markdown("<div class='custom-card'><h4>📊 Anlık Analiz</h4><p>Detaylı başarı raporu, pedagojik çözüm açıklamaları ve yanlış sorular arşivi.</p></div>", unsafe_allow_html=True)
+        st.markdown("<div class='custom-card'><h4>⏱️ Soru Başı 80 Sn</h4><p>Soru sayısına özel otomatik süre hesabı ile gerçekçi sınav deneyimi.</p></div>", unsafe_allow_html=True)
 
 # 1. Hazırlık Ekranı (Sınav Başlatma Onayı)
 elif st.session_state.quiz_ready_to_start and not st.session_state.exam_started and not st.session_state.quiz_submitted:
+    toplam_saniye = st.session_state.total_duration
+    dk = toplam_saniye // 60
+    sn = toplam_saniye % 60
+    
     st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
     st.subheader("📋 Sınavınız Hazır!")
     st.write(f"**Soru Sayısı:** {len(st.session_state.quiz_data)} Soru")
-    st.write(f"**Ayrılan Süre:** {st.session_state.total_duration // 60} Dakika")
-    st.write("**Açıklama:** Sınavı başlattığınızda süreniz saymaya başlayacaktır. Başarılar dileriz!")
+    st.write(f"**Her Soru İçin Süre:** 80 Saniye")
+    st.write(f"**Toplam Ayrılan Süre:** {dk} Dakika {sn} Saniye ({toplam_saniye} Saniye)")
+    st.write("**Açıklama:** Sınavı başlattığınızda süreniz geriye doğru toplam süreden düşmeye başlayacaktır. Başarılar dileriz!")
     
     if st.button("▶️ Sınavı Şimdi Başlat", type="primary"):
         st.session_state.exam_started = True
@@ -735,22 +770,29 @@ elif st.session_state.quiz_ready_to_start and not st.session_state.exam_started 
 # 2. Aktif Sınav Ekranı
 elif st.session_state.exam_started and not st.session_state.quiz_submitted:
     gecen_sure = time.time() - st.session_state.start_time
-    kalan_sure = max(0, st.session_state.total_duration - gecen_sure)
+    kalan_sure = max(0, int(st.session_state.total_duration - gecen_sure))
 
     if kalan_sure <= 0:
         st.warning("⏱️ Süreniz doldu! Sınavınız otomatik olarak sonlandırılıyor.")
         st.session_state.quiz_submitted = True
         st.rerun()
 
-    # Üst Bilgi Barı
-    k_dakika = int(kalan_sure // 60)
-    k_saniye = int(kalan_sure % 60)
-    
-    col_t1, col_t2 = st.columns([3, 1])
+    # Kalan Süre Hesabı (Dakika:Saniye)
+    k_dakika = kalan_sure // 60
+    k_saniye = kalan_sure % 60
+    warning_class = "timer-warning" if kalan_sure <= 30 else ""
+
+    # Üst Bilgi Barı ve Canlı Zamanlayıcı
+    col_t1, col_t2 = st.columns([3, 2])
     with col_t1:
         st.progress((st.session_state.current_question + 1) / len(st.session_state.quiz_data))
     with col_t2:
-        st.markdown(f"⏱️ **Kalan Süre:** `{k_dakika:02d}:{k_saniye:02d}`")
+        st.markdown(f"""
+        <div class='timer-container {warning_class}'>
+            <span>⏳ KALAN TOPLAM SÜRE</span>
+            <span class='timer-value'>{k_dakika:02d}:{k_saniye:02d}</span>
+        </div>
+        """, unsafe_allow_html=True)
 
     idx = st.session_state.current_question
     q = st.session_state.quiz_data[idx]
@@ -829,7 +871,6 @@ elif st.session_state.quiz_submitted:
         if u_ans is None:
             bos_sayisi += 1
         else:
-            # Doğru cevap harf kontrolü (A, B, C, D)
             u_char = u_ans[0] if len(u_ans) > 0 else ""
             d_char = d_ans[0] if len(d_ans) > 0 else ""
 
@@ -837,7 +878,6 @@ elif st.session_state.quiz_submitted:
                 dogru_sayisi += 1
             else:
                 yanlis_sayisi += 1
-                # Yanlış sorular arşivine ekle
                 st.session_state.yanlis_sorular_arsivi.append({
                     "soru": q,
                     "kullanici_cevabi": u_ans,
@@ -846,7 +886,6 @@ elif st.session_state.quiz_submitted:
 
     basari_yuzdesi = int((dogru_sayisi / toplam_soru) * 100) if toplam_soru > 0 else 0
 
-    # Metrik Kartları
     m1, m2, m3, m4, m5 = st.columns(5)
     m1.metric("Toplam Soru", toplam_soru)
     m2.metric("Doğru", dogru_sayisi)
