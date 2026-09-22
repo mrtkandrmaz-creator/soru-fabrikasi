@@ -9,6 +9,7 @@ import time
 from datetime import datetime
 from google import genai
 from google.genai import types
+from google.genai.errors import APIError
 import pandas as pd
 import matplotlib.pyplot as plt
 import io
@@ -538,14 +539,10 @@ def dinamik_geri_sayim_bileseni_yayinla(toplam_saniye, soru_sayisi):
     """
     components.html(html_code, height=210)
 
-# --- GEMINI AI SORU ÜRETİM MOTORU ---
+# --- GEMINI AI SORU ÜRETİM MOTORU (GÜNCELLENMİŞ VE HATALARDAN ARINDIRILMIŞ) ---
 def ai_soru_uret(seviye, harita, adet, zorluk, ek_baglam=""):
-    selected_key = api_manager.get_next_key()
-    if not selected_key:
-        st.error("Sistemde aktif API anahtarı tanımlı değil.")
-        return None
-
-    client = genai.Client(api_key=selected_key)
+    max_deneme = max(3, len(API_KEYS) * 2)
+    deneme = 0
     
     prompt = f"""
 Sen Türkiye MEB müfredatına ve LGS/Tablet sınav formatına tam uyumlu bir eğitim uzmanısın.
@@ -569,20 +566,46 @@ Ek Yönerge / Sınav Tipi Bağlamı: {ek_baglam}
 
 SADECE VE SADECE JSON FORMATINDA CEVAP VER:
 """
-    try:
-        response = client.models.generate_content(
-            model='gemini-3.6-flash',
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json",
-                temperature=0.7
+
+    while deneme < max_deneme:
+        selected_key = api_manager.get_next_key()
+        if not selected_key:
+            st.error("Sistemde aktif API anahtarı tanımlı değil. Lütfen secrets.toml dosyasını kontrol edin.")
+            return None
+
+        try:
+            client = genai.Client(api_key=selected_key)
+            # Kararlı model olan gemini-2.5-flash kullanılıyor
+            response = client.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    temperature=0.7
+                )
             )
-        )
-        questions = kararli_json_ayikla(response.text)
-        return questions
-    except Exception as e:
-        st.error(f"Soru üretilirken bir API hatası oluştu: {str(e)}")
-        return None
+            questions = kararli_json_ayikla(response.text)
+            if questions and len(questions) > 0:
+                return questions
+            else:
+                deneme += 1
+                time.sleep(1)
+        except APIError as e:
+            # 429 RESOURCE_EXHAUSTED Hata Yakalama ve Rotasyon
+            if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e):
+                deneme += 1
+                # Kota aşımında bekleme süresi veya anahtar değiştirme
+                time.sleep(3)
+                continue
+            else:
+                st.error(f"API Bağlantı Hatası: {str(e)}")
+                return None
+        except Exception as e:
+            st.error(f"Soru üretilirken beklenmeyen bir hata oluştu: {str(e)}")
+            return None
+
+    st.error("API kota limitine ulaşıldı veya sunucu yanıt vermiyor. Lütfen birkaç dakika sonra tekrar deneyiniz.")
+    return None
 
 # --- SESSION STATE TANIMLARI ---
 if "quiz_data" not in st.session_state:
@@ -614,234 +637,242 @@ with st.sidebar:
     st.markdown("---")
 
     bugunku_toplam = bugunku_soru_sayisini_getir()
-    st.metric(label="📅 Bugün Üretilen Toplam Soru", value=bugunku_toplam)
-    st.markdown("---")
-
-    if not API_KEYS or "buraya_gercek" in API_KEYS[0]:
-        st.warning("⚠️ `.streamlit/secrets.toml` dosyasına geçerli Gemini API anahtarınızı ekleyin.")
-
-    secili_sinif = st.selectbox("Eğitim Seviyesi / Kategori:", list(MUGREDAT.keys()), key=f"sinif_secim_{st.session_state.secim_sifirla_tetikleyici}")
-    
-    sinav_turu = st.selectbox("Sınav Türü:", [
-        "Genel Tarama Sınavı",
-        "Konu Tarama Sınavı",
-        "Yanlışlardan Üretilen Sorular",
-        "LGS Geçmiş Yıllar Çıkmış Sorular",
-        "Hazır Bulunuşluk Sınavı",
-        "Yeni Nesil Sorular"
-    ], key=f"tur_secim_{st.session_state.secim_sifirla_tetikleyici}")
-
-    zorluk_seviyesi = st.selectbox("🎯 Soru Zorluk Seviyesi:", ["Kolay", "Orta", "Zor", "Karma / Dengeli"], key=f"zorluk_secim_{st.session_state.secim_sifirla_tetikleyici}")
+    st.metric("Bugün Üretilen Toplam Soru", f"{bugunku_toplam} Soru")
 
     st.markdown("---")
-    st.markdown("📚 **Dersler ve Üniteler**")
+    st.markdown("#### 🎯 Sınav Yapılandırması")
 
-    mevcut_dersler = MUGREDAT.get(secili_sinif, {})
-    secili_ders_unite_haritasi = {}
+    seviye_secimi = st.selectbox("Eğitim Seviyesi Seçiniz:", list(MUGREDAT.keys()))
 
-    for ders_adi, uniteler_listesi in mevcut_dersler.items():
-        with st.expander(f"📘 {ders_adi}"):
-            ders_secildi = st.checkbox(f"Tüm {ders_adi} Kategorisini Dahil Et", key=f"chk_ders_{st.session_state.secim_sifirla_tetikleyici}_{secili_sinif}_{ders_adi}")
-            secili_alt_uniteler = []
-            for unite in uniteler_listesi:
-                if st.checkbox(unite, key=f"chk_unite_{secili_sinif}_{ders_adi}_{unite}"):
-                    secili_alt_uniteler.append(unite)
-            
-            if ders_secildi or secili_alt_uniteler:
-                secili_ders_unite_haritasi[ders_adi] = secili_alt_uniteler if secili_alt_uniteler else uniteler_listesi
+    ders_haritasi = MUGREDAT.get(seviye_secimi, {})
+    secilen_dersler = {}
 
-    st.markdown("---")
-    soru_sayisi = st.slider("🔢 Soru Sayısı:", 5, 25, 5, key=f"slider_soru_{st.session_state.secim_sifirla_tetikleyici}")
-
-    if st.button("🚀 Soruları Üret", use_container_width=True, type="primary"):
-        if not API_KEYS or "buraya_gercek" in API_KEYS[0]:
-            st.error("Geçerli bir API anahtarı bulunamadı!")
-        elif not secili_ders_unite_haritasi:
-            st.error("Lütfen en az bir ders veya ünite seçiniz!")
-        else:
-            ek_baglam = ""
-            if sinav_turu == "Yanlışlardan Üretilen Sorular":
-                ek_baglam = "Öğrencinin zorlandığı kritik kazanımlardan oluşan pekiştirici sorular üret.\n"
-            elif sinav_turu == "Genel Tarama Sınavı":
-                ek_baglam = "Seçilen tüm ders ve üniteleri kapsayan dengeli bir genel tarama sınavı olmalıdır.\n"
-            elif sinav_turu == "Konu Tarama Sınavı":
-                ek_baglam = "Seçilen alt başlıkları ve konuları derinlemesine irdeleyen konu tarama sınavı olmalıdır.\n"
-            elif sinav_turu == "LGS Geçmiş Yıllar Çıkmış Sorular":
-                ek_baglam = "MEB LGS'de çıkmış gerçek soruların mantığına ve yapısına uygun sorular olmalıdır.\n"
-            elif sinav_turu == "Hazır Bulunuşluk Sınavı":
-                ek_baglam = "Öğrencinin bilmesi gereken ön koşul temel kavramları ölçen sınav olmalıdır.\n"
-            elif sinav_turu == "Yeni Nesil Sorular":
-                ek_baglam = "Günlük yaşam problemleri içeren, mantık ve muhakeme becerisine dayalı yeni nesil sorular olmalıdır.\n"
-
-            tahmini_sure = max(5, soru_sayisi * 3)
-            dinamik_geri_sayim_bileseni_yayinla(tahmini_sure, soru_sayisi)
-
-            with st.spinner("Yapay zeka sorularınızı hazırlıyor..."):
-                sorular = ai_soru_uret(secili_sinif, secili_ders_unite_haritasi, soru_sayisi, zorluk_seviyesi, ek_baglam)
-
-            if sorular and len(sorular) > 0:
-                st.session_state.quiz_data = sorular
-                st.session_state.user_answers = {}
-                st.session_state.quiz_submitted = False
-                st.session_state.quiz_ready_to_start = True
-                st.session_state.exam_started = False
-                st.session_state.current_question = 0
-                soru_sayisini_artir(len(sorular))
-                st.rerun()
+    st.markdown("**Dersler ve Konular:**")
+    for ders, konular in ders_haritasi.items():
+        with st.expander(f"📚 {ders}"):
+            hepsini_sec = st.checkbox(f"Tüm {ders} Konuları", key=f"all_{ders}")
+            if hepsini_sec:
+                secilen_dersler[ders] = konular
             else:
-                st.error("Sorular üretilirken bir hata oluştu. Lütfen tekrar deneyiniz.")
+                secilen_konular = []
+                for kon in konular:
+                    if st.checkbox(kon, key=f"k_{ders}_{kon}"):
+                        secilen_konular.append(kon)
+                if secilen_konular:
+                    secilen_dersler[ders] = secilen_konular
 
-# --- ANA EKRAN İÇERİĞİ VE SINAV ARAYÜZÜ ---
+    zorluk_derecesi = st.select_slider(
+        "Sınav Zorluk Seviyesi:",
+        options=["Kolay", "Orta", "Zor (LGS / Yeni Nesil)", "Şampiyon Seviyesi"]
+    )
+
+    soru_sayisi = st.slider("Üretilecek Soru Sayısı:", min_value=1, max_value=20, value=5, step=1)
+    
+    sure_dakika = st.number_input("Sınav Süresi (Dakika):", min_value=1, max_value=180, value=soru_sayisi * 2)
+
+    ek_notlar = st.text_area("Ek Sınav Yönergesi / Özel İstekler:", placeholder="Örn: 8. Sınıf LGS tarzı, mantık muhakeme ağırlıklı olsun.")
+
+    st.markdown("---")
+    
+    if st.button("🚀 Soru Setini Üret ve Başlat", type="primary", use_container_width=True):
+        if not secilen_dersler:
+            st.warning("Lütfen en az bir ders ve konu seçiniz!")
+        else:
+            tahmini_saniye = max(5, soru_sayisi * 3)
+            dinamik_geri_sayim_bileseni_yayinla(tahmini_saniye, soru_sayisi)
+
+            with st.spinner("AI Soru Motoru Çalışıyor..."):
+                sorular = ai_soru_uret(
+                    seviye=seviye_secimi,
+                    harita=secilen_dersler,
+                    adet=soru_sayisi,
+                    zorluk=zorluk_derecesi,
+                    ek_baglam=ek_notlar
+                )
+
+                if sorular:
+                    st.session_state.quiz_data = sorular
+                    st.session_state.user_answers = {}
+                    st.session_state.quiz_submitted = False
+                    st.session_state.quiz_ready_to_start = True
+                    st.session_state.exam_started = False
+                    st.session_state.current_question = 0
+                    st.session_state.total_duration = sure_dakika * 60
+                    
+                    soru_sayisini_artir(len(sorular))
+                    st.success(f"{len(sorular)} adet soru başarıyla üretildi!")
+                    st.rerun()
+
+# --- ANA EKRAN VE SINAV MODÜLÜ ---
 st.title("🎓 Soru Fabrikası Tablet Sınav Modülü")
 
-if not st.session_state.quiz_ready_to_start and not st.session_state.quiz_submitted:
-    st.info("👋 Hoş geldiniz! Sol taraftaki paneli kullanarak ders, ünite ve soru sayısını seçip **Soruları Üret** butonuna tıklayınız.")
-
-elif st.session_state.quiz_ready_to_start and not st.session_state.exam_started:
-    st.success(f"🎉 {len(st.session_state.quiz_data)} Adet Özgün Soru Başarıyla Hazırlandı!")
-    st.markdown("""
-    <div class="custom-card">
-        <h3>📋 Sınav Yönergeleri</h3>
-        <ul>
-            <li>Sınav başlatıldığında süreniz sayılmaya başlayacaktır.</li>
-            <li>Sorular arasında ileri/geri yapabilir, cevaplarınızı değiştirebilirsiniz.</li>
-            <li>Hazır olduğunuzda aşağıdaki butona basarak sınava başlayabilirsiniz.</li>
-        </ul>
-    </div>
-    """, unsafe_allow_html=True)
+if not st.session_state.quiz_ready_to_start and st.session_state.quiz_data is None:
+    st.info("👈 Sınavı başlatmak için sol taraftaki panelden ders/konu seçimi yapıp 'Soru Setini Üret' butonuna basınız.")
     
-    if st.button("▶ Sınavı Başlat", type="primary", use_container_width=True):
+    # İstatistiksel / Tanıtım Kartları
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.markdown("<div class='custom-card'><h4>🎯 MEB Uyumlu</h4><p>Müfredat kazanımlarına ve LGS sınav standartlarına tam uyumlu sorular.</p></div>", unsafe_allow_html=True)
+    with col2:
+        st.markdown("<div class='custom-card'><h4>📐 Görsel Desteği</h4><p>Geometri, Basınç ve Dinamometre gibi konularda otomatik vektörel çizim desteği.</p></div>", unsafe_allow_html=True)
+    with col3:
+        st.markdown("<div class='custom-card'><h4>📊 Anlık Analiz</h4><p>Detaylı başarı raporu, pedagojik çözüm açıklamaları ve yanlış sorular arşivi.</p></div>", unsafe_allow_html=True)
+
+# 1. Hazırlık Ekranı (Sınav Başlatma Onayı)
+elif st.session_state.quiz_ready_to_start and not st.session_state.exam_started and not st.session_state.quiz_submitted:
+    st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
+    st.subheader("📋 Sınavınız Hazır!")
+    st.write(f"**Soru Sayısı:** {len(st.session_state.quiz_data)} Soru")
+    st.write(f"**Ayrılan Süre:** {st.session_state.total_duration // 60} Dakika")
+    st.write("**Açıklama:** Sınavı başlattığınızda süreniz saymaya başlayacaktır. Başarılar dileriz!")
+    
+    if st.button("▶️ Sınavı Şimdi Başlat", type="primary"):
         st.session_state.exam_started = True
         st.session_state.start_time = time.time()
         st.rerun()
+    st.markdown("</div>", unsafe_allow_html=True)
 
+# 2. Aktif Sınav Ekranı
 elif st.session_state.exam_started and not st.session_state.quiz_submitted:
-    sorular = st.session_state.quiz_data
-    toplam_soru = len(sorular)
-    curr_idx = st.session_state.current_question
-    q = sorular[curr_idx]
+    gecen_sure = time.time() - st.session_state.start_time
+    kalan_sure = max(0, st.session_state.total_duration - gecen_sure)
 
-    # Üst İlerleme Çubuğu
-    st.progress((curr_idx + 1) / toplam_soru)
-    
-    col_head1, col_head2 = st.columns([3, 1])
-    with col_head1:
-        st.subheader(f"Soru {curr_idx + 1} / {toplam_soru}")
-    with col_head2:
-        gecen_sn = int(time.time() - st.session_state.start_time)
-        st.markdown(f"⏱️ **Süre:** {gecen_sn // 60} dk {gecen_sn % 60} sn")
+    if kalan_sure <= 0:
+        st.warning("⏱️ Süreniz doldu! Sınavınız otomatik olarak sonlandırılıyor.")
+        st.session_state.quiz_submitted = True
+        st.rerun()
 
-    st.markdown('<div class="custom-card">', unsafe_allow_html=True)
+    # Üst Bilgi Barı
+    k_dakika = int(kalan_sure // 60)
+    k_saniye = int(kalan_sure % 60)
     
+    col_t1, col_t2 = st.columns([3, 1])
+    with col_t1:
+        st.progress((st.session_state.current_question + 1) / len(st.session_state.quiz_data))
+    with col_t2:
+        st.markdown(f"⏱️ **Kalan Süre:** `{k_dakika:02d}:{k_saniye:02d}`")
+
+    idx = st.session_state.current_question
+    q = st.session_state.quiz_data[idx]
+
+    st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
+    st.markdown(f"### Soru {idx + 1} / {len(st.session_state.quiz_data)}")
+    
+    # Görsel Var İse Çizdir
+    g_tip = q.get("gorsel_tipi", "yok")
+    g_etiketler = q.get("gorsel_etiketler", {})
+    if g_tip != "yok":
+        img_base64 = ciz_vektorel_gorsel(g_tip, g_etiketler)
+        if img_base64:
+            st.markdown(f"<div class='gorsel-sema-kutusu'><img src='{img_base64}' style='max-width:100%; height:auto;'/></div>", unsafe_allow_html=True)
+
     # Soru Metni
-    soru_metni = temizle_latex_metin(q.get("soru_metni", ""))
-    st.markdown(f'<div class="soru-metni-kutusu">{soru_metni}</div>', unsafe_allow_html=True)
-
-    # Vektörel Görsel (Varsa)
-    gorsel_tipi = q.get("gorsel_tipi", "yok")
-    if gorsel_tipi and gorsel_tipi.lower() != "yok":
-        gorsel_base64 = ciz_vektorel_gorsel(gorsel_tipi, q.get("gorsel_etiketler", {}))
-        if gorsel_base64:
-            st.markdown(f'''
-            <div class="gorsel-sema-kutusu">
-                <img src="{gorsel_base64}" style="max-width: 100%; height: auto;" />
-            </div>
-            ''', unsafe_allow_html=True)
-
-    st.markdown("---")
+    st.markdown(f"<p class='soru-metni-kutusu'>{temizle_latex_metin(q.get('soru_metni', ''))}</p>", unsafe_allow_html=True)
+    st.markdown("<br>", unsafe_allow_html=True)
 
     # Seçenekler
     secenekler = q.get("secenekler", [])
-    mevcut_cevap = st.session_state.user_answers.get(curr_idx, None)
+    mevcut_cevap = st.session_state.user_answers.get(idx, None)
     
     secilen = st.radio(
-        "Cevabınızı Seçiniz:",
+        "Cevabınızı seçiniz:",
         secenekler,
         index=secenekler.index(mevcut_cevap) if mevcut_cevap in secenekler else None,
-        key=f"q_radio_{curr_idx}"
+        key=f"q_radio_{idx}_{st.session_state.secim_sifirla_tetikleyici}"
     )
 
     if secilen:
-        st.session_state.user_answers[curr_idx] = secilen
+        st.session_state.user_answers[idx] = secilen
 
-    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
     # Navigasyon Butonları
-    col_nav1, col_nav2, col_nav3 = st.columns([1, 1, 1])
+    col_b1, col_b2, col_b3 = st.columns([1, 1, 1])
     
-    with col_nav1:
-        if curr_idx > 0:
-            if st.button("⬅ Önceki Soru", type="secondary", use_container_width=True):
+    with col_b1:
+        if idx > 0:
+            if st.button("⬅️ Önceki Soru"):
                 st.session_state.current_question -= 1
                 st.rerun()
 
-    with col_nav2:
-        if st.button("🏁 Sınavı Bitir", type="primary", use_container_width=True):
-            st.session_state.quiz_submitted = True
-            st.session_state.total_duration = int(time.time() - st.session_state.start_time)
+    with col_b2:
+        if st.button("🗑️ Seçimi Temizle"):
+            if idx in st.session_state.user_answers:
+                del st.session_state.user_answers[idx]
+            st.session_state.secim_sifirla_tetikleyici += 1
             st.rerun()
 
-    with col_nav3:
-        if curr_idx < toplam_soru - 1:
-            if st.button("Sonraki Soru ➡", type="secondary", use_container_width=True):
+    with col_b3:
+        if idx < len(st.session_state.quiz_data) - 1:
+            if st.button("Sonraki Soru ➡️"):
                 st.session_state.current_question += 1
                 st.rerun()
+        else:
+            if st.button("🏁 Sınavı Bitir ve Değerlendir", type="primary"):
+                st.session_state.quiz_submitted = True
+                st.session_state.exam_started = False
+                st.rerun()
 
+# 3. Sonuç ve Değerlendirme Ekranı
 elif st.session_state.quiz_submitted:
-    st.balloons()
-    st.header("📊 Sınav Sonuç ve Performans Raporu")
-
-    sorular = st.session_state.quiz_data
-    toplam = len(sorular)
+    st.markdown("## 📊 Sınav Sonuç ve Değerlendirme Raporu")
+    
+    toplam_soru = len(st.session_state.quiz_data)
     dogru_sayisi = 0
     yanlis_sayisi = 0
     bos_sayisi = 0
 
-    for idx, q in enumerate(sorular):
-        u_ans = st.session_state.user_answers.get(idx, "")
-        d_ans = str(q.get("dogru_cevap", "")).strip()
+    for i, q in enumerate(st.session_state.quiz_data):
+        u_ans = st.session_state.user_answers.get(i, None)
+        d_ans = q.get("dogru_cevap", "").strip()
 
-        if not u_ans:
+        if u_ans is None:
             bos_sayisi += 1
-        elif u_ans.startswith(d_ans[0]) or d_ans in u_ans:
-            dogru_sayisi += 1
         else:
-            yanlis_sayisi += 1
-            if q not in st.session_state.yanlis_sorular_arsivi:
-                st.session_state.yanlis_sorular_arsivi.append(q)
+            # Doğru cevap harf kontrolü (A, B, C, D)
+            u_char = u_ans[0] if len(u_ans) > 0 else ""
+            d_char = d_ans[0] if len(d_ans) > 0 else ""
 
-    sure_str = f"{st.session_state.total_duration // 60} dk {st.session_state.total_duration % 60} sn" if st.session_state.total_duration else "N/A"
+            if u_char == d_char or u_ans == d_ans:
+                dogru_sayisi += 1
+            else:
+                yanlis_sayisi += 1
+                # Yanlış sorular arşivine ekle
+                st.session_state.yanlis_sorular_arsivi.append({
+                    "soru": q,
+                    "kullanici_cevabi": u_ans,
+                    "tarih": datetime.now().strftime("%d.%m.%Y %H:%M")
+                })
 
-    col_m1, col_m2, col_m3, col_m4, col_m5 = st.columns(5)
-    col_m1.metric("Toplam Soru", toplam)
-    col_m2.metric("Doğru", dogru_sayisi)
-    col_m3.metric("Yanlış", yanlis_sayisi)
-    col_m4.metric("Boş", bos_sayisi)
-    col_m5.metric("Tamamlama Süresi", sure_str)
+    basari_yuzdesi = int((dogru_sayisi / toplam_soru) * 100) if toplam_soru > 0 else 0
+
+    # Metrik Kartları
+    m1, m2, m3, m4, m5 = st.columns(5)
+    m1.metric("Toplam Soru", toplam_soru)
+    m2.metric("Doğru", dogru_sayisi)
+    m3.metric("Yanlış", yanlis_sayisi)
+    m4.metric("Boş", bos_sayisi)
+    m5.metric("Başarı Oranı", f"%{basari_yuzdesi}")
 
     st.markdown("---")
-    st.subheader("📝 Soru Detayları ve Çözüm Açıklamaları")
+    st.subheader("📝 Detaylı Soru İncelemesi")
 
-    for idx, q in enumerate(sorular):
-        u_ans = st.session_state.user_answers.get(idx, "Boş Bırakıldı")
+    for i, q in enumerate(st.session_state.quiz_data):
+        u_ans = st.session_state.user_answers.get(i, "Boş Bırakıldı")
         d_ans = q.get("dogru_cevap", "")
         cozum = q.get("cozum_aciklamasi", "Açıklama bulunmuyor.")
 
-        is_correct = u_ans != "Boş Bırakıldı" and (u_ans.startswith(d_ans[0]) or d_ans in u_ans)
-        status_icon = "✅" if is_correct else ("⚠️" if u_ans == "Boş Bırakıldı" else "❌")
-
-        with st.expander(f"{status_icon} Soru {idx + 1}: {q.get('soru_metni', '')[:60]}..."):
-            st.markdown(f"**Soru:** {temizle_latex_metin(q.get('soru_metni', ''))}")
-            st.markdown(f"**Sizin Cevabınız:** {u_ans}")
-            st.markdown(f"**Doğru Cevap:** {d_ans}")
-            st.info(f"💡 **Çözüm / Açıklama:** {temizle_latex_metin(cozum)}")
+        with st.expander(f"Soru {i + 1} İncelemesi - ({'✅ Doğru' if u_ans != 'Boş Bırakıldı' and (u_ans[0] == d_ans[0]) else '❌ Yanlış / Boş'})"):
+            st.write(f"**Soru:** {temizle_latex_metin(q.get('soru_metni', ''))}")
+            st.write(f"**Sizin Cevabınız:** {u_ans}")
+            st.write(f"**Doğru Cevap:** {d_ans}")
+            st.info(f"💡 **Pedagojik Çözüm:** {cozum}")
 
     st.markdown("---")
     if st.button("🔄 Yeni Sınav Başlat", type="primary"):
         st.session_state.quiz_data = None
+        st.session_state.user_answers = {}
+        st.session_state.quiz_submitted = False
         st.session_state.quiz_ready_to_start = False
         st.session_state.exam_started = False
-        st.session_state.quiz_submitted = False
-        st.session_state.user_answers = {}
-        st.session_state.secim_sifirla_tetikleyici += 1
         st.rerun()
