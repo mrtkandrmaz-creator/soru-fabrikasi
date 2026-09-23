@@ -4,11 +4,6 @@ import json
 import streamlit as st
 from google import genai
 from google.genai import types
-from reportlab.lib.pagesizes import A4
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib import colors
-from reportlab.pdfgen import canvas
 from docx import Document
 
 # ---------------------------------------------------------
@@ -96,147 +91,18 @@ with st.sidebar:
     
     st.markdown("---")
     if API_KEY:
-        st.success("🔑 API Anahtarı Streamlit Secrets üzerinden doğrulandı.")
+        st.success("🔑 API Anahtarı Streamlit Secrets üzerinden bağlandı.")
     else:
-        st.error("⚠️ API Key bulunamadı! Lütfen `.streamlit/secrets.toml` dosyasına `GEMINI_API_KEY` ekleyin.")
+        st.error("⚠️ API Key bulunamadı! Lütfen Streamlit Cloud Secrets ayarlarınıza `GEMINI_API_KEY` ekleyin.")
 
 # ---------------------------------------------------------
-# 5. YARDIMCI FONKSİYONLAR (PDF VE DOCX ÜRETİMİ)
+# 5. YARDIMCI FONKSİYONLAR (WORD VE HTML/PRINT PDF)
 # ---------------------------------------------------------
-class NumberedCanvas(canvas.Canvas):
-    """PDF için dinamik sayfa numaralandırması sağlayan alt bilgi canvası."""
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._saved_page_states = []
-
-    def showPage(self):
-        self._saved_page_states.append(dict(self.__dict__))
-        self._startPage()
-
-    def save(self):
-        num_pages = len(self._saved_page_states)
-        for state in self._saved_page_states:
-            self.__dict__.update(state)
-            self.draw_page_number(num_pages)
-            super().showPage()
-        super().save()
-
-    def draw_page_number(self, page_count):
-        self.setFont("Helvetica", 9)
-        self.setFillColor(colors.HexColor("#666666"))
-        self.drawString(40, 20, "MEB 5. Sınıf Soru Bankası - Yapay Zeka Tarafından Oluşturuldu")
-        self.drawRightString(555, 20, f"Sayfa {self._pageNumber} / {page_count}")
-
-def generate_pdf(questions_data, ders_adi, konu_adi):
-    """Soruları ReportLab kullanarak PDF formatına dönüştürür."""
-    buffer = io.BytesIO()
-    doc = SimpleDocTemplate(
-        buffer,
-        pagesize=A4,
-        rightMargin=40,
-        leftMargin=40,
-        topMargin=40,
-        bottomMargin=40
-    )
-    
-    styles = getSampleStyleSheet()
-    title_style = ParagraphStyle(
-        'TitleStyle',
-        parent=styles['Heading1'],
-        fontName='Helvetica-Bold',
-        fontSize=16,
-        leading=20,
-        alignment=1,
-        textColor=colors.HexColor("#1E3A8A")
-    )
-    subtitle_style = ParagraphStyle(
-        'SubTitleStyle',
-        parent=styles['Normal'],
-        fontName='Helvetica-Bold',
-        fontSize=11,
-        leading=14,
-        alignment=1,
-        textColor=colors.HexColor("#4B5563")
-    )
-    q_style = ParagraphStyle(
-        'QuestionStyle',
-        parent=styles['Normal'],
-        fontName='Helvetica-Bold',
-        fontSize=10,
-        leading=14,
-        spaceAfter=6,
-        textColor=colors.HexColor("#1F2937")
-    )
-    opt_style = ParagraphStyle(
-        'OptionStyle',
-        parent=styles['Normal'],
-        fontName='Helvetica',
-        fontSize=10,
-        leading=13,
-        textColor=colors.HexColor("#374151")
-    )
-    ans_style = ParagraphStyle(
-        'AnswerStyle',
-        parent=styles['Normal'],
-        fontName='Helvetica',
-        fontSize=9,
-        leading=12,
-        textColor=colors.HexColor("#065F46")
-    )
-
-    story = []
-    
-    # Başlık
-    story.append(Paragraph(f"5. SINIF {ders_adi.upper()} TESTİ", title_style))
-    story.append(Paragraph(f"Konu: {konu_adi}", subtitle_style))
-    story.append(Spacer(1, 15))
-
-    # Sorular
-    for i, q in enumerate(questions_data, 1):
-        q_text = f"<b>Soru {i}:</b> {q.get('soru_metni', '')}"
-        story.append(Paragraph(q_text, q_style))
-        
-        secenekler = q.get('secenekler', {})
-        opt_a = f"<b>A)</b> {secenekler.get('A', '')}"
-        opt_b = f"<b>B)</b> {secenekler.get('B', '')}"
-        opt_c = f"<b>C)</b> {secenekler.get('C', '')}"
-        opt_d = f"<b>D)</b> {secenekler.get('D', '')}"
-        
-        table_data = [
-            [Paragraph(opt_a, opt_style), Paragraph(opt_b, opt_style)],
-            [Paragraph(opt_c, opt_style), Paragraph(opt_d, opt_style)]
-        ]
-        
-        t = Table(table_data, colWidths=[250, 250])
-        t.setStyle(TableStyle([
-            ('VALIGN', (0,0), (-1,-1), 'TOP'),
-            ('BOTTOMPADDING', (0,0), (-1,-1), 4),
-            ('TOPPADDING', (0,0), (-1,-1), 2),
-        ]))
-        story.append(t)
-        story.append(Spacer(1, 10))
-
-    # Cevap Anahtarı ve Çözümler
-    story.append(Spacer(1, 10))
-    story.append(Paragraph("<b>CEVAP ANAHTARI VE ÇÖZÜMLER</b>", title_style))
-    story.append(Spacer(1, 10))
-
-    for i, q in enumerate(questions_data, 1):
-        dogru_cevap = q.get('dogru_cevap', '')
-        cozum = q.get('cozum', '')
-        ans_text = f"<b>{i}. Soru Cevabı: {dogru_cevap}</b> - Çözüm: {cozum}"
-        story.append(Paragraph(ans_text, ans_style))
-        story.append(Spacer(1, 4))
-
-    doc.build(story, canvasmaker=NumberedCanvas)
-    buffer.seek(0)
-    return buffer
-
 def generate_docx(questions_data, ders_adi, konu_adi):
     """Soruları Microsoft Word (.docx) formatında hazırlar."""
     doc = Document()
     doc.add_heading(f"5. Sınıf {ders_adi} Testi", level=0)
-    doc.add_paragraph(f"Konu: {konu_adi}")
+    doc.add_paragraph(f"Konu: {konu_adi}\n")
     
     for i, q in enumerate(questions_data, 1):
         doc.add_heading(f"Soru {i}", level=2)
@@ -251,12 +117,83 @@ def generate_docx(questions_data, ders_adi, konu_adi):
     for i, q in enumerate(questions_data, 1):
         p = doc.add_paragraph()
         p.add_run(f"{i}. Soru Doğru Cevap: {q.get('dogru_cevap', '')}\n").bold = True
-        p.add_run(f"Çözüm: {q.get('cozum', '')}")
+        p.add_run(f"Çözüm: {q.get('cozum', '')}\n")
 
     buffer = io.BytesIO()
     doc.save(buffer)
     buffer.seek(0)
     return buffer
+
+def generate_html_printable(questions_data, ders_adi, konu_adi):
+    """A4 formatında yazdırılabilir ve PDF olarak kaydedilebilir HTML belgesi üretir."""
+    html_content = f"""
+    <!DOCTYPE html>
+    <html lang="tr">
+    <head>
+        <meta charset="UTF-8">
+        <title>5. Sınıf {ders_adi} Testi</title>
+        <style>
+            body {{ font-family: Arial, sans-serif; margin: 30px; color: #111; line-height: 1.5; }}
+            .header {{ text-align: center; border-bottom: 2px solid #1E3A8A; padding-bottom: 10px; margin-bottom: 20px; }}
+            .header h1 {{ color: #1E3A8A; margin: 0; font-size: 22px; }}
+            .header h3 {{ color: #4B5563; margin: 5px 0 0 0; font-size: 14px; }}
+            .question-box {{ margin-bottom: 20px; page-break-inside: avoid; }}
+            .q-title {{ font-weight: bold; margin-bottom: 8px; color: #1F2937; }}
+            .options-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-left: 15px; }}
+            .solutions {{ margin-top: 40px; page-break-before: always; border-top: 2px dashed #6B7280; padding-top: 20px; }}
+            .sol-item {{ margin-bottom: 12px; font-size: 13px; }}
+            @media print {{
+                body {{ margin: 0; }}
+                .no-print {{ display: none; }}
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="no-print" style="margin-bottom: 20px; text-align: right;">
+            <button onclick="window.print()" style="padding: 10px 20px; background-color: #1E3A8A; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                🖨️ Yazdır / PDF Olarak Kaydet
+            </button>
+        </div>
+        
+        <div class="header">
+            <h1>5. SINIF {ders_adi.upper()} TESTİ</h1>
+            <h3>Konu: {konu_adi}</h3>
+        </div>
+    """
+    
+    for i, q in enumerate(questions_data, 1):
+        sec = q.get('secenekler', {})
+        html_content += f"""
+        <div class="question-box">
+            <div class="q-title">Soru {i}: {q.get('soru_metni', '')}</div>
+            <div class="options-grid">
+                <div><b>A)</b> {sec.get('A', '')}</div>
+                <div><b>B)</b> {sec.get('B', '')}</div>
+                <div><b>C)</b> {sec.get('C', '')}</div>
+                <div><b>D)</b> {sec.get('D', '')}</div>
+            </div>
+        </div>
+        """
+        
+    html_content += """
+        <div class="solutions">
+            <h2 style="color: #1E3A8A; text-align: center;">CEVAP ANAHTARI VE ÇÖZÜMLER</h2>
+    """
+    
+    for i, q in enumerate(questions_data, 1):
+        html_content += f"""
+        <div class="sol-item">
+            <b>{i}. Soru Cevabı: {q.get('dogru_cevap', '')}</b><br>
+            <i>Çözüm:</i> {q.get('cozum', '')}
+        </div>
+        """
+        
+    html_content += """
+        </div>
+    </body>
+    </html>
+    """
+    return html_content
 
 # ---------------------------------------------------------
 # 6. GEMINI API ILE SORU URETME MOTORU
@@ -318,7 +255,7 @@ generate_btn = st.button("🚀 Soruları Üret", type="primary", use_container_w
 
 if generate_btn:
     if not API_KEY:
-        st.error("❌ API Key bulunamadı! Lütfen Streamlit secrets veya ortam değişkenlerinizi kontrol edin.")
+        st.error("❌ API Key bulunamadı! Lütfen Streamlit Cloud Secrets ayarlarınıza `GEMINI_API_KEY` ekleyin.")
     else:
         with st.spinner("MEB müfredatına uygun sorular hazırlanıyor..."):
             try:
@@ -339,7 +276,7 @@ if 'generated_questions' in st.session_state and st.session_state['generated_que
     st.markdown("---")
     st.subheader("📝 Üretilen Soru Bankası")
     
-    tab1, tab2 = st.tabs(["📄 Sorular ve Çözümler", "📥 İndirme Seçenekleri"])
+    tab1, tab2 = st.tabs(["📄 Sorular ve Çözümler", "📥 İndirme ve Yazdırma"])
     
     with tab1:
         for idx, q in enumerate(questions, 1):
@@ -362,21 +299,13 @@ if 'generated_questions' in st.session_state and st.session_state['generated_que
                 st.divider()
 
     with tab2:
-        st.markdown("#### Test Belgenizi İndirin")
+        st.markdown("#### Test Belgenizi İndirin / Yazdırın")
         
-        pdf_data = generate_pdf(questions, ders, unite)
         docx_data = generate_docx(questions, ders, unite)
+        html_print_data = generate_html_printable(questions, ders, unite)
         
         d_col1, d_col2 = st.columns(2)
         with d_col1:
-            st.download_button(
-                label="📄 PDF Olarak İndir",
-                data=pdf_data,
-                file_name=f"5_Sinif_{ders}_{unite}.pdf",
-                mime="application/pdf",
-                use_container_width=True
-            )
-        with d_col2:
             st.download_button(
                 label="📝 Word (.docx) Olarak İndir",
                 data=docx_data,
@@ -384,3 +313,13 @@ if 'generated_questions' in st.session_state and st.session_state['generated_que
                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                 use_container_width=True
             )
+        with d_col2:
+            st.download_button(
+                label="🌐 Yazdırılabilir HTML / PDF Şablonu İndir",
+                data=html_print_data,
+                file_name=f"5_Sinif_{ders}_{unite}.html",
+                mime="text/html",
+                use_container_width=True
+            )
+            
+        st.caption("💡 **Not:** İndirdiğiniz HTML belgesini tarayıcınızda açıp 'Yazdır / PDF Olarak Kaydet' butonuna basarak tek tıkla mükemmel düzenli PDF çıktısı alabilirsiniz.")

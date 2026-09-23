@@ -5,3 +5,7 @@ google-genai
 streamlit
 matplotlib
 pandas
+streamlit
+google-genai
+reportlab
+python-docx
