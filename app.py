@@ -146,7 +146,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- HİBRİT API VE GÜNLÜK SAYAC YÖNETİMİ ---
+# --- KALICI GÜNLÜK SAYAC YÖNETİMİ (DOSYA BAZLI) ---
 SAYAC_DOSYASI = "soru_sayac_veritabani.json"
 
 def veritabani_yukle():
@@ -177,79 +177,6 @@ def soru_sayisini_artir(eklenecek_adet):
     db[bugun_str] = mevcut + eklenecek_adet
     veritabani_kaydet(db)
 
-# --- GÜVENLİ API ANAHTARLARI & HİBRİT YÖNETİCİ ---
-raw_keys = st.secrets.get("API_KEYS", [])
-if isinstance(raw_keys, str):
-    API_KEYS = [raw_keys.strip()]
-elif isinstance(raw_keys, list):
-    API_KEYS = [str(k).strip() for k in raw_keys if str(k).strip()]
-else:
-    API_KEYS = []
-
-groq_config = st.secrets.get("groq", {})
-GROQ_API_KEY = groq_config.get("api_key", "")
-GROQ_MODEL = groq_config.get("model_name", "llama-3.3-70b-versatile")
-
-class HybridAIClient:
-    def __init__(self, gemini_keys, groq_key, groq_model):
-        self.gemini_keys = gemini_keys
-        self.current_gemini_index = 0
-        self.groq_key = groq_key
-        self.groq_model = groq_model
-
-    def get_next_gemini_key(self):
-        if not self.gemini_keys:
-            return None
-        key = self.gemini_keys[self.current_gemini_index]
-        self.current_gemini_index = (self.current_gemini_index + 1) % len(self.gemini_keys)
-        return key
-
-    def generate_content(self, prompt_text, preferred_engine="gemini"):
-        """
-        Hibrit yapı: Önce tercih edilen motorla dener, hata veya limit durumunda diğerine geçer.
-        """
-        engine_order = [preferred_engine, "groq" if preferred_engine == "gemini" else "gemini"]
-        
-        for engine in engine_order:
-            if engine == "gemini" and self.gemini_keys:
-                try:
-                    key = self.get_next_gemini_key()
-                    client = genai.Client(api_key=key)
-                    response = client.models.generate_content(
-                        model='gemini-2.5-flash',
-                        contents=prompt_text
-                    )
-                    if response and response.text:
-                        return response.text
-                except Exception:
-                    continue
-            
-            elif engine == "groq" and self.groq_key:
-                try:
-                    import urllib.request
-                    import urllib.error
-                    
-                    url = "https://api.groq.com/openai/v1/chat/completions"
-                    headers = {
-                        "Authorization": f"Bearer {self.groq_key}",
-                        "Content-Type": "application/json"
-                    }
-                    payload = {
-                        "model": self.groq_model,
-                        "messages": [{"role": "user", "content": prompt_text}],
-                        "temperature": 0.7
-                    }
-                    req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers=headers, method="POST")
-                    with urllib.request.urlopen(req) as resp:
-                        res_data = json.loads(resp.read().decode("utf-8"))
-                        content = res_data["choices"][0]["message"]["content"]
-                        if content:
-                            return content
-                except Exception:
-                    continue
-        return None
-
-ai_client = HybridAIClient(API_KEYS, GROQ_API_KEY, GROQ_MODEL)
 # --- DİNAMİK HARF ÇIKARICI ---
 def get_custom_labels(etiketler, default_tuple=("A", "B", "C")):
     if not isinstance(etiketler, dict) or not etiketler:
@@ -510,6 +437,52 @@ MUGREDAT = {
         "Almanca": ["LGS Almanca Kelime, Cümle Yapısı ve Paragraf Soruları"]
     }
 }
+
+# --- GÜVENLİ API ANAHTARI YÖNETİMİ ---
+raw_keys = st.secrets.get("API_KEYS", [])
+if isinstance(raw_keys, str):
+    API_KEYS = [raw_keys.strip()]
+elif isinstance(raw_keys, list):
+    API_KEYS = [str(k).strip() for k in raw_keys if str(k).strip()]
+else:
+    API_KEYS = []
+
+class APIKeyManager:
+    def __init__(self, keys):
+        self.keys = keys
+        self.current_index = 0
+
+    def get_next_key(self):
+        if not self.keys:
+            return None
+        key = self.keys[self.current_index]
+        self.current_index = (self.current_index + 1) % len(self.keys)
+        return key
+
+api_manager = APIKeyManager(API_KEYS)
+
+def temizle_latex_metin(text):
+    if not isinstance(text, str):
+        return str(text)
+    text = re.sub(r'\\circ\b', '°', text)
+    text = re.sub(r'\\frac\{([^}]+)\}\{([^}]+)\}', r'\1/\2', text)
+    text = text.replace('\\%', '%').replace('$', '').strip()
+    return text
+
+def kararli_json_ayikla(raw_text):
+    try:
+        clean_text = re.sub(r'```(?:json)?\s*([\s\S]*?)\s*```', r'\1', raw_text).strip()
+        match = re.search(r'(\[.*\]|\{.*\})', clean_text, re.DOTALL)
+        if match:
+            clean_text = match.group(1)
+        parsed = json.loads(clean_text)
+        if isinstance(parsed, dict):
+            return [parsed]
+        elif isinstance(parsed, list):
+            return parsed
+    except Exception:
+        pass
+    return []
 
 # --- SESSION STATE TANIMLARI ---
 if "quiz_data" not in st.session_state:
