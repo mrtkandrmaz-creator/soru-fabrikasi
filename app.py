@@ -388,7 +388,7 @@ MUGREDAT = {
     "5. Sınıf": {
         "Türkçe": ["Sözcükte Anlam", "Cümlede Anlam", "Metin Yorumlama ve Paragraf", "Yazım Kuralları", "Noktalama İşaretleri"],
         "Matematik": ["Doğal Sayılarla İşlemler","Tümler ve Bütünler açı","Çokgenler Düzgün Çokgenler", "Kesirler", "üçgende çokgende dörtgende çevre uzunluğu ve alan", "Ondalık Gösterimler", "Kareli Zemin","Yüzdeler", "Üçgen ve Dörtgenler", "Veri İşleme", "Koordinat Sistemi ve Üçgende Açılar","Çember ve Daire","Doğru Doğru Parçası Dikme ve Çember", "Açı çeşitleri ve Dörtgende Açılar", "Temel Geometrik Kavramlar ve Doğrular"],
-        "Fen Bilimleri": ["Güneş, Dünya ve Ay", "Canlılar Dünyası", "Kuvvetin Uygulanması ve Sürtünme", "Maddenin Hâl Değişimi ve Isı", "Kuvveti Tanıyalım", "Işığın Yayılması"],
+        "Fen Bilimleri": ["Güneş, Dünya ve Ay", "Canlılar Dünyası","Dinamometre Sürtünme Kuvveti ", "Kuvvetin Ölçülmesi","Kuvvetin Uygulanması ve Sürtünme", "Maddenin Hâl Değişimi ve Isı", "Kuvveti Tanıyalım", "Işığın Yayılması"],
         "Sosyal Bilgiler": ["Birlikte Yaşamak,Birey ve Toplum", "Kültür ve Ortak Mirasımız", "Evimiz Dünya", "Yaşayan Demokrasimiz", "Hayatımızda Ekonomi", "Teknoloji ve Sosyal Bilimler", "Üretim, Dağıtım ve Tüketim"],
         "Din Kültürü": ["Allah İnancı ve İnsan", "Allahın İsimleri Esmaül Hüsna","Hz. Muhammed ve Aile Hayatı", "İslam'ın Temel İbadetleri","Namaz","Kuran Kerim","Peygamber Kıssaları","Mimarimizde dini Motifler", "Ahlaki Değerler"],
         "İngilizce": ["Hello!", "My Town", "Games and Hobbies", "My Daily Routine", "Health", "Movies"],
