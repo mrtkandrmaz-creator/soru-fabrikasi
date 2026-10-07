@@ -506,7 +506,7 @@ with st.sidebar:
     st.metric(label="📅 Bugün Üretilen Toplam Soru", value=bugunku_toplam)
     st.markdown("---")
 
-    def call_groq_with_key(api_key, prompt_text):
+def call_groq_with_key(api_key, prompt_text):
     from groq import Groq
     client = Groq(api_key=api_key)
     completion = client.chat.completions.create(
