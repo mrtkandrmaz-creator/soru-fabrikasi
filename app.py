@@ -438,28 +438,17 @@ MUGREDAT = {
     }
 }
 
-# --- GÜVENLİ API ANAHTARI YÖNETİMİ ---
-raw_keys = st.secrets.get("API_KEYS", [])
-if isinstance(raw_keys, str):
-    API_KEYS = [raw_keys.strip()]
-elif isinstance(raw_keys, list):
-    API_KEYS = [str(k).strip() for k in raw_keys if str(k).strip()]
-else:
-    API_KEYS = []
+# API Anahtarları
+try:
+    GROQ_KEYS = st.secrets["api_keys"].get("groq_keys", [])
+    GEMINI_KEYS = st.secrets["api_keys"].get("gemini_keys", [])
+except Exception:
+    GROQ_KEYS = []
+    GEMINI_KEYS = []
 
-class APIKeyManager:
-    def __init__(self, keys):
-        self.keys = keys
-        self.current_index = 0
-
-    def get_next_key(self):
-        if not self.keys:
-            return None
-        key = self.keys[self.current_index]
-        self.current_index = (self.current_index + 1) % len(self.keys)
-        return key
-
-api_manager = APIKeyManager(API_KEYS)
+if not GROQ_KEYS and not GEMINI_KEYS:
+    st.error("⚠️ `.streamlit/secrets.toml` dosyasında API anahtarları bulunamadı!")
+    st.stop()
 
 def temizle_latex_metin(text):
     if not isinstance(text, str):
