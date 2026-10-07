@@ -222,59 +222,26 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
         ax.plot(3.0 + 1.1*np.cos(theta), 2.5 + 0.7*np.sin(theta), color='#94a3b8', linestyle='--', linewidth=1)
         ax.text(3.0, 3.4, etiketler.get("O", "Yörünge"), fontsize=8, color='#64748b', ha='center')
 
-    # Soru parametresinden dinamometre değerini alalım (Varsayılan: 15 N, Max: 30 N)
-deger = float(etiketler.get("deger", 15))
-max_deger = float(etiketler.get("max_deger", 30))
-
-# Değere göre yayın alt ucunun konumunu hesapla (Değer arttıkça yay aşağı uzar)
-spring_top = 3.9
-spring_bottom_min = 3.7
-spring_bottom_max = 2.3
-# Değere orantılı olarak yayın alt ucunu konumlandırıyoruz
-spring_bottom = spring_bottom_min - (deger / max_deger) * (spring_bottom_min - spring_bottom_max)
-
-# 1. Üst Askı Halkası ve Kanca
-ax.plot([3.0, 3.0], [4.6, 4.0], color='#475569', linewidth=3)
-ring = plt.Circle((3.0, 4.7), 0.15, color='#475569', fill=False, linewidth=2.5)
-ax.add_patch(ring)
-
-# 2. Dinamometre Gövdesi (Şeffaf / Silindirik Kasa)
-body = plt.Rectangle((2.4, 1.6), 1.2, 2.5, color='#f1f5f9', ec='#0f172a', linewidth=2, alpha=0.9, zorder=2)
-ax.add_patch(body)
-
-# 3. Gerçekçi Ölçek Çizgileri ve Newton Değerleri
-for i, val in enumerate(np.linspace(0, max_deger, 7)):
-    # Gövde içerisindeki dikey konuma göre çizgileri yerleştir
-    y_tick = 3.8 - (i / 6) * 2.0
-    is_major = (i % 2 == 0)
-    tick_len = 0.25 if is_major else 0.12
-    
-    # Bölme çizgisi
-    ax.plot([2.4, 2.4 + tick_len], [y_tick, y_tick], color='#334155', linewidth=1.5 if is_major else 1, zorder=3)
-    
-    # Çizgi etiketleri (Örn: 0N, 10N, 20N...)
-    if is_major:
-        ax.text(2.75, y_tick, f"{int(val)}N", fontsize=7, va='center', color='#334155', fontweight='bold', zorder=3)
-
-# 4. Esnek Yay (Değere göre uzayan spiral çizgi)
-y_spring = np.linspace(3.8, spring_bottom, 20)
-# Sinüs dalgası ile yay sarmalı efekti
-x_spring = 3.0 + 0.12 * np.sin(np.linspace(0, 8*np.pi, 20))
-ax.plot(x_spring, y_spring, color='#ea580c', linewidth=2, zorder=4)
-
-# 5. Alt Uzantı ve İbre (Ölçü Göstergesi)
-ax.plot([3.0, 3.0], [spring_bottom, spring_bottom - 0.3], color='#475569', linewidth=2.5, zorder=4)
-# İbre ucu (Kırmızı ok/çizgi gövde üzerindeki değeri gösterir)
-ax.plot([2.4, 2.65], [spring_bottom, spring_bottom], color='#dc2626', linewidth=2, zorder=5)
-
-# 6. Alttaki Yük Kutusu (Cisim)
-box_top = spring_bottom - 0.3
-weight_box = plt.Rectangle((2.5, box_top - 0.8), 1.0, 0.8, color='#94a3b8', ec='#0f172a', linewidth=2, zorder=4)
-ax.add_patch(weight_box)
-
-# Yük üzerindeki etiket metni
-yuk_metni = f"{deger} N" if "deger" not in etiketler else f"{deger}N\n" + etiketler.get("Y", "Yük")
-ax.text(3.0, box_top - 0.4, yuk_metni, fontsize=8, fontweight='bold', ha='center', va='center', color='#0f172a', zorder=5)
+    elif "dinamometre" in tip or "kuvvet_hareket" in tip:
+        ax.plot([3.0, 3.0], [4.4, 4.0], color='#475569', linewidth=3)
+        ring = plt.Circle((3.0, 4.5), 0.15, color='#475569', fill=False, linewidth=2.5)
+        ax.add_patch(ring)
+        
+        body = plt.Rectangle((2.6, 1.8), 0.8, 2.2, color='#e2e8f0', ec='#0f172a', linewidth=2, alpha=0.8)
+        ax.add_patch(body)
+        
+        y_spring = np.linspace(3.9, 2.7, 10)
+        x_spring = 3.0 + 0.15 * np.sin(np.linspace(0, 4*np.pi, 10))
+        ax.plot(x_spring, y_spring, color='#f97316', linewidth=2)
+        
+        for y_tick in np.linspace(2.8, 3.8, 6):
+            ax.plot([2.6, 2.8], [y_tick, y_tick], color='#0f172a', linewidth=1.2)
+            
+        ax.plot([3.0, 3.0], [1.8, 1.2], color='#475569', linewidth=2.5)
+        weight_box = plt.Rectangle((2.5, 0.5), 1.0, 0.7, color='#cbd5e1', ec='#0f172a', linewidth=2)
+        ax.add_patch(weight_box)
+        ax.text(3.0, 0.85, etiketler.get("Y", "Yük"), fontsize=9, fontweight='bold', ha='center', color='#0f172a')
+        ax.text(3.6, 2.8, etiketler.get("N", "N"), fontsize=10, fontweight='bold', color='#dc2626')
 
     elif "grafik" in tip or "tablo" in tip or "veri" in tip:
         ax.bar([1.5, 3.0, 4.5], [3, 5, 2], width=0.8, color=['#38bdf8', '#f97316', '#a855f7'], ec='#0f172a', linewidth=1.5)
