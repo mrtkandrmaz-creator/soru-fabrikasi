@@ -276,7 +276,7 @@ ax.add_patch(weight_box)
 yuk_metni = f"{deger} N" if "deger" not in etiketler else f"{deger}N\n" + etiketler.get("Y", "Yük")
 ax.text(3.0, box_top - 0.4, yuk_metni, fontsize=8, fontweight='bold', ha='center', va='center', color='#0f172a', zorder=5)
 
-   elif "grafik" in tip or "tablo" in tip or "veri" in tip:
+    elif "grafik" in tip or "tablo" in tip or "veri" in tip:
         ax.bar([1.5, 3.0, 4.5], [3, 5, 2], width=0.8, color=['#38bdf8', '#f97316', '#a855f7'], ec='#0f172a', linewidth=1.5)
         ax.set_xlim(0.5, 5.5)
         ax.set_ylim(0, 6)
