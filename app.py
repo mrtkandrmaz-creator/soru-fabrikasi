@@ -506,9 +506,59 @@ with st.sidebar:
     st.metric(label="📅 Bugün Üretilen Toplam Soru", value=bugunku_toplam)
     st.markdown("---")
 
-    if not API_KEYS or "buraya_gercek" in API_KEYS[0]:
-        st.warning("⚠️ `.streamlit/secrets.toml` dosyasına geçerli Gemini API anahtarınızı ekleyin.")
+    def call_groq_with_key(api_key, prompt_text):
+    from groq import Groq
+    client = Groq(api_key=api_key)
+    completion = client.chat.completions.create(
+        model="openai/gpt-oss-120b",
+        messages=[
+            {"role": "system", "content": "Sen MEB müfredatı soru hazırlama uzmanısın. Paragraf, metin, tablo ve fen bilimleri grafik/şema sorularında asla kesinti yapmaz, eksiksiz üretirsin."},
+            {"role": "user", "content": prompt_text}
+        ],
+        temperature=0.75,
+        max_tokens=8000,
+        response_format={"type": "json_object"}
+    )
+    return completion.choices[0].message.content
 
+def call_gemini_with_key(api_key, prompt_text):
+    from google import genai
+    client = genai.Client(api_key=api_key)
+    response = client.models.generate_content(
+        model="gemini-3.6-flash",
+        contents=prompt_text,
+    )
+    text = response.text
+    if "```json" in text:
+        text = text.split("```json")[1].split("```")[0].strip()
+    elif "```" in text:
+        text = text.split("```")[1].split("```")[0].strip()
+    return text
+
+def multi_pool_generate(prompt_text):
+    attempts = []
+    for i, key in enumerate(GROQ_KEYS):
+        if key.strip():
+            attempts.append(("Groq", i+1, key, call_groq_with_key))
+            
+    for i, key in enumerate(GEMINI_KEYS):
+        if key.strip():
+            attempts.append(("Gemini", i+1, key, call_gemini_with_key))
+
+    if not attempts:
+        return None, "Geçerli API anahtarı bulunamadı!"
+
+    last_error = None
+    for provider, index, key, func in attempts:
+        try:
+            result = func(key, prompt_text)
+            if result:
+                return result, None
+        except Exception as e:
+            last_error = e
+            continue
+
+    return None, str(last_error)
     secili_sinif = st.selectbox("Eğitim Seviyesi / Kategori:", list(MUGREDAT.keys()), key=f"sinif_secim_{st.session_state.secim_sifirla_tetikleyici}")
     
     sinav_turu = st.selectbox("Sınav Türü:", [
