@@ -438,17 +438,28 @@ MUGREDAT = {
     }
 }
 
-# API Anahtarları
-try:
-    GROQ_KEYS = st.secrets["api_keys"].get("groq_keys", [])
-    GEMINI_KEYS = st.secrets["api_keys"].get("gemini_keys", [])
-except Exception:
-    GROQ_KEYS = []
-    GEMINI_KEYS = []
+# --- GÜVENLİ API ANAHTARI YÖNETİMİ ---
+raw_keys = st.secrets.get("API_KEYS", [])
+if isinstance(raw_keys, str):
+    API_KEYS = [raw_keys.strip()]
+elif isinstance(raw_keys, list):
+    API_KEYS = [str(k).strip() for k in raw_keys if str(k).strip()]
+else:
+    API_KEYS = []
 
-if not GROQ_KEYS and not GEMINI_KEYS:
-    st.error("⚠️ `.streamlit/secrets.toml` dosyasında API anahtarları bulunamadı!")
-    st.stop()
+class APIKeyManager:
+    def __init__(self, keys):
+        self.keys = keys
+        self.current_index = 0
+
+    def get_next_key(self):
+        if not self.keys:
+            return None
+        key = self.keys[self.current_index]
+        self.current_index = (self.current_index + 1) % len(self.keys)
+        return key
+
+api_manager = APIKeyManager(API_KEYS)
 
 def temizle_latex_metin(text):
     if not isinstance(text, str):
@@ -506,59 +517,9 @@ with st.sidebar:
     st.metric(label="📅 Bugün Üretilen Toplam Soru", value=bugunku_toplam)
     st.markdown("---")
 
-def call_groq_with_key(api_key, prompt_text):
-    from groq import Groq
-    client = Groq(api_key=api_key)
-    completion = client.chat.completions.create(
-        model="openai/gpt-oss-120b",
-        messages=[
-            {"role": "system", "content": "Sen MEB müfredatı soru hazırlama uzmanısın. Paragraf, metin, tablo ve fen bilimleri grafik/şema sorularında asla kesinti yapmaz, eksiksiz üretirsin."},
-            {"role": "user", "content": prompt_text}
-        ],
-        temperature=0.75,
-        max_tokens=8000,
-        response_format={"type": "json_object"}
-    )
-    return completion.choices[0].message.content
+    if not API_KEYS or "buraya_gercek" in API_KEYS[0]:
+        st.warning("⚠️ `.streamlit/secrets.toml` dosyasına geçerli Gemini API anahtarınızı ekleyin.")
 
-def call_gemini_with_key(api_key, prompt_text):
-    from google import genai
-    client = genai.Client(api_key=api_key)
-    response = client.models.generate_content(
-        model="gemini-3.6-flash",
-        contents=prompt_text,
-    )
-    text = response.text
-    if "```json" in text:
-        text = text.split("```json")[1].split("```")[0].strip()
-    elif "```" in text:
-        text = text.split("```")[1].split("```")[0].strip()
-    return text
-
-def multi_pool_generate(prompt_text):
-    attempts = []
-    for i, key in enumerate(GROQ_KEYS):
-        if key.strip():
-            attempts.append(("Groq", i+1, key, call_groq_with_key))
-            
-    for i, key in enumerate(GEMINI_KEYS):
-        if key.strip():
-            attempts.append(("Gemini", i+1, key, call_gemini_with_key))
-
-    if not attempts:
-        return None, "Geçerli API anahtarı bulunamadı!"
-
-    last_error = None
-    for provider, index, key, func in attempts:
-        try:
-            result = func(key, prompt_text)
-            if result:
-                return result, None
-        except Exception as e:
-            last_error = e
-            continue
-
-    return None, str(last_error)
     secili_sinif = st.selectbox("Eğitim Seviyesi / Kategori:", list(MUGREDAT.keys()), key=f"sinif_secim_{st.session_state.secim_sifirla_tetikleyici}")
     
     sinav_turu = st.selectbox("Sınav Türü:", [
