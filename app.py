@@ -360,154 +360,19 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
         ax.text(3.0, 2.6, etiketler.get("G", "Ağırlık"), fontsize=11, fontweight='bold', ha='center', color='#0f172a')
         ax.text(3.0, 1.4, etiketler.get("S", "Yüzey"), fontsize=9, fontweight='bold', ha='center', color='#475569')
 
-    import streamlit as st
-import io
-import random
-import matplotlib.pyplot as plt
-
-# --- 1. GÖRSEL ÇİZEN MATPLOTLIB FONKSİYONU ---
-def sudoku_gorseli_olustur(sudoku_matrisi):
-    rows = len(sudoku_matrisi)
-    cols = len(sudoku_matrisi[0])
-    
-    if rows == 2:
-        box_r, box_c = 1, 2
-    elif rows == 3:
-        box_r, box_c = 1, 3
-    elif rows == 4:
-        box_r, box_c = 2, 2
-    elif rows == 5:
-        box_r, box_c = 1, 5
     else:
-        box_r, box_c = 3, 3
+        plt.close(fig)
+        return None
 
-    fig, ax = plt.subplots(figsize=(4, 4), dpi=200)
-    ax.axis('off')
-
-    cell_size = 1.0
-    x_start = 0.5
-    y_start = 0.5
-    grid_width = cols * cell_size
-    grid_height = rows * cell_size
-
-    for i in range(rows + 1):
-        is_thick = (i % box_r == 0) or (i == 0) or (i == rows)
-        lw = 2.5 if is_thick else 1.0
-        color = '#1e293b' if is_thick else '#cbd5e1'
-        ax.plot([x_start, x_start + grid_width], 
-                [y_start + i * cell_size, y_start + i * cell_size], 
-                color=color, linewidth=lw)
-
-    for j in range(cols + 1):
-        is_thick = (j % box_c == 0) or (j == 0) or (j == cols)
-        lw = 2.5 if is_thick else 1.0
-        color = '#1e293b' if is_thick else '#cbd5e1'
-        ax.plot([x_start + j * cell_size, x_start + j * cell_size], 
-                [y_start, y_start + grid_height], 
-                color=color, linewidth=lw)
-
-    for r_idx, row in enumerate(sudoku_matrisi):
-        for c_idx, val in enumerate(row):
-            x_pos = x_start + c_idx * cell_size + (cell_size / 2)
-            y_pos = y_start + (rows - 1 - r_idx) * cell_size + (cell_size / 2)
-            
-            val_str = str(val).strip()
-            if val_str and val_str != '0':
-                font_color = '#2563eb' if val_str.isalpha() else '#0f172a'
-                ax.text(
-                    x_pos, y_pos, val_str, 
-                    fontsize=18, fontweight='bold', 
-                    ha='center', va='center', color=font_color
-                )
-
-    ax.set_xlim(0, grid_width + 1.0)
-    ax.set_ylim(0, grid_height + 1.0)
-
-    buf = io.BytesIO()
-    plt.savefig(buf, format='png', bbox_inches='tight', dpi=200, transparent=True)
-    buf.seek(0)
-    plt.close(fig)
-    return buf
-
-# --- 2. ARKA PLANDA ÇÖZÜCÜ VE BULMACA ÜRETİCİ ---
-def tam_cozum_ve_bulmaca_uret(boyut):
-    if boyut == "2x2":
-        tam_cozum = [["1", "2"], ["2", "1"]]
-        eksik_matris = [["1", "A"], ["B", "1"]]
-        cevaplar = {"A": "2", "B": "2"}
-    elif boyut == "3x3":
-        tam_cozum = [["1", "2", "3"], ["3", "1", "2"], ["2", "3", "1"]]
-        eksik_matris = [["1", "A", "3"], ["B", "3", "C"], ["3", "1", "D"]]
-        cevaplar = {"A": "2", "B": "3", "C": "2", "D": "2"}
-    elif boyut == "4x4":
-        tam_cozum = [["1", "2", "3", "4"], ["3", "4", "1", "2"], ["2", "3", "4", "1"], ["4", "1", "2", "3"]]
-        eksik_matris = [["1", "A", "3", "4"], ["B", "3", "1", "2"], ["2", "3", "C", "1"], ["4", "1", "2", "D"]]
-        cevaplar = {"A": "2", "B": "3", "C": "4", "D": "3"}
-    else:  # 5x5
-        tam_cozum = [["1", "2", "3", "4", "5"], ["3", "4", "5", "1", "2"], ["5", "1", "2", "3", "4"], ["2", "3", "4", "5", "1"], ["4", "5", "1", "2", "3"]]
-        eksik_matris = [["1", "A", "3", "4", "5"], ["3", "4", "B", "1", "2"], ["5", "1", "2", "C", "4"], ["2", "3", "4", "5", "1"], ["4", "D", "1", "2", "3"]]
-        cevaplar = {"A": "2", "B": "5", "C": "3", "D": "5"}
-        
-    return tam_cozum, eksik_matris, cevaplar
-
-# --- 3. STREAMLIT ARAYÜZ VE ENTEGRASYON ---
-st.sidebar.title("📚 Soru Fabrikası Paneli")
-st.sidebar.subheader("Dersler ve Üniteler")
-
-ders_unite_secimi = st.sidebar.selectbox("Konu Seçin", ["Lütfen Seçiniz...", "Su Doku", "Diğer Konular"])
-
-if ders_unite_secimi == "Su Doku":
-    st.sidebar.markdown("---")
-    boyut_secimi = st.sidebar.selectbox("Su Doku Boyutu", ["2x2", "3x3", "4x4", "5x5"])
-
-    # Oturum yönetimi ile her seçimde taze bulmaca üretimi
-    if "secilen_boyut" not in st.session_state or st.session_state["secilen_boyut"] != boyut_secimi:
-        st.session_state["secilen_boyut"] = boyut_secimi
-        tam_cozum, eksik_matris, cevaplar = tam_cozum_ve_bulmaca_uret(boyut_secimi)
-        st.session_state["tam_cozum"] = tam_cozum
-        st.session_state["eksik_matris"] = eksik_matris
-        st.session_state["dogru_cevaplar"] = cevaplar
-
-    # --- EKRANDA GÖSTERİM ---
-    st.title("✏️ Soru Fabrikası - Su Doku Modülü")
-    st.subheader(f"Zorluk Seviyesi: {boyut_secimi}")
-    st.write(f"{boyut_secimi}'lük bir Su Doku bulmacasında her satır ve her sütunda kurallara uygun sayılar yer almalıdır.")
-    st.write("Aşağıdaki eksik hücreleri (harfleri) tamamlayınız:")
-
-    # Görseli basıyoruz
-    gorsel_buffer = sudoku_gorseli_olustur(st.session_state["eksik_matris"])
-    st.image(gorsel_buffer, width=320)
-
-    st.markdown("---")
-    st.subheader("✍️ Eksik Harflerin Değerlerini Giriniz")
+    ax.set_xlim(0, 6)
+    ax.set_ylim(0, 5.0)
     
-    kullanici_cevaplari = {}
-    for harf in sorted(st.session_state["dogru_cevaplar"].keys()):
-        kullanici_cevaplari[harf] = st.text_input(f"'{harf}' harfinin değeri nedir?", key=f"input_{harf}")
-
-    if st.button("Çözümümü Kontrol Et"):
-        dogru_mu = True
-        for harf, dogru_val in st.session_state["dogru_cevaplar"].items():
-            if kullanici_cevaplari[harf].strip() != dogru_val:
-                dogru_mu = False
-                break
-        
-        if dogru_mu:
-            st.success("🎉 Tebrikler! Tüm harfleri doğru yerleştirdiniz ve bulmacayı çözdünüz!")
-        else:
-            st.error("❌ Bazı değerler hatalı veya eksik. Lütfen kontrol edip tekrar deneyiniz.")
-
-elif ders_unite_secimi == "Diğer Konular":
-    st.title("📚 Diğer Konular")
-    st.write("Seçtiğiniz kategoriye ait içerikler yakında eklenecektir.")
-
-else:
-    st.title("📚 Soru Fabrikası Paneli")
-    st.info("Lütfen sol menüdeki 'Dersler ve Üniteler' bölümünden **'Su Doku'** seçeneğini seçerek başlayın.")
-
-<FollowUp>
-- İstediğiniz gibi arka planda çözülen, harfleri gizlenen ve sizin input ile doldurduğunuz yapı tam olarak oturdu mu?
-</FollowUp>
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png', bbox_inches='tight', dpi=180, transparent=True)
+    buf.seek(0)
+    img_str = base64.b64encode(buf.read()).decode('utf-8')
+    plt.close(fig)
+    return f"data:image/png;base64,{img_str}"
 
 # --- MEB MÜFREDATI VE ÖZEL MODÜLLER ---
 MUGREDAT = {
@@ -516,8 +381,7 @@ MUGREDAT = {
         "Analiz-Cebir)": ["Gerçel sayı denklemleri", "Çarpanlara ayırma", "Diziler", "Eşitsizlikler"],
         "Sayılar ve Sayılar Teorisi (Temel Seviye)": ["Ardışık Sayılar", "Asal Sayılar", "Sayı Basamakları", "Ebob-Ekok"],
         "Geometri ve Görsel Zeka": ["Açılar", "Çevre ve Alan", "Görsel Algı ve Küpler", "Sihirli Kareler ve Sudoku Tarzı Mantık Oyunları"],
-        "Problem Çözme Stratejileri": ["Tersten Gitme", "Şema ve Tablo Çizme", "Örüntüler ve Sihirli Diziler",],
-        "Su Doku": ["2x2", "3x3", "4x4", "5x5"]
+        "Problem Çözme Stratejileri": ["Tersten Gitme", "Şema ve Tablo Çizme", "Örüntüler ve Sihirli Diziler",]
         },
     "4. Sınıf": {
         "Türkçe": ["Sözcükte Anlam", "Cümle Bilgisi", "Paragraf Yorumlama", "Yazım Kuralları ve Noktalama", "Metin Türleri ve Söz Sanatları"],
@@ -694,7 +558,7 @@ with st.sidebar:
                 secili_ders_unite_haritasi[ders_adi] = secili_alt_uniteler if secili_alt_uniteler else uniteler_listesi
 
     st.markdown("---")
-    soru_sayisi = st.slider("🔢 Soru Sayısı:", 1, 7, 5, key=f"slider_soru_{st.session_state.secim_sifirla_tetikleyici}")
+    soru_sayisi = st.slider("🔢 Soru Sayısı:", 5, 10, 5, key=f"slider_soru_{st.session_state.secim_sifirla_tetikleyici}")
 
     if st.button("🚀 Soruları Üret", use_container_width=True, type="primary"):
         if not API_KEYS or "buraya_gercek" in API_KEYS[0]:
