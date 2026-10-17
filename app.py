@@ -381,7 +381,7 @@ MUGREDAT = {
         "Analiz-Cebir)": ["Gerçel sayı denklemleri", "Çarpanlara ayırma", "Diziler", "Eşitsizlikler"],
         "Sayılar ve Sayılar Teorisi (Temel Seviye)": ["Ardışık Sayılar", "Asal Sayılar", "Sayı Basamakları", "Ebob-Ekok"],
         "Geometri ve Görsel Zeka": ["Açılar", "Çevre ve Alan", "Görsel Algı ve Küpler", "Sihirli Kareler ve Sudoku Tarzı Mantık Oyunları"],
-        "Problem Çözme Stratejileri": ["Tersten Gitme", "Şema ve Tablo Çizme", "Örüntüler ve Sihirli Diziler", "Palindromik Sayılar"]
+        "Problem Çözme Stratejileri": ["Tersten Gitme", "Şema ve Tablo Çizme", "Örüntüler ve Sihirli Diziler",]
         },
     "4. Sınıf": {
         "Türkçe": ["Sözcükte Anlam", "Cümle Bilgisi", "Paragraf Yorumlama", "Yazım Kuralları ve Noktalama", "Metin Türleri ve Söz Sanatları"],
