@@ -365,90 +365,210 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
 
     elif "sudoku" in tip or "bulmaca" in tip:
       # Sorudaki matris verisi ve harfler
-      matris = etiketler.get(
-          "matris", [[1, "A", "3"], [3, 1, "B"], ["C", 3, 1]]
-      )
+      import random
+import streamlit as st
 
-      nrows = len(matris)
-      ncols = len(matris[0]) if nrows > 0 else 3
 
-      # Izgara Çizimi
-      for i in range(nrows + 1):
-        lw = 2 if i == 0 or i == nrows else 1
-        ax.plot(
-            [1.2, 1.2 + ncols * 0.8],
-            [1.0 + i * 0.8, 1.0 + i * 0.8],
-            color="#0284c7",
-            linewidth=lw,
+class SudokuGenerator:
+
+  def __init__(self, box_size=3):
+    self.box_size = box_size
+    self.n = box_size * box_size
+    self.board = [[0 for _ in range(self.n)] for _ in range(self.n)]
+
+  def is_valid(self, board, row, col, num):
+    for x in range(self.n):
+      if board[row][x] == num:
+        return False
+    for x in range(self.n):
+      if board[x][col] == num:
+        return False
+    start_row = row - row % self.box_size
+    start_col = col - col % self.box_size
+    for i in range(self.box_size):
+      for j in range(self.box_size):
+        if board[i + start_row][j + start_col] == num:
+          return False
+    return True
+
+  def solve(self, board):
+    for i in range(self.n):
+      for j in range(self.n):
+        if board[i][j] == 0:
+          numbers = list(range(1, self.n + 1))
+          random.shuffle(numbers)
+          for num in numbers:
+            if self.is_valid(board, i, j, num):
+              board[i][j] = num
+              if self.solve(board):
+                return True
+              board[i][j] = 0
+          return False
+    return True
+
+  def generate_puzzle(self):
+    self.solve(self.board)
+    solution = [row[:] for row in self.board]
+    puzzle = [row[:] for row in self.board]
+
+    total_cells = self.n * self.n
+    empty_cells = int(total_cells * 0.50)  # Hücrelerin %50'si boş
+
+    count = empty_cells
+    while count > 0:
+      row = random.randint(0, self.n - 1)
+      col = random.randint(0, self.n - 1)
+      if puzzle[row][col] != 0:
+        puzzle[row][col] = 0
+        count -= 1
+
+    return puzzle, solution
+
+
+# --- Streamlit Arayüzü ---
+st.set_page_config(
+    page_title="Etkileşimli Sudoku", page_icon="🧩", layout="centered"
+)
+
+st.title("🧩 Etkileşimli Sudoku Bulmacası")
+st.write("Boş kutucuklara değerleri girin ve çözümünüzü kontrol edin!")
+
+# Kenar Çubuğu
+st.sidebar.header("Ayarlar")
+grid_type = st.sidebar.selectbox(
+    "Kutu / Boyut Seçin", ["2x2 (4x4)", "3x3 (9x9 Klasik)", "4x4 (16x16)"]
+)
+
+if "2x2" in grid_type:
+  box_size = 2
+elif "3x3" in grid_type:
+  box_size = 3
+else:
+  box_size = 4
+
+n = box_size * box_size
+
+
+def reset_game():
+  generator = SudokuGenerator(box_size=box_size)
+  puzzle, solution = generator.generate_puzzle()
+  st.session_state.box_size = box_size
+  st.session_state.puzzle = puzzle
+  st.session_state.solution = solution
+  # Kullanıcı girdilerini sıfırla
+  for r in range(n):
+    for c in range(n):
+      key = f"cell_{r}_{c}"
+      if puzzle[r][c] != 0:
+        val = str(puzzle[r][c])
+        if puzzle[r][c] > 9:
+          val = chr(ord("A") + puzzle[r][c] - 10)
+        st.session_state[key] = val
+      else:
+        st.session_state[key] = ""
+
+
+# Boyut değiştiyse oyunu sıfırla
+if (
+    "box_size" not in st.session_state
+    or st.session_state.box_size != box_size
+    or "puzzle" not in st.session_state
+):
+  reset_game()
+
+if st.sidebar.button("Yeni Bulmaca Oluştur"):
+  reset_game()
+
+st.subheader(f"Oynama Alanı ({n}x{n})")
+
+# Değeri sayıya çeviren yardımcı fonksiyon
+def parse_val(val_str):
+  val_str = val_str.strip().upper()
+  if not val_str:
+    return 0
+  if val_str.isdigit():
+    return int(val_str)
+  if len(val_str) == 1 and "A" <= val_str <= "Z":
+    return ord(val_str) - ord("A") + 10
+  return -1
+
+
+# ızgarayı (Grid) Streamlit sütunları ile oluşturma
+puzzle = st.session_state.puzzle
+solution = st.session_state.solution
+
+# Streamlit grid düzeni
+for r in range(n):
+  cols = st.columns(n)
+  for c in range(n):
+    key = f"cell_{r}_{c}"
+    is_given = puzzle[r][c] != 0
+
+    with cols[c]:
+      if is_given:
+        # Verilen hücreleri kilitli (disabled) göster
+        val = str(puzzle[r][c])
+        if puzzle[r][c] > 9:
+          val = chr(ord("A") + puzzle[r][c] - 10)
+        st.text_input(
+            "", value=val, key=key, disabled=True, label_visibility="collapsed"
+        )
+      else:
+        # Kullanıcının dolduracağı boş hücreler
+        st.text_input(
+            "",
+            key=key,
+            max_chars=2 if n > 9 else 1,
+            label_visibility="collapsed",
         )
 
-      for i in range(ncols + 1):
-        lw = 2 if i == 0 or i == ncols else 1
-        ax.plot(
-            [1.2 + i * 0.8, 1.2 + i * 0.8],
-            [1.0, 1.0 + nrows * 0.8],
-            color="#0284c7",
-            linewidth=lw,
+# Kontrol Et Butonu
+st.markdown("---")
+col_btn1, col_btn2 = st.columns([1, 1])
+
+with col_btn1:
+  if st.button("Çözümü Kontrol Et", type="primary"):
+    user_board = [[0 for _ in range(n)] for _ in range(n)]
+    has_error = False
+    is_complete = True
+
+    for r in range(n):
+      for c in range(n):
+        val_str = st.session_state.get(f"cell_{r}_{c}", "")
+        val_num = parse_val(val_str)
+
+        if val_num == 0:
+          is_complete = False
+        user_board[r][c] = val_num
+
+    if not is_complete:
+      st.warning("Henüz tüm hücreleri doldurmadınız!")
+    else:
+      # Çözüm doğrulaması
+      correct = True
+      for r in range(n):
+        for c in range(n):
+          if user_board[r][c] != solution[r][c]:
+            correct = False
+            break
+
+      if correct:
+        st.balloons()
+        st.success("Tebrikler! Bulmacayı doğru çözdünüz. 🎉")
+      else:
+        st.error(
+            "Maalesef bazı hatalar var. Lütfen girdiğiniz değerleri tekrar"
+            " kontrol edin."
         )
 
-      # Hücrelerdeki Sayı/Harfleri Yerleştirme
-      for r in range(nrows):
-        for c in range(ncols):
-          val = matris[nrows - 1 - r][c]
-          cx = 1.2 + c * 0.8 + 0.4
-          cy = 1.0 + r * 0.8 + 0.4
-
-          if val != "" and val is not None:
-            ax.text(
-                cx,
-                cy,
-                str(val),
-                fontsize=13,
-                fontweight="bold",
-                ha="center",
-                va="center",
-                color="#0f172a",
-            )
-
-      # Kenar Etiketleri ve Başlık
-      ax.text(
-          1.2 + (ncols * 0.8) / 2,
-          1.0 + nrows * 0.8 + 0.3,
-          etiketler.get("Baslik", "3x3 Sudoku Bulmacası"),
-          fontsize=11,
-          fontweight="bold",
-          ha="center",
-          color="#0f172a",
-      )
-      ax.text(
-          1.2 + (ncols * 0.8) / 2,
-          0.7,
-          etiketler.get("Alt", "Sütun"),
-          fontsize=9,
-          fontweight="bold",
-          ha="center",
-          color="#475569",
-      )
-      ax.text(
-          0.9,
-          1.0 + (nrows * 0.8) / 2,
-          etiketler.get("Sol", "Satır"),
-          fontsize=9,
-          fontweight="bold",
-          rotation=90,
-          ha="center",
-          color="#475569",
-      )
-      ax.text(
-          1.2 + ncols * 0.8 + 0.3,
-          1.0 + (nrows * 0.8) / 2,
-          etiketler.get("Sag", "Bölge"),
-          fontsize=9,
-          fontweight="bold",
-          rotation=270,
-          ha="center",
-          color="#475569",
-      )
+with col_btn2:
+  if st.button("Sıfırla"):
+    # Sadece kullanıcının yazdığı değerleri temizle
+    for r in range(n):
+      for c in range(n):
+        if puzzle[r][c] == 0:
+          st.session_state[f"cell_{r}_{c}"] = ""
+    st.rerun())
 
     else:
       plt.close(fig)
