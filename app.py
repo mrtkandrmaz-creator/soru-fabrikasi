@@ -363,108 +363,89 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
     import io
 import base64
 import matplotlib.pyplot as plt
+import math
 
-def sudoku_gorseli_olustur(tip, etiketler=None):
+def bulmaca_gorseli_olustur(tip, etiketler=None, sudoku_matrisi=None):
     if etiketler is None:
         etiketler = {}
 
     fig, ax = plt.subplots(figsize=(6, 6))
-    ax.axis('off')  # Standart eksen çizgilerini ve rakamlarını gizle
+    ax.axis('off')  # Eksen çizgilerini gizle
 
     if "sudoku" in tip:
-        # Görseldeki soruyla birebir uyumlu 6x6 Sudoku matrisi
-        # 0: Boş hücre, Diğer sayılar: Hücreye yazılacak sabit ipucu sayıları
-        sudoku_matrisi = [
-            [1, 2, 4, 0, 6, 0],
-            [0, 6, 2, 3, 1, 0],
-            [3, 4, 0, 1, 0, 6],
-            [2, 5, 1, 0, 0, 0],
-            [0, 0, 6, 1, 3, 3],
-            [1, 2, 0, 0, 1, 5]
-        ]
+        # Eğer dışarıdan matris verilmediyse, sizin gönderdiğiniz yapıyla uyumlu 
+        # (veya isteğe göre 2x2, 3x3, 4x4, 5x5, 6x6, 9x9 destekleyen) matris tanımlanır.
+        if sudoku_matrisi is None:
+            sudoku_matrisi = [
+                [1, 2, 4, 0, 6, 0],
+                [0, 6, 2, 3, 1, 0],
+                [3, 4, 0, 1, 0, 6],
+                [2, 5, 1, 0, 0, 0],
+                [0, 0, 6, 1, 3, 3],
+                [1, 2, 0, 0, 1, 5]
+            ]
         
-        rows = 6
-        cols = 6
-        cell_size = 0.6
+        rows = len(sudoku_matrisi)
+        cols = len(sudoku_matrisi[0])
+        
+        # Bölge boyutlarını dinamik hesapla (Örn: 4x4 için 2x2, 6x6/9x9 için uygun bloklar)
+        box_r = int(math.sqrt(rows)) if rows in [4, 9] else 2 
+        box_c = int(math.sqrt(cols)) if cols in [4, 9] else 3
+
+        cell_size = 0.5
         x_start = 1.0
         y_start = 0.5
-        
-        # Izgara Çizimi (Grid)
+
+        # Izgara Çizimi (Dinamik ve Kalın Sınırlar)
         for i in range(rows + 1):
-            # Ana bölge kalınlıkları (2x3 blok yapıları için)
-            lw_h = 2.5 if i % 2 == 0 or i == 0 or i == rows else 1.0
-            lw_v = 2.5 if i % 3 == 0 or i == 0 or i == cols else 1.0
+            lw = 2 if (i % box_r == 0 or i == 0 or i == rows) else 1
+            ax.plot([x_start, x_start + cols * cell_size], [y_start + i * cell_size, y_start + i * cell_size], color='#38bdf8', linewidth=lw)
             
-            # Yatay Çizgiler
-            ax.plot(
-                [x_start, x_start + cols * cell_size], 
-                [y_start + i * cell_size, y_start + i * cell_size], 
-                color='#38bdf8', linewidth=lw_h
-            )
+        for j in range(cols + 1):
+            lw_v = 2 if (j % box_c == 0 or j == 0 or j == cols) else 1
+            ax.plot([x_start + j * cell_size, x_start + j * cell_size], [y_start, y_start + rows * cell_size], color='#38bdf8', linewidth=lw_v)
             
-            # Dikey Çizgiler
-            ax.plot(
-                [x_start + i * cell_size, x_start + i * cell_size], 
-                [y_start, y_start + rows * cell_size], 
-                color='#38bdf8', linewidth=lw_v
-            )
-        
-        # Hücre Değerlerini Hizalayarak Yerleştirme
+        # Hücre Değerlerini Yerleştirme
         for r_idx, row in enumerate(sudoku_matrisi):
             for c_idx, val in enumerate(row):
                 x_pos = x_start + c_idx * cell_size + (cell_size / 2)
-                # Matplotlib y-ekseni aşağıdan yukarıya doğru olduğu için matris satırını çeviriyoruz
                 y_pos = y_start + (rows - 1 - r_idx) * cell_size + (cell_size / 2)
                 
                 if val != 0:
                     ax.text(
                         x_pos, y_pos, str(val), 
-                        fontsize=14, fontweight='bold', 
+                        fontsize=12, fontweight='bold', 
                         ha='center', va='center', color='#0f172a'
                     )
 
-        # Başlık ve Etiket Metinleri
-        ax.text(2.8, 4.3, etiketler.get("Baslik", "Sudoku Bulmacası"), fontsize=12, fontweight='bold', ha='center', color='#0f172a')
-        ax.text(2.8, 0.2, etiketler.get("Alt", "Sütun"), fontsize=10, fontweight='bold', ha='center', color='#0f172a')
-        ax.text(0.6, 2.3, etiketler.get("Sol", "Satır"), fontsize=10, fontweight='bold', rotation=90, ha='center', color='#0f172a')
-        ax.text(5.0, 2.3, etiketler.get("Sag", "Bölge"), fontsize=10, fontweight='bold', rotation=270, ha='center', color='#0f172a')
+        # Başlık ve Kenar Etiketleri
+        ax.text(x_start + (cols * cell_size)/2, y_start + rows * cell_size + 0.3, etiketler.get("Baslik", "Sudoku Bulmacası"), fontsize=10, fontweight='bold', ha='center', color='#0f172a')
+        ax.text(x_start + (cols * cell_size)/2, y_start - 0.3, etiketler.get("Alt", "Sütun"), fontsize=9, fontweight='bold', ha='center', color='#0f172a')
+        ax.text(x_start - 0.3, y_start + (rows * cell_size)/2, etiketler.get("Sol", "Satır"), fontsize=9, fontweight='bold', rotation=90, ha='center', color='#0f172a')
+        ax.text(x_start + cols * cell_size + 0.3, y_start + (rows * cell_size)/2, etiketler.get("Sag", "Bölge"), fontsize=9, fontweight='bold', rotation=270, ha='center', color='#0f172a')
+
+    elif "basinc" in tip:
+        # Basınç soruları için eklediğiniz koşul ve örnek çizim
+        ax.text(3.0, 3.1, etiketler.get("Baslik", "Basınç Sorusu"), fontsize=10, fontweight='bold', ha='center', color='#0f172a')
+        ax.plot([1, 5], [2, 2], color='#ef4444', linewidth=2)
 
     else:
         plt.close(fig)
         return None
 
     # Eksen Limitleri
-    ax.set_xlim(0, 5.6)
-    ax.set_ylim(0, 4.6)
+    ax.set_xlim(0, 7)
+    ax.set_ylim(0, 6.0)
     
-    # Görseli Belleğe (BytesIO) PNG Olarak Kaydetme
+    # Görseli Belleğe Kaydedip Base64 Formatına Dönüştürme
     buf = io.BytesIO()
     plt.savefig(buf, format='png', bbox_inches='tight', dpi=180, transparent=True)
     buf.seek(0)
     img_str = base64.b64encode(buf.read()).decode('utf-8')
     plt.close(fig)
     
-    # Base64 Kodunu Doğrudan HTML <img> Etiketine Dönüştürüp Döndürme
-    # Bu sayede web arayüzünde metin olarak değil, Doğrudan Görsel Olarak Ekrana Gelir
-    html_gorsel_kodu = f'<img src="data:image/png;base64,{img_str}" alt="Sudoku Görseli" style="max-width:100%; height:auto;" />'
-    
-    return html_gorsel_kodu
-
-
-# --- KULLANIM ÖRNEĞİ ---
-if __name__ == "__main__":
-    etiket_bilgisi = {
-        "Baslik": "Örnek 6x6 Sudoku",
-        "Alt": "Sütunlar (1-6)",
-        "Sol": "Satırlar (1-6)",
-        "Sag": "2x3 Bölgeler"
-    }
-    
-    # Fonksiyonu çağırıyoruz
-    gorsel_html = sudoku_gorseli_olustur("sudoku", etiket_bilgisi)
-    
-    # Bu çıktıyı web sayfanızda (HTML) soru metninin içerisine ekleyebilirsiniz:
-    print(gorsel_html)
+    # Arayüzde doğrudan görsel olarak görünmesi için HTML etiketi döndürülür
+    return f'<img src="data:image/png;base64,{img_str}" alt="Bulmaca Görseli" style="max-width:100%; height:auto;" />'
 
 # --- MEB MÜFREDATI VE ÖZEL MODÜLLER ---
 MUGREDAT = {
