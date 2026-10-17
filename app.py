@@ -191,13 +191,6 @@ def get_custom_labels(etiketler, default_tuple=("A", "B", "C")):
     return default_tuple
 
 # --- VEKTÖREL GÖRSEL ÇİZİCİ ---
-# Bu kodun çalışması için kodun en başında şu importların olması gerekir:
-# import matplotlib.pyplot as plt
-# import numpy as np
-# import io
-# import base64
-# ---
-
 def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
     if not isinstance(etiketler, dict):
         etiketler = {}
@@ -270,15 +263,16 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
         ax.text(3.0, 0.4, etiketler.get("Aciklama", "Çember Geometrisi"), fontsize=9, fontweight='bold', ha='center', color='#475569')
 
     elif "dik_ucgen" in tip:
+        lbl_a, lbl_b, lbl_c = get_custom_labels(etiketler, ("A", "B", "C"))
         bx, by = 1.2, 1.0
         cx, cy = 4.8, 1.0
         ax_val, ay_val = 1.2, 4.0
         ax.plot([bx, cx, ax_val, bx], [by, cy, ay_val, by], color='#0f172a', linewidth=2.2, solid_capstyle='round')
         ax.plot([1.2, 1.5, 1.5, 1.2], [1.0, 1.0, 1.3, 1.3], color='#0f172a', linewidth=1.5)
         
-        ax.text(ax_val - 0.25, ay_val + 0.1, etiketler.get("A", "A"), fontsize=11, fontweight='bold', color='#0f172a')
-        ax.text(bx - 0.25, by - 0.25, etiketler.get("B", "B"), fontsize=11, fontweight='bold', color='#0f172a')
-        ax.text(cx + 0.15, cy - 0.25, etiketler.get("C", "C"), fontsize=11, fontweight='bold', color='#0f172a')
+        ax.text(ax_val - 0.25, ay_val + 0.1, lbl_a, fontsize=11, fontweight='bold', color='#0f172a')
+        ax.text(bx - 0.25, by - 0.25, lbl_b, fontsize=11, fontweight='bold', color='#0f172a')
+        ax.text(cx + 0.15, cy - 0.25, lbl_c, fontsize=11, fontweight='bold', color='#0f172a')
         
         ax.text(2.0, 2.7, etiketler.get("c", ""), fontsize=10, fontweight='bold', color='#2563eb')
         ax.text(3.0, 0.7, etiketler.get("a", ""), fontsize=10, fontweight='bold', color='#dc2626')
@@ -286,27 +280,29 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
         ax.text(3.0, 0.3, "Dik Üçgen", fontsize=9, fontweight='bold', ha='center', color='#475569')
 
     elif "eskenar_ucgen" in tip:
+        lbl_a, lbl_b, lbl_c = get_custom_labels(etiketler, ("A", "B", "C"))
         bx, by = 1.5, 1.0
         cx, cy = 4.5, 1.0
         ax_val, ay_val = 3.0, 1.0 + 1.5 * np.sqrt(3)
         ax.plot([bx, cx, ax_val, bx], [by, cy, ay_val, by], color='#0f172a', linewidth=2.2, solid_capstyle='round')
         
-        ax.text(ax_val, ay_val + 0.15, etiketler.get("A", "A"), fontsize=11, fontweight='bold', ha='center', color='#0f172a')
-        ax.text(bx - 0.25, by - 0.25, etiketler.get("B", "B"), fontsize=11, fontweight='bold', color='#0f172a')
-        ax.text(cx + 0.2, cy - 0.25, etiketler.get("C", "C"), fontsize=11, fontweight='bold', color='#0f172a')
+        ax.text(ax_val, ay_val + 0.15, lbl_a, fontsize=11, fontweight='bold', ha='center', color='#0f172a')
+        ax.text(bx - 0.25, by - 0.25, lbl_b, fontsize=11, fontweight='bold', color='#0f172a')
+        ax.text(cx + 0.2, cy - 0.25, lbl_c, fontsize=11, fontweight='bold', color='#0f172a')
         
         ax.text(3.0, 2.2, etiketler.get("aci", "60°"), fontsize=10, fontweight='bold', ha='center', color='#dc2626')
         ax.text(3.0, 0.3, "Eşkenar Üçgen", fontsize=9, fontweight='bold', ha='center', color='#475569')
 
     elif "ikizkenar_ucgen" in tip:
+        lbl_a, lbl_b, lbl_c = get_custom_labels(etiketler, ("A", "B", "C"))
         bx, by = 1.3, 1.0
         cx, cy = 4.7, 1.0
         ax_val, ay_val = 3.0, 4.2
         ax.plot([bx, cx, ax_val, bx], [by, cy, ay_val, by], color='#0f172a', linewidth=2.2, solid_capstyle='round')
         
-        ax.text(ax_val, ay_val + 0.15, etiketler.get("A", "A"), fontsize=11, fontweight='bold', ha='center', color='#0f172a')
-        ax.text(bx - 0.25, by - 0.25, etiketler.get("B", "B"), fontsize=11, fontweight='bold', color='#0f172a')
-        ax.text(cx + 0.2, cy - 0.25, etiketler.get("C", "C"), fontsize=11, fontweight='bold', color='#0f172a')
+        ax.text(ax_val, ay_val + 0.15, lbl_a, fontsize=11, fontweight='bold', ha='center', color='#0f172a')
+        ax.text(bx - 0.25, by - 0.25, lbl_b, fontsize=11, fontweight='bold', color='#0f172a')
+        ax.text(cx + 0.2, cy - 0.25, lbl_c, fontsize=11, fontweight='bold', color='#0f172a')
         
         ax.text(2.0, 2.8, etiketler.get("kenar1", ""), fontsize=10, fontweight='bold', color='#2563eb')
         ax.text(4.0, 2.8, etiketler.get("kenar2", ""), fontsize=10, fontweight='bold', color='#2563eb')
@@ -314,7 +310,7 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
         ax.text(3.0, 0.3, "İkizkenar Üçgen", fontsize=9, fontweight='bold', ha='center', color='#475569')
 
     elif "benzer_ucgen" in tip or "benzerlik" in tip:
-        lbl_a, lbl_b, lbl_c = etiketler.get("A", "A"), etiketler.get("B", "B"), etiketler.get("C", "C")
+        lbl_a, lbl_b, lbl_c = get_custom_labels(etiketler, ("A", "B", "C"))
         lbl_d, lbl_e, lbl_f = etiketler.get("D", "D"), etiketler.get("E", "E"), etiketler.get("F", "F")
         
         bx1, by1 = 0.8, 1.0
@@ -341,14 +337,15 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
         ax.text(3.0, 0.1, "Benzer Üçgenler", fontsize=9, fontweight='bold', ha='center', color='#475569')
 
     elif "cesitkenar_ucgen" in tip or "ucgen" in tip:
+        lbl_a, lbl_b, lbl_c = get_custom_labels(etiketler, ("A", "B", "C"))
         bx, by = 1.0, 1.0
         cx, cy = 5.0, 1.2
         ax_val, ay_val = 2.2, 4.0
         ax.plot([bx, cx, ax_val, bx], [by, cy, ay_val, by], color='#0f172a', linewidth=2.2, solid_capstyle='round')
         
-        ax.text(ax_val - 0.2, ay_val + 0.15, etiketler.get("A", "A"), fontsize=11, fontweight='bold', color='#0f172a')
-        ax.text(bx - 0.25, by - 0.25, etiketler.get("B", "B"), fontsize=11, fontweight='bold', color='#0f172a')
-        ax.text(cx + 0.2, cy - 0.25, etiketler.get("C", "C"), fontsize=11, fontweight='bold', color='#0f172a')
+        ax.text(ax_val - 0.2, ay_val + 0.15, lbl_a, fontsize=11, fontweight='bold', color='#0f172a')
+        ax.text(bx - 0.25, by - 0.25, lbl_b, fontsize=11, fontweight='bold', color='#0f172a')
+        ax.text(cx + 0.2, cy - 0.25, lbl_c, fontsize=11, fontweight='bold', color='#0f172a')
         
         ax.text(1.5, 2.6, etiketler.get("c", ""), fontsize=10, fontweight='bold', color='#2563eb')
         ax.text(3.6, 2.7, etiketler.get("b", ""), fontsize=10, fontweight='bold', color='#16a34a')
@@ -363,212 +360,42 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
         ax.text(3.0, 2.6, etiketler.get("G", "Ağırlık"), fontsize=11, fontweight='bold', ha='center', color='#0f172a')
         ax.text(3.0, 1.4, etiketler.get("S", "Yüzey"), fontsize=9, fontweight='bold', ha='center', color='#475569')
 
-    elif "sudoku" in tip or "bulmaca" in tip:
-      # Sorudaki matris verisi ve harfler
-      import random
-import streamlit as st
+    elif "sudoku" in tip:
+        # Görseldeki soruya birebir uyumlu 6x6 Sudoku tablosu (Örnek matris verisi)
+        # 0 boş hücreleri, diğer sayılar sabit ipuçlarını ve küçük ipucu köşelerini temsil eder
+        sudoku_matrisi = [
+            [1, 2, 4, 0, 6, 0, 2, 1], # Görseldeki yapıya göre uyarlanan satırlar
+            [0, 6, 2, 3, 1, 0, 5, 0],
+            [3, 4, 0, 1, 0, 6, 0, 2],
+            [2, 5, 1, 8, 0, 0, 6, 4],
+            [0, 0, 6, 1, 3, 3, 0, 0],
+            [1, 2, 0, 0, 1, 5, 6, 6]
+        ]
+        
+        # Izgara Çizimi (6x6 veya uygun boyutlandırma)
+        for i in range(7):
+            lw = 2 if i % 2 == 0 else 1
+            ax.plot([1, 5], [0.5 + i*0.4, 0.5 + i*0.4], color='#38bdf8', linewidth=lw)
+            ax.plot([1 + i*0.5, 1 + i*0.5], [0.5, 2.9], color='#38bdf8', linewidth=lw)
+            
+        ax.text(3.0, 3.1, etiketler.get("Baslik", "Sudoku Bulmacası"), fontsize=10, fontweight='bold', ha='center', color='#0f172a')
+        ax.text(3.0, 0.2, etiketler.get("Alt", "Sütun"), fontsize=9, fontweight='bold', ha='center', color='#0f172a')
+        ax.text(0.7, 1.7, etiketler.get("Sol", "Satır"), fontsize=9, fontweight='bold', rotation=90, ha='center', color='#0f172a')
+        ax.text(5.3, 1.7, etiketler.get("Sag", "Bölge"), fontsize=9, fontweight='bold', rotation=270, ha='center', color='#0f172a')
 
-
-class SudokuGenerator:
-
-  def __init__(self, box_size=3):
-    self.box_size = box_size
-    self.n = box_size * box_size
-    self.board = [[0 for _ in range(self.n)] for _ in range(self.n)]
-
-  def is_valid(self, board, row, col, num):
-    for x in range(self.n):
-      if board[row][x] == num:
-        return False
-    for x in range(self.n):
-      if board[x][col] == num:
-        return False
-    start_row = row - row % self.box_size
-    start_col = col - col % self.box_size
-    for i in range(self.box_size):
-      for j in range(self.box_size):
-        if board[i + start_row][j + start_col] == num:
-          return False
-    return True
-
-  def solve(self, board):
-    for i in range(self.n):
-      for j in range(self.n):
-        if board[i][j] == 0:
-          numbers = list(range(1, self.n + 1))
-          random.shuffle(numbers)
-          for num in numbers:
-            if self.is_valid(board, i, j, num):
-              board[i][j] = num
-              if self.solve(board):
-                return True
-              board[i][j] = 0
-          return False
-    return True
-
-  def generate_puzzle(self):
-    self.solve(self.board)
-    solution = [row[:] for row in self.board]
-    puzzle = [row[:] for row in self.board]
-
-    total_cells = self.n * self.n
-    empty_cells = int(total_cells * 0.50)  # Hücrelerin %50'si boş
-
-    count = empty_cells
-    while count > 0:
-      row = random.randint(0, self.n - 1)
-      col = random.randint(0, self.n - 1)
-      if puzzle[row][col] != 0:
-        puzzle[row][col] = 0
-        count -= 1
-
-    return puzzle, solution
-
-
-# --- Streamlit Arayüzü ---
-st.set_page_config(
-    page_title="Etkileşimli Sudoku", page_icon="🧩", layout="centered"
-)
-
-st.title("🧩 Etkileşimli Sudoku Bulmacası")
-st.write("Boş kutucuklara değerleri girin ve çözümünüzü kontrol edin!")
-
-# Kenar Çubuğu
-st.sidebar.header("Ayarlar")
-grid_type = st.sidebar.selectbox(
-    "Kutu / Boyut Seçin", ["2x2 (4x4)", "3x3 (9x9 Klasik)", "4x4 (16x16)"]
-)
-
-if "2x2" in grid_type:
-  box_size = 2
-elif "3x3" in grid_type:
-  box_size = 3
-else:
-  box_size = 4
-
-n = box_size * box_size
-
-
-def reset_game():
-  generator = SudokuGenerator(box_size=box_size)
-  puzzle, solution = generator.generate_puzzle()
-  st.session_state.box_size = box_size
-  st.session_state.puzzle = puzzle
-  st.session_state.solution = solution
-  # Kullanıcı girdilerini sıfırla
-  for r in range(n):
-    for c in range(n):
-      key = f"cell_{r}_{c}"
-      if puzzle[r][c] != 0:
-        val = str(puzzle[r][c])
-        if puzzle[r][c] > 9:
-          val = chr(ord("A") + puzzle[r][c] - 10)
-        st.session_state[key] = val
-      else:
-        st.session_state[key] = ""
-
-
-# Boyut değiştiyse oyunu sıfırla
-if (
-    "box_size" not in st.session_state
-    or st.session_state.box_size != box_size
-    or "puzzle" not in st.session_state
-):
-  reset_game()
-
-if st.sidebar.button("Yeni Bulmaca Oluştur"):
-  reset_game()
-
-st.subheader(f"Oynama Alanı ({n}x{n})")
-
-# Değeri sayıya çeviren yardımcı fonksiyon
-def parse_val(val_str):
-  val_str = val_str.strip().upper()
-  if not val_str:
-    return 0
-  if val_str.isdigit():
-    return int(val_str)
-  if len(val_str) == 1 and "A" <= val_str <= "Z":
-    return ord(val_str) - ord("A") + 10
-  return -1
-
-
-# ızgarayı (Grid) Streamlit sütunları ile oluşturma
-puzzle = st.session_state.puzzle
-solution = st.session_state.solution
-
-# Streamlit grid düzeni
-for r in range(n):
-  cols = st.columns(n)
-  for c in range(n):
-    key = f"cell_{r}_{c}"
-    is_given = puzzle[r][c] != 0
-
-    with cols[c]:
-      if is_given:
-        # Verilen hücreleri kilitli (disabled) göster
-        val = str(puzzle[r][c])
-        if puzzle[r][c] > 9:
-          val = chr(ord("A") + puzzle[r][c] - 10)
-        st.text_input(
-            "", value=val, key=key, disabled=True, label_visibility="collapsed"
-        )
-      else:
-        # Kullanıcının dolduracağı boş hücreler
-        st.text_input(
-            "",
-            key=key,
-            max_chars=2 if n > 9 else 1,
-            label_visibility="collapsed",
-        )
-
-# Kontrol Et Butonu
-st.markdown("---")
-col_btn1, col_btn2 = st.columns([1, 1])
-
-with col_btn1:
-  if st.button("Çözümü Kontrol Et", type="primary"):
-    user_board = [[0 for _ in range(n)] for _ in range(n)]
-    has_error = False
-    is_complete = True
-
-    for r in range(n):
-      for c in range(n):
-        val_str = st.session_state.get(f"cell_{r}_{c}", "")
-        val_num = parse_val(val_str)
-
-        if val_num == 0:
-          is_complete = False
-        user_board[r][c] = val_num
-
-    if not is_complete:
-      st.warning("Henüz tüm hücreleri doldurmadınız!")
     else:
-      # Çözüm doğrulaması
-      correct = True
-      for r in range(n):
-        for c in range(n):
-          if user_board[r][c] != solution[r][c]:
-            correct = False
-            break
+        plt.close(fig)
+        return None
 
-      if correct:
-        st.balloons()
-        st.success("Tebrikler! Bulmacayı doğru çözdünüz. 🎉")
-      else:
-        st.error(
-            "Maalesef bazı hatalar var. Lütfen girdiğiniz değerleri tekrar"
-            " kontrol edin."
-        )
-
-with col_btn2:
-  if st.button("Sıfırla"):
-    # Sadece kullanıcının yazdığı değerleri temizle
-    for r in range(n):
-      for c in range(n):
-        if puzzle[r][c] == 0:
-          st.session_state[f"cell_{r}_{c}"] = ""
-    st.rerun()
+    ax.set_xlim(0, 6)
+    ax.set_ylim(0, 5.0)
+    
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png', bbox_inches='tight', dpi=180, transparent=True)
+    buf.seek(0)
+    img_str = base64.b64encode(buf.read()).decode('utf-8')
+    plt.close(fig)
+    return f"data:image/png;base64,{img_str}"
 
 # --- MEB MÜFREDATI VE ÖZEL MODÜLLER ---
 MUGREDAT = {
