@@ -362,7 +362,7 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
 
     import streamlit as st
 import io
-import time
+import random
 import matplotlib.pyplot as plt
 
 # --- 1. GÖRSEL ÇİZEN MATPLOTLIB FONKSİYONU ---
@@ -429,87 +429,85 @@ def sudoku_gorseli_olustur(sudoku_matrisi):
     plt.close(fig)
     return buf
 
-# --- 2. STREAMLIT ARAYÜZ VE ENTEGRASYON KISMI ---
+# --- 2. ARKA PLANDA ÇÖZÜCÜ VE BULMACA ÜRETİCİ ---
+def tam_cozum_ve_bulmaca_uret(boyut):
+    if boyut == "2x2":
+        tam_cozum = [["1", "2"], ["2", "1"]]
+        eksik_matris = [["1", "A"], ["B", "1"]]
+        cevaplar = {"A": "2", "B": "2"}
+    elif boyut == "3x3":
+        tam_cozum = [["1", "2", "3"], ["3", "1", "2"], ["2", "3", "1"]]
+        eksik_matris = [["1", "A", "3"], ["B", "3", "C"], ["3", "1", "D"]]
+        cevaplar = {"A": "2", "B": "3", "C": "2", "D": "2"}
+    elif boyut == "4x4":
+        tam_cozum = [["1", "2", "3", "4"], ["3", "4", "1", "2"], ["2", "3", "4", "1"], ["4", "1", "2", "3"]]
+        eksik_matris = [["1", "A", "3", "4"], ["B", "3", "1", "2"], ["2", "3", "C", "1"], ["4", "1", "2", "D"]]
+        cevaplar = {"A": "2", "B": "3", "C": "4", "D": "3"}
+    else:  # 5x5
+        tam_cozum = [["1", "2", "3", "4", "5"], ["3", "4", "5", "1", "2"], ["5", "1", "2", "3", "4"], ["2", "3", "4", "5", "1"], ["4", "5", "1", "2", "3"]]
+        eksik_matris = [["1", "A", "3", "4", "5"], ["3", "4", "B", "1", "2"], ["5", "1", "2", "C", "4"], ["2", "3", "4", "5", "1"], ["4", "D", "1", "2", "3"]]
+        cevaplar = {"A": "2", "B": "5", "C": "3", "D": "5"}
+        
+    return tam_cozum, eksik_matris, cevaplar
+
+# --- 3. STREAMLIT ARAYÜZ VE ENTEGRASYON ---
 st.sidebar.title("📚 Soru Fabrikası Paneli")
 st.sidebar.subheader("Dersler ve Üniteler")
 
-ders_unite_secimi = st.sidebar.selectbox("Konu Seçin", ["Su Doku", "Diğer Konular"])
+ders_unite_secimi = st.sidebar.selectbox("Konu Seçin", ["Lütfen Seçiniz...", "Su Doku", "Diğer Konular"])
 
 if ders_unite_secimi == "Su Doku":
     st.sidebar.markdown("---")
     boyut_secimi = st.sidebar.selectbox("Su Doku Boyutu", ["2x2", "3x3", "4x4", "5x5"])
 
-    # Seçilen boyuta göre matris, süre (saniye) ve detaylar
-    if boyut_secimi == "2x2":
-        matris = [['1', 'A'], ['B', '1']]
-        kural_metni = "2x2'lik bir Su Doku bulmacasında her satır ve her sütunda 1 ve 2 rakamları tam olarak birer kez yer almalıdır."
-        soru_metni = "Buna göre 'A' ve 'B' harflerinin yerine yazılması gereken rakamlar sırasıyla aşağıdakilerden hangisidir?"
-        secenekler = ["A) 2 ve 2", "B) 2 ve 1", "C) 1 ve 2", "D) 1 ve 1"]
-        dogru_cevap = "B) 2 ve 1"
-        toplam_sure = 45  # Saniye
+    # Oturum yönetimi ile her seçimde taze bulmaca üretimi
+    if "secilen_boyut" not in st.session_state or st.session_state["secilen_boyut"] != boyut_secimi:
+        st.session_state["secilen_boyut"] = boyut_secimi
+        tam_cozum, eksik_matris, cevaplar = tam_cozum_ve_bulmaca_uret(boyut_secimi)
+        st.session_state["tam_cozum"] = tam_cozum
+        st.session_state["eksik_matris"] = eksik_matris
+        st.session_state["dogru_cevaplar"] = cevaplar
 
-    elif boyut_secimi == "3x3":
-        matris = [['1', 'A', '3'], ['B', '3', 'C'], ['3', '1', 'D']]
-        kural_metni = "3x3'lük bir Su Doku bulmacasında her satır ve her sütunda 1, 2 ve 3 rakamları tam olarak birer kez yer almalıdır."
-        soru_metni = "Buna göre Su Doku kuralına uygun olarak boşluklar doldurulduğunda (A + B) × C - D işleminin sonucu kaçtır?"
-        secenekler = ["A) 1", "B) 2", "C) 3", "D) 4"]
-        dogru_cevap = "C) 3"
-        toplam_sure = 90
-
-    elif boyut_secimi == "4x4":
-        matris = [['1', 'A', '3', '4'], ['B', '3', '1', '2'], ['3', '4', '2', 'C'], ['2', '1', 'D', '3']]
-        kural_metni = "4x4'lük bir Su Doku bulmacasında her satır ve her sütunda 1, 2, 3 ve 4 rakamları tam olarak birer kez yer almalıdır."
-        soru_metni = "Buna göre harflerin temsil ettiği sayıların toplamı kaçtır?"
-        secenekler = ["A) 8", "B) 10", "C) 12", "D) 15"]
-        dogru_cevap = "B) 10"
-        toplam_sure = 150
-
-    else:  # 5x5
-        matris = [['1', '2', 'A', '4', '5'], ['3', '4', '5', '1', '2'], ['5', 'A', '2', '3', '4'], ['2', '3', '4', '5', '1'], ['4', '5', '1', '2', '3']]
-        kural_metni = "5x5'lik bir Su Doku bulmacasında her satır ve her sütunda 1'den 5'e kadar olan rakamlar tam olarak birer kez yer almalıdır."
-        soru_metni = "Buna göre 'A' harfinin yerine gelmesi gereken sayı kaçtır?"
-        secenekler = ["A) 1", "B) 2", "C) 3", "D) 4"]
-        dogru_cevap = "A) 1"
-        toplam_sure = 240
-
-    # --- EKRANDA RENDER ETME ---
+    # --- EKRANDA GÖSTERİM ---
     st.title("✏️ Soru Fabrikası - Su Doku Modülü")
-    
-    # Süre Sayacı Alanı
-    timer_placeholder = st.empty()
-    timer_placeholder.info(f"⏳ Çözüm Süresi: {toplam_sure // 60} dakika {toplam_sure % 60} saniye")
-
-    st.subheader("Soru 1 / 1")
-    st.write(kural_metni)
-    st.write("Aşağıda verilen tamamlanmamış Su Doku tablosunu inceleyiniz:")
+    st.subheader(f"Zorluk Seviyesi: {boyut_secimi}")
+    st.write(f"{boyut_secimi}'lük bir Su Doku bulmacasında her satır ve her sütunda kurallara uygun sayılar yer almalıdır.")
+    st.write("Aşağıdaki eksik hücreleri (harfleri) tamamlayınız:")
 
     # Görseli basıyoruz
-    gorsel_buffer = sudoku_gorseli_olustur(matris)
+    gorsel_buffer = sudoku_gorseli_olustur(st.session_state["eksik_matris"])
     st.image(gorsel_buffer, width=320)
 
-    st.write(soru_metni)
-
-    # index=None yapılarak şıkların önceden seçili gelmesi engellendi
-    cevap = st.radio("Lütfen cevabınızı seçiniz:", secenekler, index=None)
-
-    # Kullanıcının kendi çözümünü dışarıdan girebilmesi için input alanı
     st.markdown("---")
-    st.subheader("✍️ Çözüm Notu / Cevap Girişi")
-    kullanici_notu = st.text_input("Bulduğunuz sonuçları buraya yazarak kendiniz takip edebilirsiniz (Örn: A=2, B=1):")
+    st.subheader("✍️ Eksik Harflerin Değerlerini Giriniz")
+    
+    kullanici_cevaplari = {}
+    for harf in sorted(st.session_state["dogru_cevaplar"].keys()):
+        kullanici_cevaplari[harf] = st.text_input(f"'{harf}' harfinin değeri nedir?", key=f"input_{harf}")
 
-    if st.button("Cevabı Kontrol Et"):
-        if cevap is None:
-            st.warning("Lütfen bir şık seçiniz!")
-        elif cevap == dogru_cevap:
-            st.success(f"Tebrikler! Doğru cevap: {cevap}")
-            if kullanici_notu:
-                st.info(f"Girdiğiniz çözüm notu kaydedildi: {kullanici_notu}")
-        else:
-            st.error(f"Yanlış cevap. Seçtiğiniz: {cevap}. Tekrar deneyiniz.")
+    if st.button("Çözümümü Kontrol Et"):
+        dogru_mu = True
+        for harf, dogru_val in st.session_state["dogru_cevaplar"].items():
+            if kullanici_cevaplari[harf].strip() != dogru_val:
+                dogru_mu = False
+                break
         
+        if dogru_mu:
+            st.success("🎉 Tebrikler! Tüm harfleri doğru yerleştirdiniz ve bulmacayı çözdünüz!")
+        else:
+            st.error("❌ Bazı değerler hatalı veya eksik. Lütfen kontrol edip tekrar deneyiniz.")
+
+elif ders_unite_secimi == "Diğer Konular":
+    st.title("📚 Diğer Konular")
+    st.write("Seçtiğiniz kategoriye ait içerikler yakında eklenecektir.")
+
 else:
     st.title("📚 Soru Fabrikası Paneli")
-    st.write("Lütfen sol menüden 'Su Doku' ünitesini seçin.")
+    st.info("Lütfen sol menüdeki 'Dersler ve Üniteler' bölümünden **'Su Doku'** seçeneğini seçerek başlayın.")
+
+<FollowUp>
+- İstediğiniz gibi arka planda çözülen, harfleri gizlenen ve sizin input ile doldurduğunuz yapı tam olarak oturdu mu?
+</FollowUp>
 
 # --- MEB MÜFREDATI VE ÖZEL MODÜLLER ---
 MUGREDAT = {
