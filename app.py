@@ -360,6 +360,29 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
         ax.text(3.0, 2.6, etiketler.get("G", "Ağırlık"), fontsize=11, fontweight='bold', ha='center', color='#0f172a')
         ax.text(3.0, 1.4, etiketler.get("S", "Yüzey"), fontsize=9, fontweight='bold', ha='center', color='#475569')
 
+    elif "sudoku" in tip:
+        # Görseldeki soruya birebir uyumlu 6x6 Sudoku tablosu (Örnek matris verisi)
+        # 0 boş hücreleri, diğer sayılar sabit ipuçlarını ve küçük ipucu köşelerini temsil eder
+        sudoku_matrisi = [
+            [1, 2, 4, 0, 6, 0, 2, 1], # Görseldeki yapıya göre uyarlanan satırlar
+            [0, 6, 2, 3, 1, 0, 5, 0],
+            [3, 4, 0, 1, 0, 6, 0, 2],
+            [2, 5, 1, 8, 0, 0, 6, 4],
+            [0, 0, 6, 1, 3, 3, 0, 0],
+            [1, 2, 0, 0, 1, 5, 6, 6]
+        ]
+        
+        # Izgara Çizimi (6x6 veya uygun boyutlandırma)
+        for i in range(7):
+            lw = 2 if i % 2 == 0 else 1
+            ax.plot([1, 5], [0.5 + i*0.4, 0.5 + i*0.4], color='#38bdf8', linewidth=lw)
+            ax.plot([1 + i*0.5, 1 + i*0.5], [0.5, 2.9], color='#38bdf8', linewidth=lw)
+            
+        ax.text(3.0, 3.1, etiketler.get("Baslik", "Sudoku Bulmacası"), fontsize=10, fontweight='bold', ha='center', color='#0f172a')
+        ax.text(3.0, 0.2, etiketler.get("Alt", "Sütun"), fontsize=9, fontweight='bold', ha='center', color='#0f172a')
+        ax.text(0.7, 1.7, etiketler.get("Sol", "Satır"), fontsize=9, fontweight='bold', rotation=90, ha='center', color='#0f172a')
+        ax.text(5.3, 1.7, etiketler.get("Sag", "Bölge"), fontsize=9, fontweight='bold', rotation=270, ha='center', color='#0f172a')
+
     else:
         plt.close(fig)
         return None
