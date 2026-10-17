@@ -360,129 +360,135 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
         ax.text(3.0, 2.6, etiketler.get("G", "Ağırlık"), fontsize=11, fontweight='bold', ha='center', color='#0f172a')
         ax.text(3.0, 1.4, etiketler.get("S", "Yüzey"), fontsize=9, fontweight='bold', ha='center', color='#475569')
 
-    import io
+    import streamlit as st
+import io
 import base64
-import re
 import math
 import matplotlib.pyplot as plt
 
-def sudoku_gorseli_ciz(tip, soru_metni="", sudoku_matrisi=None, etiketler=None):
+# --- 1. GÖRSEL ÜRETİCİ FONKSİYON ---
+def sudoku_gorseli_olustur(sudoku_matrisi, etiketler=None):
     if etiketler is None:
         etiketler = {}
 
-    # 1. EĞER MATRİS METİN OLARAK GELDİYSE ("1. Satır: [ 1 , A , 3 ]") AYRIŞTIR (PARSE ET)
-    if sudoku_matrisi is None and soru_metni:
-        # Metin içindeki [ ... ] yapılarını bulur
-        satirlar = re.findall(r'\[(.*?)\]', soru_metni)
-        if satirlar:
-            parsed_matrix = []
-            for satirdaki_elemanlar in satirlar:
-                # Elemanları virgüle göre ayırıp temizler
-                row = [elem.strip() for elem in satirdaki_elemanlar.split(',')]
-                parsed_matrix.append(row)
-            if parsed_matrix:
-                sudoku_matrisi = parsed_matrix
-
-    # 2. VARSAYILAN MATRİS (Eğer hiçbir veri gelmediyse fallback 3x3)
-    if sudoku_matrisi is None:
-        sudoku_matrisi = [
-            ['1', 'A', '3'],
-            ['B', '3', 'C'],
-            ['3', '1', 'D']
-        ]
-
     rows = len(sudoku_matrisi)
     cols = len(sudoku_matrisi[0])
-
-    # Alt bölge (box) kalın çizgi hesaplaması (4x4 -> 2x2, 9x9 -> 3x3, 3x3 -> her hücre)
-    if rows == 4:
+    
+    # Boyuta göre alt bölge (blok) sınırlarını belirle
+    if rows == 2:
+        box_r, box_c = 1, 2
+    elif rows == 3:
+        box_r, box_c = 1, 3
+    elif rows == 4:
         box_r, box_c = 2, 2
-    elif rows == 6:
-        box_r, box_c = 2, 3
-    elif rows == 9:
-        box_r, box_c = 3, 3
     else:
-        box_r, box_c = 1, 1
+        box_r, box_c = 3, 3
 
-    # Tuval (Canvas) Ayarları
-    fig, ax = plt.subplots(figsize=(5, 5), dpi=200)
+    fig, ax = plt.subplots(figsize=(4, 4), dpi=200)
     ax.axis('off')
 
-    if "sudoku" in tip:
-        cell_size = 1.0
-        x_start = 0.5
-        y_start = 0.5
-        
-        # Arka Plan Kutusu
-        grid_width = cols * cell_size
-        grid_height = rows * cell_size
+    cell_size = 1.0
+    x_start = 0.5
+    y_start = 0.5
+    grid_width = cols * cell_size
+    grid_height = rows * cell_size
 
-        # Izgara (Grid) Çizimi
-        for i in range(rows + 1):
-            is_thick = (i % box_r == 0) or (i == 0) or (i == rows)
-            lw = 2.5 if is_thick else 1.0
-            color = '#334155' if is_thick else '#cbd5e1'
-            ax.plot([x_start, x_start + grid_width], 
-                    [y_start + i * cell_size, y_start + i * cell_size], 
-                    color=color, linewidth=lw)
+    # Izgara (Grid) Çizimi ve Kalın Blok Sınırları
+    for i in range(rows + 1):
+        is_thick = (i % box_r == 0) or (i == 0) or (i == rows)
+        lw = 2.5 if is_thick else 1.0
+        color = '#1e293b' if is_thick else '#cbd5e1'
+        ax.plot([x_start, x_start + grid_width], 
+                [y_start + i * cell_size, y_start + i * cell_size], 
+                color=color, linewidth=lw)
 
-        for j in range(cols + 1):
-            is_thick = (j % box_c == 0) or (j == 0) or (j == cols)
-            lw = 2.5 if is_thick else 1.0
-            color = '#334155' if is_thick else '#cbd5e1'
-            ax.plot([x_start + j * cell_size, x_start + j * cell_size], 
-                    [y_start, y_start + grid_height], 
-                    color=color, linewidth=lw)
+    for j in range(cols + 1):
+        is_thick = (j % box_c == 0) or (j == 0) or (j == cols)
+        lw = 2.5 if is_thick else 1.0
+        color = '#1e293b' if is_thick else '#cbd5e1'
+        ax.plot([x_start + j * cell_size, x_start + j * cell_size], 
+                [y_start, y_start + grid_height], 
+                color=color, linewidth=lw)
 
-        # Hücre Değerlerini (Sayı ve Harfleri) Yerleştirme
-        for r_idx, row in enumerate(sudoku_matrisi):
-            for c_idx, val in enumerate(row):
-                x_pos = x_start + c_idx * cell_size + (cell_size / 2)
-                # Matplotlib y-ekseni aşağıdan yukarıya doğru olduğu için satır sırasını çeviriyoruz
-                y_pos = y_start + (rows - 1 - r_idx) * cell_size + (cell_size / 2)
-                
-                val_str = str(val).strip()
-                if val_str and val_str != '0':
-                    # Harf değişkenleri (A, B, C, D) için renk vurgusu
-                    font_color = '#2563eb' if val_str.isalpha() else '#0f172a'
-                    
-                    # Dinamik font boyutu (Boyuta göre ölçekleme)
-                    font_size = max(12, int(28 / (rows ** 0.5)))
-                    
-                    ax.text(
-                        x_pos, y_pos, val_str, 
-                        fontsize=font_size, fontweight='bold', 
-                        ha='center', va='center', color=font_color
-                    )
+    # Matristeki Rakam ve Harfleri Hücrelerin Merkezine Yerleştirme
+    for r_idx, row in enumerate(sudoku_matrisi):
+        for c_idx, val in enumerate(row):
+            x_pos = x_start + c_idx * cell_size + (cell_size / 2)
+            y_pos = y_start + (rows - 1 - r_idx) * cell_size + (cell_size / 2)
+            
+            val_str = str(val).strip()
+            if val_str and val_str != '0':
+                # Harf değişkenleri (A, B, C...) için mavi renk vurgusu
+                font_color = '#2563eb' if val_str.isalpha() else '#0f172a'
+                ax.text(
+                    x_pos, y_pos, val_str, 
+                    fontsize=20, fontweight='bold', 
+                    ha='center', va='center', color=font_color
+                )
 
-        # Başlık ve Etiket Desteği
-        if etiketler.get("Baslik"):
-            ax.text(x_start + grid_width / 2, y_start + grid_height + 0.3, 
-                    etiketler["Baslik"], fontsize=12, fontweight='bold', 
-                    ha='center', color='#0f172a')
+    ax.set_xlim(0, grid_width + 1.0)
+    ax.set_ylim(0, grid_height + 1.0)
 
-    elif "basinc" in tip:
-        ax.text(3.0, 3.0, etiketler.get("Baslik", "Basınç Sorusu Görseli"), 
-                fontsize=12, fontweight='bold', ha='center', color='#0f172a')
-        ax.plot([1, 5], [2, 2], color='#ef4444', linewidth=2)
-
-    else:
-        plt.close(fig)
-        return None
-
-    # Eksen Limitlerini Ayarlama
-    ax.set_xlim(0, cols * cell_size + 1.0)
-    ax.set_ylim(0, rows * cell_size + 1.0)
-
-    # Base64 Koduna Dönüştürme
+    # Belleğe PNG olarak kaydetme
     buf = io.BytesIO()
     plt.savefig(buf, format='png', bbox_inches='tight', dpi=200, transparent=True)
     buf.seek(0)
-    img_str = base64.b64encode(buf.read()).decode('utf-8')
     plt.close(fig)
+    return buf
 
-    # Doğrudan HTML 'img' etiketi döndürülür
-    return f'<img src="data:image/png;base64,{img_str}" alt="Sudoku Görseli" style="max-width:100%; height:auto;" />'
+# --- 2. STREAMLIT ARAYÜZ VE KONTROL KISMI ---
+st.title("✏️ Soru Fabrikası - Su Doku Modülü")
+
+# Yan Panelden Boyut Seçimi
+boyut_secimi = st.sidebar.selectbox("Sudoku Boyutu Seçin", ["2x2", "3x3", "4x4"])
+
+# Seçilen boyuta göre matris ve soru içeriğini belirleme
+if boyut_secimi == "2x2":
+    matris = [
+        ['1', 'A'],
+        ['B', '1']
+    ]
+    kural_metni = "2x2'lik bir Su Doku bulmacasında her satır ve her sütunda 1 ve 2 rakamları tam olarak birer kez yer almalıdır."
+    soru_metni = "Buna göre 'A' ve 'B' harflerinin yerine yazılması gereken rakamlar sırasıyla aşağıdakilerden hangisidir?"
+    secenekler = ["A) 2 ve 2", "B) 2 ve 1", "C) 1 ve 2", "D) 1 ve 1"]
+
+elif boyut_secimi == "3x3":
+    matris = [
+        ['1', 'A', '3'],
+        ['B', '3', 'C'],
+        ['3', '1', 'D']
+    ]
+    kural_metni = "3x3'lük bir Su Doku bulmacasında her satır ve her sütunda 1, 2 ve 3 rakamları tam olarak birer kez yer almalıdır."
+    soru_metni = "Buna göre Su Doku kuralına uygun olarak boşluklar doldurulduğunda (A + B) × C - D işleminin sonucu kaçtır?"
+    secenekler = ["A) 1", "B) 2", "C) 3", "D) 4"]
+
+else: # 4x4
+    matris = [
+        ['1', 'A', '3', '4'],
+        ['B', '3', '1', '2'],
+        ['3', '4', '2', 'C'],
+        ['2', '1', 'D', '3']
+    ]
+    kural_metni = "4x4'lük bir Su Doku bulmacasında her satır ve her sütunda 1, 2, 3 ve 4 rakamları tam olarak birer kez yer almalıdır."
+    soru_metni = "Buna göre harflerin temsil ettiği sayıların toplamı kaçtır?"
+    secenekler = ["A) 8", "B) 10", "C) 12", "D) 15"]
+
+# --- 3. EKRANDA GÖSTERİM (RENDER) ---
+st.subheader("Soru 1 / 1")
+st.write(kural_metni)
+st.write("Aşağıda verilen tamamlanmamış Su Doku tablosunu inceleyiniz:")
+
+# GÖRSELİ OLUŞTUR VE DOĞRUDAN STREAMLIT İLE ÇÖZüM (Metin Değil Resim Olarak Basar)
+img_buffer = sudoku_gorseli_olustur(matris)
+st.image(img_buffer, width=300)  # <-- Metin yerine doğrudan grafiksel görseli basar
+
+# Soru Kökü ve Şartlar
+st.write(soru_metni)
+
+# Şıklar
+cevap = st.radio("Lütfen cevabınızı seçiniz:", secenekler)
+if st.button("Cevabı Kontrol Et"):
+    st.success(f"Seçtiğiniz cevap kaydedildi: {cevap}")
 
 # --- MEB MÜFREDATI VE ÖZEL MODÜLLER ---
 MUGREDAT = {
