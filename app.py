@@ -362,14 +362,28 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
 
     import io
 import base64
+import re
+import math
 import matplotlib.pyplot as plt
 
-def soru_karti_gorseli_olustur(tip, etiketler=None, sudoku_matrisi=None):
+def sudoku_gorseli_ciz(tip, soru_metni="", sudoku_matrisi=None, etiketler=None):
     if etiketler is None:
         etiketler = {}
 
-    # 1. Sudoku Matris Verisi (Sayılar ve Harfler)
-    # Eğer dışarıdan verilmediyse görseldeki 3x3 matris kullanılır
+    # 1. EĞER MATRİS METİN OLARAK GELDİYSE ("1. Satır: [ 1 , A , 3 ]") AYRIŞTIR (PARSE ET)
+    if sudoku_matrisi is None and soru_metni:
+        # Metin içindeki [ ... ] yapılarını bulur
+        satirlar = re.findall(r'\[(.*?)\]', soru_metni)
+        if satirlar:
+            parsed_matrix = []
+            for satirdaki_elemanlar in satirlar:
+                # Elemanları virgüle göre ayırıp temizler
+                row = [elem.strip() for elem in satirdaki_elemanlar.split(',')]
+                parsed_matrix.append(row)
+            if parsed_matrix:
+                sudoku_matrisi = parsed_matrix
+
+    # 2. VARSAYILAN MATRİS (Eğer hiçbir veri gelmediyse fallback 3x3)
     if sudoku_matrisi is None:
         sudoku_matrisi = [
             ['1', 'A', '3'],
@@ -377,87 +391,88 @@ def soru_karti_gorseli_olustur(tip, etiketler=None, sudoku_matrisi=None):
             ['3', '1', 'D']
         ]
 
-    # Tuval (Canvas) Oluşturma
-    fig, ax = plt.subplots(figsize=(8, 4.5), dpi=200)
+    rows = len(sudoku_matrisi)
+    cols = len(sudoku_matrisi[0])
+
+    # Alt bölge (box) kalın çizgi hesaplaması (4x4 -> 2x2, 9x9 -> 3x3, 3x3 -> her hücre)
+    if rows == 4:
+        box_r, box_c = 2, 2
+    elif rows == 6:
+        box_r, box_c = 2, 3
+    elif rows == 9:
+        box_r, box_c = 3, 3
+    else:
+        box_r, box_c = 1, 1
+
+    # Tuval (Canvas) Ayarları
+    fig, ax = plt.subplots(figsize=(5, 5), dpi=200)
     ax.axis('off')
 
     if "sudoku" in tip:
-        # Arka Plan Yuvarlatılmış Kart Kutusu
-        card_box = plt.Rectangle((0.02, 0.02), 0.96, 0.96, transform=ax.transAxes,
-                                 facecolor='#ffffff', edgecolor='#cbd5e1', linewidth=1.5,
-                                 zorder=1)
-        ax.add_patch(card_box)
-
-        # --- SOL TARAF: GRAFİKSEL 3x3 SUDOKU TABLOSU ---
-        grid_left = 0.08
-        grid_bottom = 0.22
-        grid_size = 0.38  # Tablonun genişliği ve yüksekliği
+        cell_size = 1.0
+        x_start = 0.5
+        y_start = 0.5
         
-        rows = len(sudoku_matrisi)
-        cols = len(sudoku_matrisi[0])
-        cell_w = grid_size / cols
-        cell_h = grid_size / rows
+        # Arka Plan Kutusu
+        grid_width = cols * cell_size
+        grid_height = rows * cell_size
 
-        # Hücre Arka Planları ve Dış Çerçeve
-        grid_bg = plt.Rectangle((grid_left, grid_bottom), grid_size, grid_size,
-                                transform=ax.transAxes, facecolor='#f8fafc',
-                                edgecolor='#64748b', linewidth=2.5, zorder=2)
-        ax.add_patch(grid_bg)
+        # Izgara (Grid) Çizimi
+        for i in range(rows + 1):
+            is_thick = (i % box_r == 0) or (i == 0) or (i == rows)
+            lw = 2.5 if is_thick else 1.0
+            color = '#334155' if is_thick else '#cbd5e1'
+            ax.plot([x_start, x_start + grid_width], 
+                    [y_start + i * cell_size, y_start + i * cell_size], 
+                    color=color, linewidth=lw)
 
-        # Izgara Çizgilerini Çizme
-        for i in range(1, rows):
-            # Yatay
-            ax.plot([grid_left, grid_left + grid_size], 
-                    [grid_bottom + i * cell_h, grid_bottom + i * cell_h],
-                    color='#94a3b8', linewidth=1.5, transform=ax.transAxes, zorder=3)
-            # Dikey
-            ax.plot([grid_left + i * cell_w, grid_left + i * cell_w],
-                    [grid_bottom, grid_bottom + grid_size],
-                    color='#94a3b8', linewidth=1.5, transform=ax.transAxes, zorder=3)
+        for j in range(cols + 1):
+            is_thick = (j % box_c == 0) or (j == 0) or (j == cols)
+            lw = 2.5 if is_thick else 1.0
+            color = '#334155' if is_thick else '#cbd5e1'
+            ax.plot([x_start + j * cell_size, x_start + j * cell_size], 
+                    [y_start, y_start + grid_height], 
+                    color=color, linewidth=lw)
 
-        # Hücre Değerlerini (Sayı ve Harfleri) Hücre Merkezine Yazma
+        # Hücre Değerlerini (Sayı ve Harfleri) Yerleştirme
         for r_idx, row in enumerate(sudoku_matrisi):
             for c_idx, val in enumerate(row):
-                x_c = grid_left + c_idx * cell_w + (cell_w / 2)
-                y_c = grid_bottom + (rows - 1 - r_idx) * cell_h + (cell_h / 2)
+                x_pos = x_start + c_idx * cell_size + (cell_size / 2)
+                # Matplotlib y-ekseni aşağıdan yukarıya doğru olduğu için satır sırasını çeviriyoruz
+                y_pos = y_start + (rows - 1 - r_idx) * cell_size + (cell_size / 2)
                 
-                # Harfler ve sayılar için renk ayrımı
                 val_str = str(val).strip()
-                text_color = '#2563eb' if val_str.isalpha() else '#1e293b'
-                
-                ax.text(x_c, y_c, val_str, transform=ax.transAxes,
-                        fontsize=22, fontweight='bold', ha='center', va='center',
-                        color=text_color, zorder=4)
+                if val_str and val_str != '0':
+                    # Harf değişkenleri (A, B, C, D) için renk vurgusu
+                    font_color = '#2563eb' if val_str.isalpha() else '#0f172a'
+                    
+                    # Dinamik font boyutu (Boyuta göre ölçekleme)
+                    font_size = max(12, int(28 / (rows ** 0.5)))
+                    
+                    ax.text(
+                        x_pos, y_pos, val_str, 
+                        fontsize=font_size, fontweight='bold', 
+                        ha='center', va='center', color=font_color
+                    )
 
-        # --- SAĞ TARAF: SORU METNİ VE AÇIKLAMALARI ---
-        text_x = 0.50
-        
-        # Soru Başlığı (Koyu / Bold)
-        baslik_metni = f"{rows}x{cols}'lük bir Su Doku bulmacasında her satır ve her sütunda\n" \
-                       f"1'den {rows}'e kadar olan rakamlar tam olarak birer kez yer almalıdır."
-        ax.text(text_x, 0.78, baslik_metni, transform=ax.transAxes,
-                fontsize=10.5, fontweight='bold', color='#0f172a', va='top', ha='left',
-                linespacing=1.4)
-
-        # Soru Açıklaması
-        aciklama_metni = etiketler.get("Aciklama", "Aşağıda verilen tamamlanmamış Su Doku tablosunu inceleyiniz:")
-        ax.text(text_x, 0.56, aciklama_metni, transform=ax.transAxes,
-                fontsize=9.5, color='#334155', va='top', ha='left')
-
-        # Soru Kökü (Alt Metin)
-        soru_koku = etiketler.get("SoruKoku", "Buna göre Su Doku kuralına uygun olarak boşluklar doldurulduğunda\n"
-                                             "(A + B) × C - D işleminin sonucu kaçtır?")
-        ax.text(text_x, 0.38, soru_koku, transform=ax.transAxes,
-                fontsize=10, fontweight='bold', color='#1e293b', va='top', ha='left',
-                linespacing=1.3)
+        # Başlık ve Etiket Desteği
+        if etiketler.get("Baslik"):
+            ax.text(x_start + grid_width / 2, y_start + grid_height + 0.3, 
+                    etiketler["Baslik"], fontsize=12, fontweight='bold', 
+                    ha='center', color='#0f172a')
 
     elif "basinc" in tip:
-        ax.text(0.5, 0.5, etiketler.get("Baslik", "Basınç Sorusu Görseli"), 
-                transform=ax.transAxes, fontsize=12, fontweight='bold', ha='center')
+        ax.text(3.0, 3.0, etiketler.get("Baslik", "Basınç Sorusu Görseli"), 
+                fontsize=12, fontweight='bold', ha='center', color='#0f172a')
+        ax.plot([1, 5], [2, 2], color='#ef4444', linewidth=2)
 
     else:
         plt.close(fig)
         return None
+
+    # Eksen Limitlerini Ayarlama
+    ax.set_xlim(0, cols * cell_size + 1.0)
+    ax.set_ylim(0, rows * cell_size + 1.0)
 
     # Base64 Koduna Dönüştürme
     buf = io.BytesIO()
@@ -466,8 +481,8 @@ def soru_karti_gorseli_olustur(tip, etiketler=None, sudoku_matrisi=None):
     img_str = base64.b64encode(buf.read()).decode('utf-8')
     plt.close(fig)
 
-    # Doğrudan arayüzde resim olarak görüntülenen HTML çıktısı
-    return f'<img src="data:image/png;base64,{img_str}" alt="Sudoku Soru Görseli" style="max-width:100%; height:auto;" />'
+    # Doğrudan HTML 'img' etiketi döndürülür
+    return f'<img src="data:image/png;base64,{img_str}" alt="Sudoku Görseli" style="max-width:100%; height:auto;" />'
 
 # --- MEB MÜFREDATI VE ÖZEL MODÜLLER ---
 MUGREDAT = {
