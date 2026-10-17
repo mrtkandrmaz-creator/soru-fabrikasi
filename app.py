@@ -435,7 +435,7 @@ st.sidebar.title("📚 Soru Fabrikası Paneli")
 st.sidebar.subheader("Dersler ve Üniteler")
 
 # Doğrudan Dersler ve Üniteler altında Su Doku seçimi
-ders_unite_secimi = st.sidebar.selectbox("Konu Seçin", ["Su Doku", "Diğer Konular"])
+ders_unite_secimi = st.sidebar.selectbox("Konu Seçin", ["Su Doku"])
 
 if ders_unite_secimi == "Su Doku":
     st.sidebar.markdown("---")
@@ -494,7 +494,7 @@ MUGREDAT = {
         "Sayılar ve Sayılar Teorisi (Temel Seviye)": ["Ardışık Sayılar", "Asal Sayılar", "Sayı Basamakları", "Ebob-Ekok"],
         "Geometri ve Görsel Zeka": ["Açılar", "Çevre ve Alan", "Görsel Algı ve Küpler", "Sihirli Kareler ve Sudoku Tarzı Mantık Oyunları"],
         "Problem Çözme Stratejileri": ["Tersten Gitme", "Şema ve Tablo Çizme", "Örüntüler ve Sihirli Diziler",],
-        "Su Doku": ["2*2", "3*3", "4*4",]
+        "Su Doku": ["2x2", "3x3", "4x4", "5x5"]
         },
     "4. Sınıf": {
         "Türkçe": ["Sözcükte Anlam", "Cümle Bilgisi", "Paragraf Yorumlama", "Yazım Kuralları ve Noktalama", "Metin Türleri ve Söz Sanatları"],
