@@ -364,17 +364,16 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
 import base64
 import matplotlib.pyplot as plt
 
-def sudoku_ciz(tip, etiketler=None):
+def sudoku_gorseli_olustur(tip, etiketler=None):
     if etiketler is None:
         etiketler = {}
 
     fig, ax = plt.subplots(figsize=(6, 6))
-    ax.axis('off')  # Standart eksen çizgilerini ve değerlerini gizle
+    ax.axis('off')  # Standart eksen çizgilerini ve rakamlarını gizle
 
     if "sudoku" in tip:
-        # 6x6 Sudoku matrisi: 
-        # Matris hücreleri [sabit_sayi, kucuk_ipucu] şeklinde düşünülebilir 
-        # veya 0 boş hücreyi temsil eder.
+        # Görseldeki soruyla birebir uyumlu 6x6 Sudoku matrisi
+        # 0: Boş hücre, Diğer sayılar: Hücreye yazılacak sabit ipucu sayıları
         sudoku_matrisi = [
             [1, 2, 4, 0, 6, 0],
             [0, 6, 2, 3, 1, 0],
@@ -386,39 +385,49 @@ def sudoku_ciz(tip, etiketler=None):
         
         rows = 6
         cols = 6
+        cell_size = 0.6
+        x_start = 1.0
+        y_start = 0.5
         
-        # Izgara Çizimi (6x6 Grid)
+        # Izgara Çizimi (Grid)
         for i in range(rows + 1):
-            # Ana bölgeleri (2x3 veya 3x2 bloklar için) belirten kalın Çizgiler
-            lw = 2.5 if i % 2 == 0 or i == 0 or i == rows else 1.0
+            # Ana bölge kalınlıkları (2x3 blok yapıları için)
+            lw_h = 2.5 if i % 2 == 0 or i == 0 or i == rows else 1.0
+            lw_v = 2.5 if i % 3 == 0 or i == 0 or i == cols else 1.0
             
             # Yatay Çizgiler
-            ax.plot([1, 1 + cols * 0.6], [0.5 + i * 0.6, 0.5 + i * 0.6], color='#38bdf8', linewidth=lw)
+            ax.plot(
+                [x_start, x_start + cols * cell_size], 
+                [y_start + i * cell_size, y_start + i * cell_size], 
+                color='#38bdf8', linewidth=lw_h
+            )
             
-            # Dikey Çizgiler (3'erli dikey kalın çizgi)
-            lw_v = 2.5 if i % 3 == 0 or i == 0 or i == cols else 1.0
-            ax.plot([1 + i * 0.6, 1 + i * 0.6], [0.5, 0.5 + rows * 0.6], color='#38bdf8', linewidth=lw_v)
+            # Dikey Çizgiler
+            ax.plot(
+                [x_start + i * cell_size, x_start + i * cell_size], 
+                [y_start, y_start + rows * cell_size], 
+                color='#38bdf8', linewidth=lw_v
+            )
         
-        # Hücre İçine Değerleri ve İpuçlarını Yerleştirme
+        # Hücre Değerlerini Hizalayarak Yerleştirme
         for r_idx, row in enumerate(sudoku_matrisi):
             for c_idx, val in enumerate(row):
-                # Matplotlib y-ekseni aşağıdan yukarıya doğru gittiği için satır sırasını ters çeviriyoruz
-                x_pos = 1 + c_idx * 0.6 + 0.3
-                y_pos = 0.5 + (rows - 1 - r_idx) * 0.6 + 0.3
+                x_pos = x_start + c_idx * cell_size + (cell_size / 2)
+                # Matplotlib y-ekseni aşağıdan yukarıya doğru olduğu için matris satırını çeviriyoruz
+                y_pos = y_start + (rows - 1 - r_idx) * cell_size + (cell_size / 2)
                 
                 if val != 0:
-                    # Hücre değerini tam merkeze yazdırıyoruz
                     ax.text(
                         x_pos, y_pos, str(val), 
                         fontsize=14, fontweight='bold', 
                         ha='center', va='center', color='#0f172a'
                     )
 
-        # Başlık ve Yan/Alt Etiketler
+        # Başlık ve Etiket Metinleri
         ax.text(2.8, 4.3, etiketler.get("Baslik", "Sudoku Bulmacası"), fontsize=12, fontweight='bold', ha='center', color='#0f172a')
         ax.text(2.8, 0.2, etiketler.get("Alt", "Sütun"), fontsize=10, fontweight='bold', ha='center', color='#0f172a')
-        ax.text(0.7, 2.3, etiketler.get("Sol", "Satır"), fontsize=10, fontweight='bold', rotation=90, ha='center', color='#0f172a')
-        ax.text(4.9, 2.3, etiketler.get("Sag", "Bölge"), fontsize=10, fontweight='bold', rotation=270, ha='center', color='#0f172a')
+        ax.text(0.6, 2.3, etiketler.get("Sol", "Satır"), fontsize=10, fontweight='bold', rotation=90, ha='center', color='#0f172a')
+        ax.text(5.0, 2.3, etiketler.get("Sag", "Bölge"), fontsize=10, fontweight='bold', rotation=270, ha='center', color='#0f172a')
 
     else:
         plt.close(fig)
@@ -428,14 +437,34 @@ def sudoku_ciz(tip, etiketler=None):
     ax.set_xlim(0, 5.6)
     ax.set_ylim(0, 4.6)
     
-    # Görseli Base64 Formatına Dönüştürme
+    # Görseli Belleğe (BytesIO) PNG Olarak Kaydetme
     buf = io.BytesIO()
     plt.savefig(buf, format='png', bbox_inches='tight', dpi=180, transparent=True)
     buf.seek(0)
     img_str = base64.b64encode(buf.read()).decode('utf-8')
     plt.close(fig)
     
-    return f"data:image/png;base64,{img_str}"
+    # Base64 Kodunu Doğrudan HTML <img> Etiketine Dönüştürüp Döndürme
+    # Bu sayede web arayüzünde metin olarak değil, Doğrudan Görsel Olarak Ekrana Gelir
+    html_gorsel_kodu = f'<img src="data:image/png;base64,{img_str}" alt="Sudoku Görseli" style="max-width:100%; height:auto;" />'
+    
+    return html_gorsel_kodu
+
+
+# --- KULLANIM ÖRNEĞİ ---
+if __name__ == "__main__":
+    etiket_bilgisi = {
+        "Baslik": "Örnek 6x6 Sudoku",
+        "Alt": "Sütunlar (1-6)",
+        "Sol": "Satırlar (1-6)",
+        "Sag": "2x3 Bölgeler"
+    }
+    
+    # Fonksiyonu çağırıyoruz
+    gorsel_html = sudoku_gorseli_olustur("sudoku", etiket_bilgisi)
+    
+    # Bu çıktıyı web sayfanızda (HTML) soru metninin içerisine ekleyebilirsiniz:
+    print(gorsel_html)
 
 # --- MEB MÜFREDATI VE ÖZEL MODÜLLER ---
 MUGREDAT = {
