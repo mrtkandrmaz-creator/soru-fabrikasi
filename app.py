@@ -538,7 +538,7 @@ with st.sidebar:
         "Yeni Nesil Sorular"
     ], key=f"tur_secim_{st.session_state.secim_sifirla_tetikleyici}")
 
-    zorluk_seviyesi = st.selectbox("🎯 Soru Zorluk Seviyesi:", ["Kolay", "Orta", "Zor", "Karma / Dengeli"], key=f"zorluk_secim_{st.session_state.secim_sifirla_tetikleyici}")
+    zorluk_seviyesi = st.selectbox("🎯 Soru Zorluk Seviyesi:", ["Kolay", "Orta", "Zor", "Olimpik Seviye","Karma / Dengeli"], key=f"zorluk_secim_{st.session_state.secim_sifirla_tetikleyici}")
 
     st.markdown("---")
     st.markdown("📚 **Dersler ve Üniteler**")
