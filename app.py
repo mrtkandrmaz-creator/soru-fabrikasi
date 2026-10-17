@@ -376,13 +376,7 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
 
 # --- MEB MÜFREDATI VE ÖZEL MODÜLLER ---
 MUGREDAT = {
-    "Tubitak-Olimpiyat": {
-        "Sonlu Mat(Kombinatorik)": ["Mantık ve Oyunlar", "Sayma, Permütasyon ve Kombinasyon","Palindromik Sayılar","Olasılık"],
-        "Analiz-Cebir)": ["Gerçel sayı denklemleri", "Çarpanlara ayırma", "Diziler","Güvercin Yuvası Prensibi (Pigeonhole Principle)", "Eşitsizlikler"],
-        "Sayılar ve Sayılar Teorisi (Temel Seviye)": ["Ardışık Sayılar", "Asal Sayılar", "Sayı Basamakları", "Ebob-Ekok"],
-        "Geometri ve Görsel Zeka": ["Açılar", "Çevre ve Alan", "Görsel Algı ve Küpler", "Sihirli Kareler ve Sudoku Tarzı Mantık Oyunları"],
-        "Problem Çözme Stratejileri": ["Tersten Gitme", "Şema ve Tablo Çizme","Sudoku", "Örüntüler ve Sihirli Diziler"]
-        },
+    
     "4. Sınıf": {
         "Türkçe": ["Sözcükte Anlam", "Cümle Bilgisi", "Paragraf Yorumlama", "Yazım Kuralları ve Noktalama", "Metin Türleri ve Söz Sanatları"],
         "Matematik": ["Doğal Sayılar ve İşlemler", "Geometrik Şekiller ve Cisimler", "Kesirler", "Zaman Ölçme", "Veri Toplama ve Değerlendirme"],
@@ -432,7 +426,15 @@ MUGREDAT = {
         "Bilgi Yarışması": ["Sanat ve Dünya Tarihi", "Az Bilinen Coğrafya ve Doğa Mucizeleri", "Bilim, Uzay ve Nobel Ödüllü Keşifler", "Tarih", "Teknoloji", "Hayvanlar Alemi", "Geleneksel Yemek Kültürü", "Mitoloji, Edebiyat ve Felsefe Kuramları", "Güncel Konular", "Dünya Haritası", "Spor ve Müzik","Ülkeler Tarihi", "Ülke,Şehir ve Başkentler", "Dünya Mutfağı", "Coğrafi Konum", "Genel Kültür","İcatlar", "Şaşırtıcı Bilimsel Gerçekler ve Trivia"],
         "Zihinden Dört İşlem": ["Hızlı Toplama ve Çıkarma", "Çarpım Tablosu Hakimiyeti", "Kademeli Zincir İşlemler", "Zihinden Bölme ve Kat Problemleri"],
         "Almanca Pratik": ["Temel Kelimeler", "Günlük Diyaloglar", "Grammatik Grundlagen"]
+        
     },
+    "Tubitak-Olimpiyat": {
+        "Sonlu Mat(Kombinatorik)": ["Mantık ve Oyunlar", "Sayma, Permütasyon ve Kombinasyon","Palindromik Sayılar","Olasılık"],
+        "Analiz-Cebir)": ["Gerçel sayı denklemleri", "Çarpanlara ayırma", "Diziler","Güvercin Yuvası Prensibi (Pigeonhole Principle)", "Eşitsizlikler"],
+        "Sayılar ve Sayılar Teorisi (Temel Seviye)": ["Ardışık Sayılar", "Asal Sayılar", "Sayı Basamakları", "Ebob-Ekok"],
+        "Geometri ve Görsel Zeka": ["Açılar", "Çevre ve Alan", "Görsel Algı ve Küpler", "Sihirli Kareler ve Sudoku Tarzı Mantık Oyunları"],
+        "Problem Çözme Stratejileri": ["Tersten Gitme", "Şema ve Tablo Çizme","Sudoku", "Örüntüler ve Sihirli Diziler"]
+        },
     "LGS Hazırlık": {
         "LGS Çıkmış Sorular": ["MEB LGS Çıkmış Türkçe Soruları", "MEB LGS Çıkmış Matematik Soruları", "MEB LGS Çıkmış Fen Bilimleri Soruları", "MEB LGS Çıkmış T.C. İnkılap Tarihi Soruları", "MEB LGS Çıkmış Din Kültürü Soruları", "MEB LGS Çıkmış İngilizce Soruları", "MEB LGS Çıkmış Almanca Örnek ve Beceri Temelli Sorular"],
         "Türkçe": ["Sözel Mantık ve Muhakeme", "Paragraf Analizi", "Dil Bilgisi Karma Denemeleri"],
