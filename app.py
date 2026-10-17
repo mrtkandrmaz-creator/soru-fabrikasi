@@ -191,6 +191,13 @@ def get_custom_labels(etiketler, default_tuple=("A", "B", "C")):
     return default_tuple
 
 # --- VEKTÖREL GÖRSEL ÇİZİCİ ---
+# Bu kodun çalışması için kodun en başında şu importların olması gerekir:
+# import matplotlib.pyplot as plt
+# import numpy as np
+# import io
+# import base64
+# ---
+
 def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
     if not isinstance(etiketler, dict):
         etiketler = {}
@@ -263,16 +270,15 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
         ax.text(3.0, 0.4, etiketler.get("Aciklama", "Çember Geometrisi"), fontsize=9, fontweight='bold', ha='center', color='#475569')
 
     elif "dik_ucgen" in tip:
-        lbl_a, lbl_b, lbl_c = get_custom_labels(etiketler, ("A", "B", "C"))
         bx, by = 1.2, 1.0
         cx, cy = 4.8, 1.0
         ax_val, ay_val = 1.2, 4.0
         ax.plot([bx, cx, ax_val, bx], [by, cy, ay_val, by], color='#0f172a', linewidth=2.2, solid_capstyle='round')
         ax.plot([1.2, 1.5, 1.5, 1.2], [1.0, 1.0, 1.3, 1.3], color='#0f172a', linewidth=1.5)
         
-        ax.text(ax_val - 0.25, ay_val + 0.1, lbl_a, fontsize=11, fontweight='bold', color='#0f172a')
-        ax.text(bx - 0.25, by - 0.25, lbl_b, fontsize=11, fontweight='bold', color='#0f172a')
-        ax.text(cx + 0.15, cy - 0.25, lbl_c, fontsize=11, fontweight='bold', color='#0f172a')
+        ax.text(ax_val - 0.25, ay_val + 0.1, etiketler.get("A", "A"), fontsize=11, fontweight='bold', color='#0f172a')
+        ax.text(bx - 0.25, by - 0.25, etiketler.get("B", "B"), fontsize=11, fontweight='bold', color='#0f172a')
+        ax.text(cx + 0.15, cy - 0.25, etiketler.get("C", "C"), fontsize=11, fontweight='bold', color='#0f172a')
         
         ax.text(2.0, 2.7, etiketler.get("c", ""), fontsize=10, fontweight='bold', color='#2563eb')
         ax.text(3.0, 0.7, etiketler.get("a", ""), fontsize=10, fontweight='bold', color='#dc2626')
@@ -280,29 +286,27 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
         ax.text(3.0, 0.3, "Dik Üçgen", fontsize=9, fontweight='bold', ha='center', color='#475569')
 
     elif "eskenar_ucgen" in tip:
-        lbl_a, lbl_b, lbl_c = get_custom_labels(etiketler, ("A", "B", "C"))
         bx, by = 1.5, 1.0
         cx, cy = 4.5, 1.0
         ax_val, ay_val = 3.0, 1.0 + 1.5 * np.sqrt(3)
         ax.plot([bx, cx, ax_val, bx], [by, cy, ay_val, by], color='#0f172a', linewidth=2.2, solid_capstyle='round')
         
-        ax.text(ax_val, ay_val + 0.15, lbl_a, fontsize=11, fontweight='bold', ha='center', color='#0f172a')
-        ax.text(bx - 0.25, by - 0.25, lbl_b, fontsize=11, fontweight='bold', color='#0f172a')
-        ax.text(cx + 0.2, cy - 0.25, lbl_c, fontsize=11, fontweight='bold', color='#0f172a')
+        ax.text(ax_val, ay_val + 0.15, etiketler.get("A", "A"), fontsize=11, fontweight='bold', ha='center', color='#0f172a')
+        ax.text(bx - 0.25, by - 0.25, etiketler.get("B", "B"), fontsize=11, fontweight='bold', color='#0f172a')
+        ax.text(cx + 0.2, cy - 0.25, etiketler.get("C", "C"), fontsize=11, fontweight='bold', color='#0f172a')
         
         ax.text(3.0, 2.2, etiketler.get("aci", "60°"), fontsize=10, fontweight='bold', ha='center', color='#dc2626')
         ax.text(3.0, 0.3, "Eşkenar Üçgen", fontsize=9, fontweight='bold', ha='center', color='#475569')
 
     elif "ikizkenar_ucgen" in tip:
-        lbl_a, lbl_b, lbl_c = get_custom_labels(etiketler, ("A", "B", "C"))
         bx, by = 1.3, 1.0
         cx, cy = 4.7, 1.0
         ax_val, ay_val = 3.0, 4.2
         ax.plot([bx, cx, ax_val, bx], [by, cy, ay_val, by], color='#0f172a', linewidth=2.2, solid_capstyle='round')
         
-        ax.text(ax_val, ay_val + 0.15, lbl_a, fontsize=11, fontweight='bold', ha='center', color='#0f172a')
-        ax.text(bx - 0.25, by - 0.25, lbl_b, fontsize=11, fontweight='bold', color='#0f172a')
-        ax.text(cx + 0.2, cy - 0.25, lbl_c, fontsize=11, fontweight='bold', color='#0f172a')
+        ax.text(ax_val, ay_val + 0.15, etiketler.get("A", "A"), fontsize=11, fontweight='bold', ha='center', color='#0f172a')
+        ax.text(bx - 0.25, by - 0.25, etiketler.get("B", "B"), fontsize=11, fontweight='bold', color='#0f172a')
+        ax.text(cx + 0.2, cy - 0.25, etiketler.get("C", "C"), fontsize=11, fontweight='bold', color='#0f172a')
         
         ax.text(2.0, 2.8, etiketler.get("kenar1", ""), fontsize=10, fontweight='bold', color='#2563eb')
         ax.text(4.0, 2.8, etiketler.get("kenar2", ""), fontsize=10, fontweight='bold', color='#2563eb')
@@ -310,7 +314,7 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
         ax.text(3.0, 0.3, "İkizkenar Üçgen", fontsize=9, fontweight='bold', ha='center', color='#475569')
 
     elif "benzer_ucgen" in tip or "benzerlik" in tip:
-        lbl_a, lbl_b, lbl_c = get_custom_labels(etiketler, ("A", "B", "C"))
+        lbl_a, lbl_b, lbl_c = etiketler.get("A", "A"), etiketler.get("B", "B"), etiketler.get("C", "C")
         lbl_d, lbl_e, lbl_f = etiketler.get("D", "D"), etiketler.get("E", "E"), etiketler.get("F", "F")
         
         bx1, by1 = 0.8, 1.0
@@ -337,15 +341,14 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
         ax.text(3.0, 0.1, "Benzer Üçgenler", fontsize=9, fontweight='bold', ha='center', color='#475569')
 
     elif "cesitkenar_ucgen" in tip or "ucgen" in tip:
-        lbl_a, lbl_b, lbl_c = get_custom_labels(etiketler, ("A", "B", "C"))
         bx, by = 1.0, 1.0
         cx, cy = 5.0, 1.2
         ax_val, ay_val = 2.2, 4.0
         ax.plot([bx, cx, ax_val, bx], [by, cy, ay_val, by], color='#0f172a', linewidth=2.2, solid_capstyle='round')
         
-        ax.text(ax_val - 0.2, ay_val + 0.15, lbl_a, fontsize=11, fontweight='bold', color='#0f172a')
-        ax.text(bx - 0.25, by - 0.25, lbl_b, fontsize=11, fontweight='bold', color='#0f172a')
-        ax.text(cx + 0.2, cy - 0.25, lbl_c, fontsize=11, fontweight='bold', color='#0f172a')
+        ax.text(ax_val - 0.2, ay_val + 0.15, etiketler.get("A", "A"), fontsize=11, fontweight='bold', color='#0f172a')
+        ax.text(bx - 0.25, by - 0.25, etiketler.get("B", "B"), fontsize=11, fontweight='bold', color='#0f172a')
+        ax.text(cx + 0.2, cy - 0.25, etiketler.get("C", "C"), fontsize=11, fontweight='bold', color='#0f172a')
         
         ax.text(1.5, 2.6, etiketler.get("c", ""), fontsize=10, fontweight='bold', color='#2563eb')
         ax.text(3.6, 2.7, etiketler.get("b", ""), fontsize=10, fontweight='bold', color='#16a34a')
@@ -361,7 +364,8 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
         ax.text(3.0, 1.4, etiketler.get("S", "Yüzey"), fontsize=9, fontweight='bold', ha='center', color='#475569')
 
     elif "sudoku" in tip or "bulmaca" in tip:
-        # Soruya birebir uyumlu 3x3 matris verisi
+        # Sorudaki 3x3'lük matris verisi ve harfler
+        # 1. Satır: [1, A, 3], 2. Satır: [3, 1, B], 3. Satır: [C, 3, 1]
         matris = etiketler.get("matris", [
             [1, 'A', 3],
             [3, 1, 'B'],
@@ -371,33 +375,30 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
         nrows = len(matris)
         ncols = len(matris[0]) if nrows > 0 else 3
         
-        x_start, y_start = 1.2, 1.0
-        cell_size = 0.8
-        
-        width_total = ncols * cell_size
-        height_total = nrows * cell_size
-        
-        # Izgara çizgileri
-        for r in range(nrows + 1):
-            ax.plot([x_start, x_start + width_total], [y_start + r * cell_size, y_start + r * cell_size], color='#0284c7', linewidth=2)
+        # Izgara Çizimi
+        for i in range(nrows + 1):
+            lw = 2 if i == 0 or i == nrows else 1
+            ax.plot([1.2, 1.2 + ncols * 0.8], [1.0 + i * 0.8, 1.0 + i * 0.8], color='#0284c7', linewidth=lw)
             
-        for c in range(ncols + 1):
-            ax.plot([x_start + c * cell_size, x_start + c * cell_size], [y_start, y_start + height_total], color='#0284c7', linewidth=2)
-                
-        # Hücre içerisindeki değerler
+        for i in range(ncols + 1):
+            lw = 2 if i == 0 or i == ncols else 1
+            ax.plot([1.2 + i * 0.8, 1.2 + i * 0.8], [1.0, 1.0 + nrows * 0.8], color='#0284c7', linewidth=lw)
+            
+        # Hücrelerdeki Sayı/Harfleri Yerleştirme
         for r in range(nrows):
             for c in range(ncols):
                 val = matris[nrows - 1 - r][c]
-                cx = x_start + c * cell_size + cell_size / 2
-                cy = y_start + r * cell_size + cell_size / 2
+                cx = 1.2 + c * 0.8 + 0.4
+                cy = 1.0 + r * 0.8 + 0.4
                 
                 if val != '' and val is not None:
                     ax.text(cx, cy, str(val), fontsize=13, fontweight='bold', ha='center', va='center', color='#0f172a')
 
-        ax.text(x_start + width_total/2, y_start + height_total + 0.3, etiketler.get("Baslik", "3x3 Sudoku Bulmacası"), fontsize=11, fontweight='bold', ha='center', color='#0f172a')
-        ax.text(x_start + width_total/2, y_start - 0.3, etiketler.get("Alt", "Sütun"), fontsize=9, fontweight='bold', ha='center', color='#475569')
-        ax.text(x_start - 0.3, y_start + height_total/2, etiketler.get("Sol", "Satır"), fontsize=9, fontweight='bold', rotation=90, ha='center', color='#475569')
-        ax.text(x_start + width_total + 0.3, y_start + height_total/2, etiketler.get("Sag", "Bölge"), fontsize=9, fontweight='bold', rotation=270, ha='center', color='#475569')
+        # Kenar Etiketleri ve Başlık
+        ax.text(1.2 + (ncols * 0.8) / 2, 1.0 + nrows * 0.8 + 0.3, etiketler.get("Baslik", "3x3 Sudoku Bulmacası"), fontsize=11, fontweight='bold', ha='center', color='#0f172a')
+        ax.text(1.2 + (ncols * 0.8) / 2, 0.7, etiketler.get("Alt", "Sütun"), fontsize=9, fontweight='bold', ha='center', color='#475569')
+        ax.text(0.9, 1.0 + (nrows * 0.8) / 2, etiketler.get("Sol", "Satır"), fontsize=9, fontweight='bold', rotation=90, ha='center', color='#475569')
+        ax.text(1.2 + ncols * 0.8 + 0.3, 1.0 + (nrows * 0.8) / 2, etiketler.get("Sag", "Bölge"), fontsize=9, fontweight='bold', rotation=270, ha='center', color='#475569')
 
     else:
         plt.close(fig)
