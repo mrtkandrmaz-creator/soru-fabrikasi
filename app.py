@@ -379,6 +379,9 @@ MUGREDAT = {
     "Olimpik Sınıf": {
         "Sonlu Mat(Kombinatorik)": ["Güvercin Yuvası Prensibi (Pigeonhole Principle)", "Mantık ve Oyunlar", "Sayma, Permütasyon ve Kombinasyon", "Olasılık"],
         "Analiz-Cebir)": ["Gerçel sayı denklemleri", "Çarpanlara ayırma", "Diziler", "Eşitsizlikler"],
+        "Sayılar ve Sayılar Teorisi (Temel Seviye)": ["Ardışık Sayılar", "Asal Sayılar", "Sayı Basamakları", "Ebob-Ekok"],
+        "Geometri ve Görsel Zeka": ["Açılar", "Çevre ve Alan", "Görsel Algı ve Küpler", "Sihirli Kareler ve Sudoku Tarzı Mantık Oyunları"],
+        "Problem Çözme Stratejileri": ["Tersten Gitme", "Şema ve Tablo Çizme", "Örüntüler ve Sihirli Diziler", "Palindromik Sayılar"]
         },
     "4. Sınıf": {
         "Türkçe": ["Sözcükte Anlam", "Cümle Bilgisi", "Paragraf Yorumlama", "Yazım Kuralları ve Noktalama", "Metin Türleri ve Söz Sanatları"],
@@ -391,7 +394,7 @@ MUGREDAT = {
     },
     "5. Sınıf": {
         "Türkçe": ["Sözcükte Anlam", "Cümlede Anlam", "Metin Yorumlama ve Paragraf", "Yazım Kuralları", "Noktalama İşaretleri"],
-        "Matematik": ["Tümler ve Bütünler açı","Çokgenler Düzgün Çokgenler"," Palindromik Sayılar","Çember ve Daire","Doğru Doğru Parçası Dikme ve Çember","Temel Geometrik Kavramlar ve Doğrular"],
+        "Matematik": ["Tümler ve Bütünler açı","Çokgenler Düzgün Çokgenler"," Çevre Uzunlukları ve Alan","Çember ve Daire","Doğru Doğru Parçası Dikme ve Çember","Temel Geometrik Kavramlar ve Doğrular"],
         "Fen Bilimleri": ["Güneş, Dünya ve Ay", "Canlılar Dünyası", "Hava Direnci ve Su Direnci","Kuvvetin Uygulanması ve Sürtünme", "Maddenin Hâl Değişimi ve Isı", "Kuvveti Tanıyalım", "Işığın Yayılması"],
         "Sosyal Bilgiler": ["Birlikte Yaşamak,Birey ve Toplum", "Kültür ve Ortak Mirasımız", "Evimiz Dünya", "Yaşayan Demokrasimiz", "Hayatımızda Ekonomi", "Teknoloji ve Sosyal Bilimler", "Üretim, Dağıtım ve Tüketim"],
         "Din Kültürü": ["Allah İnancı ve İnsan", "Allahın İsimleri Esmaül Hüsna","Hz. Muhammed ve Aile Hayatı", "İslam'ın Temel İbadetleri","Namaz","Kuran Kerim","Peygamber Kıssaları","Mimarimizde dini Motifler", "Ahlaki Değerler"],
