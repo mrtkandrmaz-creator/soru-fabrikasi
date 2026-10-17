@@ -360,17 +360,15 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
         ax.text(3.0, 2.6, etiketler.get("G", "Ağırlık"), fontsize=11, fontweight='bold', ha='center', color='#0f172a')
         ax.text(3.0, 1.4, etiketler.get("S", "Yüzey"), fontsize=9, fontweight='bold', ha='center', color='#475569')
 
-    import streamlit as st
-import io
+    import io
 import base64
-import math
 import matplotlib.pyplot as plt
 
-# --- 1. GÖRSEL ÜRETİCİ FONKSİYON ---
 def sudoku_gorseli_olustur(sudoku_matrisi):
     rows = len(sudoku_matrisi)
     cols = len(sudoku_matrisi[0])
     
+    # Boyuta göre alt bölge (blok) sınırlarını dinamik belirleme
     if rows == 2:
         box_r, box_c = 1, 2
     elif rows == 3:
@@ -391,6 +389,7 @@ def sudoku_gorseli_olustur(sudoku_matrisi):
     grid_width = cols * cell_size
     grid_height = rows * cell_size
 
+    # Izgara (Grid) Çizimi ve Kalın Blok Sınırları
     for i in range(rows + 1):
         is_thick = (i % box_r == 0) or (i == 0) or (i == rows)
         lw = 2.5 if is_thick else 1.0
@@ -407,6 +406,7 @@ def sudoku_gorseli_olustur(sudoku_matrisi):
                 [y_start, y_start + grid_height], 
                 color=color, linewidth=lw)
 
+    # Matristeki Rakam ve Harfleri Hücrelerin Merkezine Yerleştirme
     for r_idx, row in enumerate(sudoku_matrisi):
         for c_idx, val in enumerate(row):
             x_pos = x_start + c_idx * cell_size + (cell_size / 2)
@@ -429,62 +429,6 @@ def sudoku_gorseli_olustur(sudoku_matrisi):
     buf.seek(0)
     plt.close(fig)
     return buf
-
-# --- 2. YAN PANEL - DERSLER VE ÜNİTELER YAPISI ---
-st.sidebar.title("📚 Soru Fabrikası Paneli")
-st.sidebar.subheader("Dersler ve Üniteler")
-
-# Doğrudan Dersler ve Üniteler altında Su Doku seçimi
-ders_unite_secimi = st.sidebar.selectbox("Konu Seçin", ["Su Doku"])
-
-if ders_unite_secimi == "Su Doku":
-    st.sidebar.markdown("---")
-    # Su Doku altında boyut seçimi
-    boyut_secimi = st.sidebar.selectbox("Su Doku Boyutu", ["2x2", "3x3", "4x4", "5x5"])
-
-    if boyut_secimi == "2x2":
-        matris = [['1', 'A'], ['B', '1']]
-        kural_metni = "2x2'lik bir Su Doku bulmacasında her satır ve her sütunda 1 ve 2 rakamları tam olarak birer kez yer almalıdır."
-        soru_metni = "Buna göre 'A' ve 'B' harflerinin yerine yazılması gereken rakamlar sırasıyla aşağıdakilerden hangisidir?"
-        secenekler = ["A) 2 ve 2", "B) 2 ve 1", "C) 1 ve 2", "D) 1 ve 1"]
-
-    elif boyut_secimi == "3x3":
-        matris = [['1', 'A', '3'], ['B', '3', 'C'], ['3', '1', 'D']]
-        kural_metni = "3x3'lük bir Su Doku bulmacasında her satır ve her sütunda 1, 2 ve 3 rakamları tam olarak birer kez yer almalıdır."
-        soru_metni = "Buna göre Su Doku kuralına uygun olarak boşluklar doldurulduğunda (A + B) × C - D işleminin sonucu kaçtır?"
-        secenekler = ["A) 1", "B) 2", "C) 3", "D) 4"]
-
-    elif boyut_secimi == "4x4":
-        matris = [['1', 'A', '3', '4'], ['B', '3', '1', '2'], ['3', '4', '2', 'C'], ['2', '1', 'D', '3']]
-        kural_metni = "4x4'lük bir Su Doku bulmacasında her satır ve her sütunda 1, 2, 3 ve 4 rakamları tam olarak birer kez yer almalıdır."
-        soru_metni = "Buna göre harflerin temsil ettiği sayıların toplamı kaçtır?"
-        secenekler = ["A) 8", "B) 10", "C) 12", "D) 15"]
-
-    else:  # 5x5
-        matris = [['1', '2', 'A', '4', '5'], ['3', '4', '5', '1', '2'], ['5', 'A', '2', '3', '4'], ['2', '3', '4', '5', '1'], ['4', '5', '1', '2', '3']]
-        kural_metni = "5x5'lik bir Su Doku bulmacasında her satır ve her sütunda 1'den 5'e kadar olan rakamlar tam olarak birer kez yer almalıdır."
-        soru_metni = "Buna göre 'A' harfinin yerine gelmesi gereken sayı kaçtır?"
-        secenekler = ["A) 1", "B) 2", "C) 3", "D) 4"]
-
-    # --- EKRANA YAZDIRMA VE GÖRSELLEŞTİRME ---
-    st.title("✏️ Soru Fabrikası - Su Doku Modülü")
-    st.subheader("Soru 1 / 1")
-    st.write(kural_metni)
-    st.write("Aşağıda verilen tamamlanmamış Su Doku tablosunu inceleyiniz:")
-
-    # Görselleştirilmiş matris ekrana basılır
-    img_buffer = sudoku_gorseli_olustur(matris)
-    st.image(img_buffer, width=320)
-
-    st.write(soru_metni)
-    cevap = st.radio("Lütfen cevabınızı seçiniz:", secenekler)
-    
-    if st.button("Cevabı Kontrol Et"):
-        st.success(f"Seçtiğiniz cevap kaydedildi: {cevap}")
-        
-else:
-    st.title("📚 Soru Fabrikası Paneli")
-    st.write("Lütfen sol menüden 'Su Doku' ünitesini seçin.")
 
 # --- MEB MÜFREDATI VE ÖZEL MODÜLLER ---
 MUGREDAT = {
