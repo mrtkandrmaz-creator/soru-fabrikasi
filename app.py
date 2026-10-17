@@ -361,32 +361,30 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
         ax.text(3.0, 1.4, etiketler.get("S", "Yüzey"), fontsize=9, fontweight='bold', ha='center', color='#475569')
 
     elif "sudoku" in tip or "bulmaca" in tip:
-        # Soruya uygun varsayılan 4x4 matris ve A harfi
+        # Soruya birebir uyumlu 3x3 matris verisi
         matris = etiketler.get("matris", [
-            [1, 2, 3, 4],
-            [3, 4, 'A', 2],
-            [2, 1, 4, 3],
-            [4, 3, 2, 1]
+            [1, 'A', 3],
+            [3, 1, 'B'],
+            ['C', 3, 1]
         ])
         
         nrows = len(matris)
-        ncols = len(matris[0]) if nrows > 0 else 4
+        ncols = len(matris[0]) if nrows > 0 else 3
         
-        x_start, y_start = 1.0, 0.8
-        cell_size = 0.6
+        x_start, y_start = 1.2, 1.0
+        cell_size = 0.8
         
         width_total = ncols * cell_size
         height_total = nrows * cell_size
         
-        box_size = 2 if nrows <= 4 else 3
+        # Izgara çizgileri
         for r in range(nrows + 1):
-            lw = 2 if r % box_size == 0 else 1
-            ax.plot([x_start, x_start + width_total], [y_start + r * cell_size, y_start + r * cell_size], color='#0284c7', linewidth=lw)
+            ax.plot([x_start, x_start + width_total], [y_start + r * cell_size, y_start + r * cell_size], color='#0284c7', linewidth=2)
             
         for c in range(ncols + 1):
-            lw = 2 if c % box_size == 0 else 1
-            ax.plot([x_start + c * cell_size, x_start + c * cell_size], [y_start, y_start + height_total], color='#0284c7', linewidth=lw)
+            ax.plot([x_start + c * cell_size, x_start + c * cell_size], [y_start, y_start + height_total], color='#0284c7', linewidth=2)
                 
+        # Hücre içerisindeki değerler
         for r in range(nrows):
             for c in range(ncols):
                 val = matris[nrows - 1 - r][c]
@@ -394,12 +392,12 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
                 cy = y_start + r * cell_size + cell_size / 2
                 
                 if val != '' and val is not None:
-                    ax.text(cx, cy, str(val), fontsize=11, fontweight='bold', ha='center', va='center', color='#0f172a')
+                    ax.text(cx, cy, str(val), fontsize=13, fontweight='bold', ha='center', va='center', color='#0f172a')
 
-        ax.text(x_start + width_total/2, y_start + height_total + 0.3, etiketler.get("Baslik", f"{ncols}x{nrows} Sudoku Bulmacası"), fontsize=10, fontweight='bold', ha='center', color='#0f172a')
-        ax.text(x_start + width_total/2, y_start - 0.25, etiketler.get("Alt", "Sütun"), fontsize=8, fontweight='bold', ha='center', color='#475569')
-        ax.text(x_start - 0.25, y_start + height_total/2, etiketler.get("Sol", "Satır"), fontsize=8, fontweight='bold', rotation=90, ha='center', color='#475569')
-        ax.text(x_start + width_total + 0.25, y_start + height_total/2, etiketler.get("Sag", "Bölge"), fontsize=8, fontweight='bold', rotation=270, ha='center', color='#475569')
+        ax.text(x_start + width_total/2, y_start + height_total + 0.3, etiketler.get("Baslik", "3x3 Sudoku Bulmacası"), fontsize=11, fontweight='bold', ha='center', color='#0f172a')
+        ax.text(x_start + width_total/2, y_start - 0.3, etiketler.get("Alt", "Sütun"), fontsize=9, fontweight='bold', ha='center', color='#475569')
+        ax.text(x_start - 0.3, y_start + height_total/2, etiketler.get("Sol", "Satır"), fontsize=9, fontweight='bold', rotation=90, ha='center', color='#475569')
+        ax.text(x_start + width_total + 0.3, y_start + height_total/2, etiketler.get("Sag", "Bölge"), fontsize=9, fontweight='bold', rotation=270, ha='center', color='#475569')
 
     else:
         plt.close(fig)
