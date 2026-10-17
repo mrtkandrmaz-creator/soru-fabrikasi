@@ -568,7 +568,7 @@ with col_btn2:
       for c in range(n):
         if puzzle[r][c] == 0:
           st.session_state[f"cell_{r}_{c}"] = ""
-    st.rerun())
+    st.rerun()
 
     else:
       plt.close(fig)
