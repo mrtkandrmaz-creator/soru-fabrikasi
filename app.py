@@ -360,41 +360,81 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
         ax.text(3.0, 2.6, etiketler.get("G", "Ağırlık"), fontsize=11, fontweight='bold', ha='center', color='#0f172a')
         ax.text(3.0, 1.4, etiketler.get("S", "Yüzey"), fontsize=9, fontweight='bold', ha='center', color='#475569')
 
-    elif "sudoku" in tip:
-        # Görseldeki soruya birebir uyumlu 6x6 Sudoku tablosu (Örnek matris verisi)
-        # 0 boş hücreleri, diğer sayılar sabit ipuçlarını ve küçük ipucu köşelerini temsil eder
+    import io
+import base64
+import matplotlib.pyplot as plt
+
+def sudoku_ciz(tip, etiketler=None):
+    if etiketler is None:
+        etiketler = {}
+
+    fig, ax = plt.subplots(figsize=(6, 6))
+    ax.axis('off')  # Standart eksen çizgilerini ve değerlerini gizle
+
+    if "sudoku" in tip:
+        # 6x6 Sudoku matrisi: 
+        # Matris hücreleri [sabit_sayi, kucuk_ipucu] şeklinde düşünülebilir 
+        # veya 0 boş hücreyi temsil eder.
         sudoku_matrisi = [
-            [1, 2, 4, 0, 6, 0, 2, 1], # Görseldeki yapıya göre uyarlanan satırlar
-            [0, 6, 2, 3, 1, 0, 5, 0],
-            [3, 4, 0, 1, 0, 6, 0, 2],
-            [2, 5, 1, 8, 0, 0, 6, 4],
-            [0, 0, 6, 1, 3, 3, 0, 0],
-            [1, 2, 0, 0, 1, 5, 6, 6]
+            [1, 2, 4, 0, 6, 0],
+            [0, 6, 2, 3, 1, 0],
+            [3, 4, 0, 1, 0, 6],
+            [2, 5, 1, 0, 0, 0],
+            [0, 0, 6, 1, 3, 3],
+            [1, 2, 0, 0, 1, 5]
         ]
         
-        # Izgara Çizimi (6x6 veya uygun boyutlandırma)
-        for i in range(7):
-            lw = 2 if i % 2 == 0 else 1
-            ax.plot([1, 5], [0.5 + i*0.4, 0.5 + i*0.4], color='#38bdf8', linewidth=lw)
-            ax.plot([1 + i*0.5, 1 + i*0.5], [0.5, 2.9], color='#38bdf8', linewidth=lw)
+        rows = 6
+        cols = 6
+        
+        # Izgara Çizimi (6x6 Grid)
+        for i in range(rows + 1):
+            # Ana bölgeleri (2x3 veya 3x2 bloklar için) belirten kalın Çizgiler
+            lw = 2.5 if i % 2 == 0 or i == 0 or i == rows else 1.0
             
-        ax.text(3.0, 3.1, etiketler.get("Baslik", "Sudoku Bulmacası"), fontsize=10, fontweight='bold', ha='center', color='#0f172a')
-        ax.text(3.0, 0.2, etiketler.get("Alt", "Sütun"), fontsize=9, fontweight='bold', ha='center', color='#0f172a')
-        ax.text(0.7, 1.7, etiketler.get("Sol", "Satır"), fontsize=9, fontweight='bold', rotation=90, ha='center', color='#0f172a')
-        ax.text(5.3, 1.7, etiketler.get("Sag", "Bölge"), fontsize=9, fontweight='bold', rotation=270, ha='center', color='#0f172a')
+            # Yatay Çizgiler
+            ax.plot([1, 1 + cols * 0.6], [0.5 + i * 0.6, 0.5 + i * 0.6], color='#38bdf8', linewidth=lw)
+            
+            # Dikey Çizgiler (3'erli dikey kalın çizgi)
+            lw_v = 2.5 if i % 3 == 0 or i == 0 or i == cols else 1.0
+            ax.plot([1 + i * 0.6, 1 + i * 0.6], [0.5, 0.5 + rows * 0.6], color='#38bdf8', linewidth=lw_v)
+        
+        # Hücre İçine Değerleri ve İpuçlarını Yerleştirme
+        for r_idx, row in enumerate(sudoku_matrisi):
+            for c_idx, val in enumerate(row):
+                # Matplotlib y-ekseni aşağıdan yukarıya doğru gittiği için satır sırasını ters çeviriyoruz
+                x_pos = 1 + c_idx * 0.6 + 0.3
+                y_pos = 0.5 + (rows - 1 - r_idx) * 0.6 + 0.3
+                
+                if val != 0:
+                    # Hücre değerini tam merkeze yazdırıyoruz
+                    ax.text(
+                        x_pos, y_pos, str(val), 
+                        fontsize=14, fontweight='bold', 
+                        ha='center', va='center', color='#0f172a'
+                    )
+
+        # Başlık ve Yan/Alt Etiketler
+        ax.text(2.8, 4.3, etiketler.get("Baslik", "Sudoku Bulmacası"), fontsize=12, fontweight='bold', ha='center', color='#0f172a')
+        ax.text(2.8, 0.2, etiketler.get("Alt", "Sütun"), fontsize=10, fontweight='bold', ha='center', color='#0f172a')
+        ax.text(0.7, 2.3, etiketler.get("Sol", "Satır"), fontsize=10, fontweight='bold', rotation=90, ha='center', color='#0f172a')
+        ax.text(4.9, 2.3, etiketler.get("Sag", "Bölge"), fontsize=10, fontweight='bold', rotation=270, ha='center', color='#0f172a')
 
     else:
         plt.close(fig)
         return None
 
-    ax.set_xlim(0, 6)
-    ax.set_ylim(0, 5.0)
+    # Eksen Limitleri
+    ax.set_xlim(0, 5.6)
+    ax.set_ylim(0, 4.6)
     
+    # Görseli Base64 Formatına Dönüştürme
     buf = io.BytesIO()
     plt.savefig(buf, format='png', bbox_inches='tight', dpi=180, transparent=True)
     buf.seek(0)
     img_str = base64.b64encode(buf.read()).decode('utf-8')
     plt.close(fig)
+    
     return f"data:image/png;base64,{img_str}"
 
 # --- MEB MÜFREDATI VE ÖZEL MODÜLLER ---
