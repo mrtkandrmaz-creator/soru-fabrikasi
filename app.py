@@ -376,7 +376,7 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
 
 # --- MEB MÜFREDATI VE ÖZEL MODÜLLER ---
 MUGREDAT = {
-    "Olimpik Sınıf": {
+    "Tubitak-Olimpiyat": {
         "Sonlu Mat(Kombinatorik)": ["Güvercin Yuvası Prensibi (Pigeonhole Principle)", "Mantık ve Oyunlar", "Sayma, Permütasyon ve Kombinasyon", "Olasılık"],
         "Analiz-Cebir)": ["Gerçel sayı denklemleri", "Çarpanlara ayırma", "Diziler", "Eşitsizlikler"],
         "Sayılar ve Sayılar Teorisi (Temel Seviye)": ["Ardışık Sayılar", "Asal Sayılar", "Sayı Basamakları", "Ebob-Ekok"],
