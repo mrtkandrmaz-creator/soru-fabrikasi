@@ -430,71 +430,61 @@ def sudoku_gorseli_olustur(sudoku_matrisi):
     plt.close(fig)
     return buf
 
-# --- 2. YAN PANEL - HİYERARŞİK MENÜ YAPISI ---
-st.sidebar.title("🎛️ Filtreler ve Menü")
+# --- 2. YAN PANEL - DERSLER VE ÜNİTELER YAPISI ---
+st.sidebar.title("📚 Soru Fabrikası Paneli")
+st.sidebar.subheader("Dersler ve Üniteler")
 
-# 1. Seviye: Eğitim Seviyesi / Kategori Seçimi
-egitim_seviyesi = st.sidebar.selectbox("Eğitim Seviyesi / Kategori", ["TÜBİTAK - Olimpiyat", "Lise", "Ortaokul"])
+# Doğrudan Dersler ve Üniteler altında Su Doku seçimi
+ders_unite_secimi = st.sidebar.selectbox("Konu Seçin", ["Su Doku", "Diğer Konular"])
 
-if egitim_seviyesi == "TÜBİTAK - Olimpiyat":
+if ders_unite_secimi == "Su Doku":
     st.sidebar.markdown("---")
-    st.sidebar.subheader("📖 Dersler ve Üniteler")
+    # Su Doku altında boyut seçimi
+    boyut_secimi = st.sidebar.selectbox("Su Doku Boyutu", ["2x2", "3x3", "4x4", "5x5"])
+
+    if boyut_secimi == "2x2":
+        matris = [['1', 'A'], ['B', '1']]
+        kural_metni = "2x2'lik bir Su Doku bulmacasında her satır ve her sütunda 1 ve 2 rakamları tam olarak birer kez yer almalıdır."
+        soru_metni = "Buna göre 'A' ve 'B' harflerinin yerine yazılması gereken rakamlar sırasıyla aşağıdakilerden hangisidir?"
+        secenekler = ["A) 2 ve 2", "B) 2 ve 1", "C) 1 ve 2", "D) 1 ve 1"]
+
+    elif boyut_secimi == "3x3":
+        matris = [['1', 'A', '3'], ['B', '3', 'C'], ['3', '1', 'D']]
+        kural_metni = "3x3'lük bir Su Doku bulmacasında her satır ve her sütunda 1, 2 ve 3 rakamları tam olarak birer kez yer almalıdır."
+        soru_metni = "Buna göre Su Doku kuralına uygun olarak boşluklar doldurulduğunda (A + B) × C - D işleminin sonucu kaçtır?"
+        secenekler = ["A) 1", "B) 2", "C) 3", "D) 4"]
+
+    elif boyut_secimi == "4x4":
+        matris = [['1', 'A', '3', '4'], ['B', '3', '1', '2'], ['3', '4', '2', 'C'], ['2', '1', 'D', '3']]
+        kural_metni = "4x4'lük bir Su Doku bulmacasında her satır ve her sütunda 1, 2, 3 ve 4 rakamları tam olarak birer kez yer almalıdır."
+        soru_metni = "Buna göre harflerin temsil ettiği sayıların toplamı kaçtır?"
+        secenekler = ["A) 8", "B) 10", "C) 12", "D) 15"]
+
+    else:  # 5x5
+        matris = [['1', '2', 'A', '4', '5'], ['3', '4', '5', '1', '2'], ['5', 'A', '2', '3', '4'], ['2', '3', '4', '5', '1'], ['4', '5', '1', '2', '3']]
+        kural_metni = "5x5'lik bir Su Doku bulmacasında her satır ve her sütunda 1'den 5'e kadar olan rakamlar tam olarak birer kez yer almalıdır."
+        soru_metni = "Buna göre 'A' harfinin yerine gelmesi gereken sayı kaçtır?"
+        secenekler = ["A) 1", "B) 2", "C) 3", "D) 4"]
+
+    # --- EKRANA YAZDIRMA VE GÖRSELLEŞTİRME ---
+    st.title("✏️ Soru Fabrikası - Su Doku Modülü")
+    st.subheader("Soru 1 / 1")
+    st.write(kural_metni)
+    st.write("Aşağıda verilen tamamlanmamış Su Doku tablosunu inceleyiniz:")
+
+    # Görselleştirilmiş matris ekrana basılır
+    img_buffer = sudoku_gorseli_olustur(matris)
+    st.image(img_buffer, width=320)
+
+    st.write(soru_metni)
+    cevap = st.radio("Lütfen cevabınızı seçiniz:", secenekler)
     
-    # 2. Seviye: Dersler ve Üniteler Altında Su Doku Seçimi
-    ders_unite_secimi = st.sidebar.selectbox("Ünite / Konu Seçin", ["Su Doku", "Matematik Olimpiyatları", "Bilgisayar Olimpiyatları"])
-    
-    if ders_unite_secimi == "Su Doku":
-        st.sidebar.markdown("---")
-        # 3. Seviye: Su Doku Boyut Seçimi
-        boyut_secimi = st.sidebar.selectbox("Su Doku Boyutu", ["2x2", "3x3", "4x4", "5x5"])
-
-        if boyut_secimi == "2x2":
-            matris = [['1', 'A'], ['B', '1']]
-            kural_metni = "2x2'lik bir Su Doku bulmacasında her satır ve her sütunda 1 ve 2 rakamları tam olarak birer kez yer almalıdır."
-            soru_metni = "Buna göre 'A' ve 'B' harflerinin yerine yazılması gereken rakamlar sırasıyla aşağıdakilerden hangisidir?"
-            secenekler = ["A) 2 ve 2", "B) 2 ve 1", "C) 1 ve 2", "D) 1 ve 1"]
-
-        elif boyut_secimi == "3x3":
-            matris = [['1', 'A', '3'], ['B', '3', 'C'], ['3', '1', 'D']]
-            kural_metni = "3x3'lük bir Su Doku bulmacasında her satır ve her sütunda 1, 2 ve 3 rakamları tam olarak birer kez yer almalıdır."
-            soru_metni = "Buna göre Su Doku kuralına uygun olarak boşluklar doldurulduğunda (A + B) × C - D işleminin sonucu kaçtır?"
-            secenekler = ["A) 1", "B) 2", "C) 3", "D) 4"]
-
-        elif boyut_secimi == "4x4":
-            matris = [['1', 'A', '3', '4'], ['B', '3', '1', '2'], ['3', '4', '2', 'C'], ['2', '1', 'D', '3']]
-            kural_metni = "4x4'lük bir Su Doku bulmacasında her satır ve her sütunda 1, 2, 3 ve 4 rakamları tam olarak birer kez yer almalıdır."
-            soru_metni = "Buna göre harflerin temsil ettiği sayıların toplamı kaçtır?"
-            secenekler = ["A) 8", "B) 10", "C) 12", "D) 15"]
-
-        else:  # 5x5
-            matris = [['1', '2', 'A', '4', '5'], ['3', '4', '5', '1', '2'], ['5', 'A', '2', '3', '4'], ['2', '3', '4', '5', '1'], ['4', '5', '1', '2', '3']]
-            kural_metni = "5x5'lik bir Su Doku bulmacasında her satır ve her sütunda 1'den 5'e kadar olan rakamlar tam olarak birer kez yer almalıdır."
-            soru_metni = "Buna göre 'A' harfinin yerine gelmesi gereken sayı kaçtır?"
-            secenekler = ["A) 1", "B) 2", "C) 3", "D) 4"]
-
-        # --- EKRANA YAZDIRMA VE GÖRSELLEŞTİRME ---
-        st.title("✏️ Soru Fabrikası - TÜBİTAK Su Doku Modülü")
-        st.subheader("Soru 1 / 1")
-        st.write(kural_metni)
-        st.write("Aşağıda verilen tamamlanmamış Su Doku tablosunu inceleyiniz:")
-
-        # Görselleştirilmiş matris ekrana basılır
-        img_buffer = sudoku_gorseli_olustur(matris)
-        st.image(img_buffer, width=320)
-
-        st.write(soru_metni)
-        cevap = st.radio("Lütfen cevabınızı seçiniz:", secenekler)
+    if st.button("Cevabı Kontrol Et"):
+        st.success(f"Seçtiğiniz cevap kaydedildi: {cevap}")
         
-        if st.button("Cevabı Kontrol Et"):
-            st.success(f"Seçtiğiniz cevap kaydedildi: {cevap}")
-            
-    else:
-        st.title("🥇 Soru Fabrikası - Diğer Olimpiyat Konuları")
-        st.write("Seçtiğiniz üniteye ait içerikler hazırlanıyor.")
-
 else:
-    st.title("📚 Soru Fabrikası - Eğitim Seviyesi Paneli")
-    st.write("Lütfen sol menüden TÜBİTAK - Olimpiyat kategorisini ve ardından Su Doku ünitesini seçin.")
+    st.title("📚 Soru Fabrikası Paneli")
+    st.write("Lütfen sol menüden 'Su Doku' ünitesini seçin.")
 
 # --- MEB MÜFREDATI VE ÖZEL MODÜLLER ---
 MUGREDAT = {
