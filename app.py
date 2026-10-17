@@ -370,10 +370,11 @@ def bulmaca_gorseli_olustur(tip, sudoku_matrisi=None, etiketler=None):
         etiketler = {}
 
     fig, ax = plt.subplots(figsize=(6, 6))
-    ax.axis('off')
+    ax.axis('off')  # Eksen çizgilerini gizle
 
-    elif "sudoku" in tip:
-        # Eğer dışarıdan matris verilmezse varsayılan matris yüklenir
+    # 1. Ana Koşul: Eğer tip içinde "sudoku" geçiyorsa
+    if "sudoku" in tip:
+        # Eğer dışarıdan matris verilmezse varsayılan 9x9 matris yüklenir
         if sudoku_matrisi is None:
             sudoku_matrisi = [
                 [9, 8, 5, 4, 0, 1, 0, 0, 0],
@@ -390,7 +391,7 @@ def bulmaca_gorseli_olustur(tip, sudoku_matrisi=None, etiketler=None):
         rows = len(sudoku_matrisi)
         cols = len(sudoku_matrisi[0])
         
-        # Alt bölge boyutlandırması (4x4 için 2x2, 9x9 için 3x3)
+        # Boyutlara göre alt bölge sınırlarını belirleme (Örn: 4x4 için 2x2, 9x9 için 3x3)
         box_r = int(math.sqrt(rows)) if rows in [4, 9] else 3
         box_c = int(math.sqrt(cols)) if cols in [4, 9] else 3
 
@@ -398,7 +399,7 @@ def bulmaca_gorseli_olustur(tip, sudoku_matrisi=None, etiketler=None):
         x_start = 0.5
         y_start = 0.5
 
-        # Izgara / Grid Çizimi
+        # Izgara (Grid) Çizimi
         for i in range(rows + 1):
             is_thick = (i % box_r == 0)
             lw = 2.5 if is_thick else 0.8
@@ -411,7 +412,7 @@ def bulmaca_gorseli_olustur(tip, sudoku_matrisi=None, etiketler=None):
             color = '#1e293b' if is_thick else '#94a3b8'
             ax.plot([x_start + j * cell_size, x_start + j * cell_size], [y_start, y_start + rows * cell_size], color=color, linewidth=lw)
 
-        # Matristeki Rakamları Hücrelerin Ortasına Yazma
+        # Matristeki Rakamları Hücrelerin Merkezine Yerleştirme
         for r_idx, row in enumerate(sudoku_matrisi):
             for c_idx, val in enumerate(row):
                 x_pos = x_start + c_idx * cell_size + (cell_size / 2)
@@ -420,13 +421,15 @@ def bulmaca_gorseli_olustur(tip, sudoku_matrisi=None, etiketler=None):
                 if val != 0:
                     ax.text(x_pos, y_pos, str(val), fontsize=14, fontweight='bold', ha='center', va='center', color='#0f172a')
 
-        # Başlık ve Kenar Bilgileri
+        # Başlık Bilgisi
         ax.text(x_start + (cols * cell_size) / 2, y_start + rows * cell_size + 0.3, etiketler.get("Baslik", "Sudoku Bulmacası"), fontsize=11, fontweight='bold', ha='center', color='#0f172a')
 
+    # 2. İkinci Koşul: Eğer tip içinde "basinc" geçiyorsa
     elif "basinc" in tip:
         ax.text(3.0, 3.0, etiketler.get("Baslik", "Basınç Sorusu"), fontsize=11, fontweight='bold', ha='center', color='#0f172a')
         ax.plot([1, 5], [2, 2], color='#ef4444', linewidth=2)
 
+    # 3. Varsayılan Durum
     else:
         plt.close(fig)
         return None
