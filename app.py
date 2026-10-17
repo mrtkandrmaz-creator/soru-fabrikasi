@@ -365,47 +365,66 @@ import base64
 import matplotlib.pyplot as plt
 import math
 
-def bulmaca_gorseli_olustur(tip, etiketler=None, sudoku_matrisi=None):
+def bulmaca_gorseli_olustur(tip, sudoku_matrisi=None, etiketler=None):
     if etiketler is None:
         etiketler = {}
 
     fig, ax = plt.subplots(figsize=(6, 6))
     ax.axis('off')  # Eksen çizgilerini gizle
 
+    # --- SUDOKU KOŞULU ---
     if "sudoku" in tip:
-        # Eğer dışarıdan matris verilmediyse, sizin gönderdiğiniz yapıyla uyumlu 
-        # (veya isteğe göre 2x2, 3x3, 4x4, 5x5, 6x6, 9x9 destekleyen) matris tanımlanır.
+        # Eğer dışarıdan matris gönderilmediyse varsayılan olarak görseldeki 9x9 yapı yüklenir[cite: 1]
         if sudoku_matrisi is None:
             sudoku_matrisi = [
-                [1, 2, 4, 0, 6, 0],
-                [0, 6, 2, 3, 1, 0],
-                [3, 4, 0, 1, 0, 6],
-                [2, 5, 1, 0, 0, 0],
-                [0, 0, 6, 1, 3, 3],
-                [1, 2, 0, 0, 1, 5]
+                [9, 8, 5,  4, 0, 1,  0, 0, 0],
+                [0, 0, 0,  0, 3, 0,  0, 0, 0],
+                [1, 0, 6,  0, 0, 0,  0, 0, 0],
+                
+                [0, 0, 0,  5, 0, 0,  0, 0, 0],
+                [4, 0, 2,  0, 0, 9,  0, 0, 3],
+                [0, 9, 0,  0, 6, 3,  4, 0, 0],
+                
+                [0, 6, 0,  0, 1, 0,  0, 0, 0],
+                [0, 0, 0,  3, 0, 6,  0, 0, 5],
+                [2, 0, 0,  0, 8, 0,  0, 0, 1]
             ]
         
         rows = len(sudoku_matrisi)
         cols = len(sudoku_matrisi[0])
         
-        # Bölge boyutlarını dinamik hesapla (Örn: 4x4 için 2x2, 6x6/9x9 için uygun bloklar)
-        box_r = int(math.sqrt(rows)) if rows in [4, 9] else 2 
+        # Dinamik olarak alt bölge sınırlarını belirle (Örn: 4x4 için 2x2, 9x9 için 3x3)
+        box_r = int(math.sqrt(rows)) if rows in [4, 9] else 3
         box_c = int(math.sqrt(cols)) if cols in [4, 9] else 3
 
         cell_size = 0.5
-        x_start = 1.0
+        x_start = 0.5
         y_start = 0.5
-
-        # Izgara Çizimi (Dinamik ve Kalın Sınırlar)
+        
+        # Izgara (Grid) Çizimi ve Kalın Bölge Sınırları
         for i in range(rows + 1):
-            lw = 2 if (i % box_r == 0 or i == 0 or i == rows) else 1
-            ax.plot([x_start, x_start + cols * cell_size], [y_start + i * cell_size, y_start + i * cell_size], color='#38bdf8', linewidth=lw)
+            is_thick_h = (i % box_r == 0)
+            lw_h = 2.5 if is_thick_h else 0.8
+            color_h = '#475569' if is_thick_h else '#cbd5e1'
+            
+            ax.plot(
+                [x_start, x_start + cols * cell_size], 
+                [y_start + i * cell_size, y_start + i * cell_size], 
+                color=color_h, linewidth=lw_h
+            )
             
         for j in range(cols + 1):
-            lw_v = 2 if (j % box_c == 0 or j == 0 or j == cols) else 1
-            ax.plot([x_start + j * cell_size, x_start + j * cell_size], [y_start, y_start + rows * cell_size], color='#38bdf8', linewidth=lw_v)
+            is_thick_v = (j % box_c == 0)
+            lw_v = 2.5 if is_thick_v else 0.8
+            color_v = '#475569' if is_thick_v else '#cbd5e1'
             
-        # Hücre Değerlerini Yerleştirme
+            ax.plot(
+                [x_start + j * cell_size, x_start + j * cell_size], 
+                [y_start, y_start + rows * cell_size], 
+                color=color_v, linewidth=lw_v
+            )
+        
+        # Sayıları Hücrelerin Merkezine Yerleştirme
         for r_idx, row in enumerate(sudoku_matrisi):
             for c_idx, val in enumerate(row):
                 x_pos = x_start + c_idx * cell_size + (cell_size / 2)
@@ -414,37 +433,35 @@ def bulmaca_gorseli_olustur(tip, etiketler=None, sudoku_matrisi=None):
                 if val != 0:
                     ax.text(
                         x_pos, y_pos, str(val), 
-                        fontsize=12, fontweight='bold', 
-                        ha='center', va='center', color='#0f172a'
+                        fontsize=14, fontweight='bold', 
+                        ha='center', va='center', color='#1e293b'
                     )
 
-        # Başlık ve Kenar Etiketleri
-        ax.text(x_start + (cols * cell_size)/2, y_start + rows * cell_size + 0.3, etiketler.get("Baslik", "Sudoku Bulmacası"), fontsize=10, fontweight='bold', ha='center', color='#0f172a')
-        ax.text(x_start + (cols * cell_size)/2, y_start - 0.3, etiketler.get("Alt", "Sütun"), fontsize=9, fontweight='bold', ha='center', color='#0f172a')
-        ax.text(x_start - 0.3, y_start + (rows * cell_size)/2, etiketler.get("Sol", "Satır"), fontsize=9, fontweight='bold', rotation=90, ha='center', color='#0f172a')
-        ax.text(x_start + cols * cell_size + 0.3, y_start + (rows * cell_size)/2, etiketler.get("Sag", "Bölge"), fontsize=9, fontweight='bold', rotation=270, ha='center', color='#0f172a')
+        # Başlık Etiketi
+        if etiketler.get("Baslik"):
+            ax.text(x_start + (cols * cell_size) / 2, y_start + rows * cell_size + 0.4, etiketler["Baslik"], fontsize=12, fontweight='bold', ha='center', color='#0f172a')
 
+    # --- BASINÇ KOŞULU ---
     elif "basinc" in tip:
-        # Basınç soruları için eklediğiniz koşul ve örnek çizim
-        ax.text(3.0, 3.1, etiketler.get("Baslik", "Basınç Sorusu"), fontsize=10, fontweight='bold', ha='center', color='#0f172a')
+        ax.text(3.0, 3.0, etiketler.get("Baslik", "Basınç Sorusu Görseli"), fontsize=12, fontweight='bold', ha='center', color='#0f172a')
         ax.plot([1, 5], [2, 2], color='#ef4444', linewidth=2)
 
     else:
         plt.close(fig)
         return None
 
-    # Eksen Limitleri
-    ax.set_xlim(0, 7)
-    ax.set_ylim(0, 6.0)
+    # Eksen Sınırları
+    ax.set_xlim(0, max(5.5, cols * 0.5 + 1))
+    ax.set_ylim(0, max(5.5, rows * 0.5 + 1))
     
-    # Görseli Belleğe Kaydedip Base64 Formatına Dönüştürme
+    # Görseli Belleğe Kaydedip Base64 formatına çevirme
     buf = io.BytesIO()
-    plt.savefig(buf, format='png', bbox_inches='tight', dpi=180, transparent=True)
+    plt.savefig(buf, format='png', bbox_inches='tight', dpi=200, transparent=True)
     buf.seek(0)
     img_str = base64.b64encode(buf.read()).decode('utf-8')
     plt.close(fig)
     
-    # Arayüzde doğrudan görsel olarak görünmesi için HTML etiketi döndürülür
+    # Arayüzde doğrudan resim olarak görünmesi için HTML etiketi döndürülür
     return f'<img src="data:image/png;base64,{img_str}" alt="Bulmaca Görseli" style="max-width:100%; height:auto;" />'
 
 # --- MEB MÜFREDATI VE ÖZEL MODÜLLER ---
