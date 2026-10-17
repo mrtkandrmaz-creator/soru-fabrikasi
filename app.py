@@ -376,6 +376,10 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
 
 # --- MEB MÜFREDATI VE ÖZEL MODÜLLER ---
 MUGREDAT = {
+    "Olimpik Sınıf": {
+        "Sonlu Mat(Kombinatorik)": ["Güvercin Yuvası Prensibi (Pigeonhole Principle)", "Mantık ve Oyunlar", "Sayma, Permütasyon ve Kombinasyon", "Olasılık"],
+        "Analiz-Cebir)": ["Gerçel sayı denklemleri", "Çarpanlara ayırma", "Diziler", "Eşitsizlikler"],
+        },
     "4. Sınıf": {
         "Türkçe": ["Sözcükte Anlam", "Cümle Bilgisi", "Paragraf Yorumlama", "Yazım Kuralları ve Noktalama", "Metin Türleri ve Söz Sanatları"],
         "Matematik": ["Doğal Sayılar ve İşlemler", "Geometrik Şekiller ve Cisimler", "Kesirler", "Zaman Ölçme", "Veri Toplama ve Değerlendirme"],
