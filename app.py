@@ -379,7 +379,7 @@ def sudoku_gorseli_olustur(sudoku_matrisi):
     elif rows == 4:
         box_r, box_c = 2, 2
     elif rows == 5:
-        box_r, box_c = 1, 5  # 5x5 özel yapısı için
+        box_r, box_c = 1, 5
     else:
         box_r, box_c = 3, 3
 
@@ -392,7 +392,7 @@ def sudoku_gorseli_olustur(sudoku_matrisi):
     grid_width = cols * cell_size
     grid_height = rows * cell_size
 
-    # Izgara (Grid) Çizimi ve Kalın Bölge Sınırları
+    # Izgara (Grid) Çizimi ve Kalın Blok Sınırları
     for i in range(rows + 1):
         is_thick = (i % box_r == 0) or (i == 0) or (i == rows)
         lw = 2.5 if is_thick else 1.0
@@ -433,15 +433,17 @@ def sudoku_gorseli_olustur(sudoku_matrisi):
     plt.close(fig)
     return buf
 
-# --- 2. YAN PANEL - DERSLER VE BÖLÜMLER YAPISI ---
-st.sidebar.title("📚 Dersler ve Bölümler")
-ders_kategori = st.sidebar.selectbox("Kategori Seçin", ["Matematik", "Zeka Oyunları / Su Doku", "Fizik (Basınç)"])
+# --- 2. YAN PANEL - TÜBİTAK & OLİMPİYAT YAPISI ---
+st.sidebar.title("📚 TÜBİTAK - Olimpiyat")
+
+# Ana kategori seçimi kaldırıldı, doğrudan alt menü oluşturuldu
+menu_secimi = st.sidebar.radio("Kategoriler", ["Sudoku", "Diğer Olimpiyat Konuları"])
 
 # --- 3. İÇERİK YÖNETİMİ ---
-if "Su Doku" in ders_kategori:
+if menu_secimi == "Sudoku":
     st.sidebar.markdown("---")
-    # Boyut seçimi doğrudan Su Doku kategorisinin altına taşındı
-    boyut_secimi = st.sidebar.selectbox("Su Doku Boyutu Seçin", ["2x2", "3x3", "4x4", "5x5"])
+    # Boyut seçimi doğrudan Sudoku'nun altında açılır
+    boyut_secimi = st.sidebar.selectbox("Sudoku Boyutu Seçin", ["2x2", "3x3", "4x4", "5x5"])
 
     if boyut_secimi == "2x2":
         matris = [['1', 'A'], ['B', '1']]
@@ -468,12 +470,12 @@ if "Su Doku" in ders_kategori:
         secenekler = ["A) 1", "B) 2", "C) 3", "D) 4"]
 
     # Ekrana Yazdırma ve Görselleştirme
-    st.title("✏️ Soru Fabrikası - Su Doku Modülü")
+    st.title("✏️ Soru Fabrikası - TÜBİTAK Su Doku Modülü")
     st.subheader("Soru 1 / 1")
     st.write(kural_metni)
     st.write("Aşağıda verilen tamamlanmamış Su Doku tablosunu inceleyiniz:")
 
-    # Metin yerine doğrudan Matplotlib ile çizilmiş görsel basılır
+    # Görselleştirilmiş matris ekrana basılır
     img_buffer = sudoku_gorseli_olustur(matris)
     st.image(img_buffer, width=320)
 
@@ -483,13 +485,9 @@ if "Su Doku" in ders_kategori:
     if st.button("Cevabı Kontrol Et"):
         st.success(f"Seçtiğiniz cevap kaydedildi: {cevap}")
 
-elif "Basınç" in ders_kategori:
-    st.title("💨 Soru Fabrikası - Fizik (Basınç) Modülü")
-    st.write("Basınç sorularına ait içerikler burada yer alacaktır.")
-
 else:
-    st.title("📐 Soru Fabrikası - Matematik Modülü")
-    st.write("Matematik sorularına ait içerikler burada yer alacaktır.")
+    st.title("🥇 Soru Fabrikası - Diğer Olimpiyat Konuları")
+    st.write("Seçtiğiniz kategoriye ait içerikler yakında eklenecektir.")
 
 # --- MEB MÜFREDATI VE ÖZEL MODÜLLER ---
 MUGREDAT = {
