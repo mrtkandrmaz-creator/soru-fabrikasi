@@ -570,22 +570,6 @@ with col_btn2:
           st.session_state[f"cell_{r}_{c}"] = ""
     st.rerun()
 
-    else:
-      plt.close(fig)
-      return None
-
-    ax.set_xlim(0, 6)
-    ax.set_ylim(0, 5.0)
-
-    buf = io.BytesIO()
-    plt.savefig(
-        buf, format="png", bbox_inches="tight", dpi=180, transparent=True
-    )
-    buf.seek(0)
-    img_str = base64.b64encode(buf.read()).decode("utf-8")
-    plt.close(fig)
-    return f"data:image/png;base64,{img_str}"
-
 # --- MEB MÜFREDATI VE ÖZEL MODÜLLER ---
 MUGREDAT = {
     "Tubitak-Olimpiyat": {
