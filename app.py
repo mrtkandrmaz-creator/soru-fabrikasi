@@ -364,53 +364,105 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
         ax.text(3.0, 1.4, etiketler.get("S", "Yüzey"), fontsize=9, fontweight='bold', ha='center', color='#475569')
 
     elif "sudoku" in tip or "bulmaca" in tip:
-        # Sorudaki 3x3'lük matris verisi ve harfler
-        # 1. Satır: [1, A, 3], 2. Satır: [3, 1, B], 3. Satır: [C, 3, 1]
-        matris = etiketler.get("matris", [
-            [1, 'A', 3],
-            [3, 1, 'B'],
-            ['C', 3, 1]
-        ])
-        
-        nrows = len(matris)
-        ncols = len(matris[0]) if nrows > 0 else 3
-        
-        # Izgara Çizimi
-        for i in range(nrows + 1):
-            lw = 2 if i == 0 or i == nrows else 1
-            ax.plot([1.2, 1.2 + ncols * 0.8], [1.0 + i * 0.8, 1.0 + i * 0.8], color='#0284c7', linewidth=lw)
-            
-        for i in range(ncols + 1):
-            lw = 2 if i == 0 or i == ncols else 1
-            ax.plot([1.2 + i * 0.8, 1.2 + i * 0.8], [1.0, 1.0 + nrows * 0.8], color='#0284c7', linewidth=lw)
-            
-        # Hücrelerdeki Sayı/Harfleri Yerleştirme
-        for r in range(nrows):
-            for c in range(ncols):
-                val = matris[nrows - 1 - r][c]
-                cx = 1.2 + c * 0.8 + 0.4
-                cy = 1.0 + r * 0.8 + 0.4
-                
-                if val != '' and val is not None:
-                    ax.text(cx, cy, str(val), fontsize=13, fontweight='bold', ha='center', va='center', color='#0f172a')
+      # Sorudaki matris verisi ve harfler
+      matris = etiketler.get(
+          "matris", [[1, "A", "3"], [3, 1, "B"], ["C", 3, 1]]
+      )
 
-        # Kenar Etiketleri ve Başlık
-        ax.text(1.2 + (ncols * 0.8) / 2, 1.0 + nrows * 0.8 + 0.3, etiketler.get("Baslik", "3x3 Sudoku Bulmacası"), fontsize=11, fontweight='bold', ha='center', color='#0f172a')
-        ax.text(1.2 + (ncols * 0.8) / 2, 0.7, etiketler.get("Alt", "Sütun"), fontsize=9, fontweight='bold', ha='center', color='#475569')
-        ax.text(0.9, 1.0 + (nrows * 0.8) / 2, etiketler.get("Sol", "Satır"), fontsize=9, fontweight='bold', rotation=90, ha='center', color='#475569')
-        ax.text(1.2 + ncols * 0.8 + 0.3, 1.0 + (nrows * 0.8) / 2, etiketler.get("Sag", "Bölge"), fontsize=9, fontweight='bold', rotation=270, ha='center', color='#475569')
+      nrows = len(matris)
+      ncols = len(matris[0]) if nrows > 0 else 3
+
+      # Izgara Çizimi
+      for i in range(nrows + 1):
+        lw = 2 if i == 0 or i == nrows else 1
+        ax.plot(
+            [1.2, 1.2 + ncols * 0.8],
+            [1.0 + i * 0.8, 1.0 + i * 0.8],
+            color="#0284c7",
+            linewidth=lw,
+        )
+
+      for i in range(ncols + 1):
+        lw = 2 if i == 0 or i == ncols else 1
+        ax.plot(
+            [1.2 + i * 0.8, 1.2 + i * 0.8],
+            [1.0, 1.0 + nrows * 0.8],
+            color="#0284c7",
+            linewidth=lw,
+        )
+
+      # Hücrelerdeki Sayı/Harfleri Yerleştirme
+      for r in range(nrows):
+        for c in range(ncols):
+          val = matris[nrows - 1 - r][c]
+          cx = 1.2 + c * 0.8 + 0.4
+          cy = 1.0 + r * 0.8 + 0.4
+
+          if val != "" and val is not None:
+            ax.text(
+                cx,
+                cy,
+                str(val),
+                fontsize=13,
+                fontweight="bold",
+                ha="center",
+                va="center",
+                color="#0f172a",
+            )
+
+      # Kenar Etiketleri ve Başlık
+      ax.text(
+          1.2 + (ncols * 0.8) / 2,
+          1.0 + nrows * 0.8 + 0.3,
+          etiketler.get("Baslik", "3x3 Sudoku Bulmacası"),
+          fontsize=11,
+          fontweight="bold",
+          ha="center",
+          color="#0f172a",
+      )
+      ax.text(
+          1.2 + (ncols * 0.8) / 2,
+          0.7,
+          etiketler.get("Alt", "Sütun"),
+          fontsize=9,
+          fontweight="bold",
+          ha="center",
+          color="#475569",
+      )
+      ax.text(
+          0.9,
+          1.0 + (nrows * 0.8) / 2,
+          etiketler.get("Sol", "Satır"),
+          fontsize=9,
+          fontweight="bold",
+          rotation=90,
+          ha="center",
+          color="#475569",
+      )
+      ax.text(
+          1.2 + ncols * 0.8 + 0.3,
+          1.0 + (nrows * 0.8) / 2,
+          etiketler.get("Sag", "Bölge"),
+          fontsize=9,
+          fontweight="bold",
+          rotation=270,
+          ha="center",
+          color="#475569",
+      )
 
     else:
-        plt.close(fig)
-        return None
+      plt.close(fig)
+      return None
 
     ax.set_xlim(0, 6)
     ax.set_ylim(0, 5.0)
-    
+
     buf = io.BytesIO()
-    plt.savefig(buf, format='png', bbox_inches='tight', dpi=180, transparent=True)
+    plt.savefig(
+        buf, format="png", bbox_inches="tight", dpi=180, transparent=True
+    )
     buf.seek(0)
-    img_str = base64.b64encode(buf.read()).decode('utf-8')
+    img_str = base64.b64encode(buf.read()).decode("utf-8")
     plt.close(fig)
     return f"data:image/png;base64,{img_str}"
 
