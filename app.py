@@ -195,7 +195,7 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
     if not isinstance(etiketler, dict):
         etiketler = {}
         
-    fig, ax = plt.subplots(figsize=(4.5, 3.3))
+    fig, ax = plt.subplots(figsize=(5.5, 4.0))
     ax.set_aspect('equal')
     ax.axis('off')
     
@@ -361,34 +361,52 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
         ax.text(3.0, 1.4, etiketler.get("S", "Yüzey"), fontsize=9, fontweight='bold', ha='center', color='#475569')
 
     elif "sudoku" in tip:
-        # Görseldeki soruya birebir uyumlu 6x6 Sudoku tablosu (Örnek matris verisi)
-        # 0 boş hücreleri, diğer sayılar sabit ipuçlarını ve küçük ipucu köşelerini temsil eder
-        sudoku_matrisi = [
-            [1, 2, 4, 0, 6, 0, 2, 1], # Görseldeki yapıya göre uyarlanan satırlar
-            [0, 6, 2, 3, 1, 0, 5, 0],
-            [3, 4, 0, 1, 0, 6, 0, 2],
-            [2, 5, 1, 8, 0, 0, 6, 4],
-            [0, 0, 6, 1, 3, 3, 0, 0],
-            [1, 2, 0, 0, 1, 5, 6, 6]
+        # Görseldeki 8 sütun x 6 satır Sudoku bulmacasına birebir uyumlu matris
+        # Her hücre için (Ana Sayı, Küçük İpucu Sayısı) ikilisi tanımlanmıştır.
+        sudoku_data = [
+            [(1, ''), (2, ''), (4, ''), ('', ''), (6, ''), ('', ''), (2, ''), (1, '')],
+            [('', 6), (6, ''), (2, ''), (3, ''), (1, ''), ('', 1), (5, ''), ('', 3)],
+            [(3, ''), (4, ''), ('', ''), (1, ''), ('', 2), (6, ''), ('', ''), (2, '')],
+            [(2, ''), (5, ''), (1, ''), (8, ''), ('', ''), ('', ''), (6, ''), (4, '')],
+            [(3, ''), (4, ''), (6, ''), (1, ''), (3, ''), (3, ''), ('', 2), (1, '')],
+            [(1, ''), (2, ''), ('', ''), ('', ''), (1, ''), ('', 5), (6, ''), (6, '6')]
         ]
         
-        # Izgara Çizimi (6x6 veya uygun boyutlandırma)
-        for i in range(7):
-            lw = 2 if i % 2 == 0 else 1
-            ax.plot([1, 5], [0.5 + i*0.4, 0.5 + i*0.4], color='#38bdf8', linewidth=lw)
-            ax.plot([1 + i*0.5, 1 + i*0.5], [0.5, 2.9], color='#38bdf8', linewidth=lw)
+        ncols, nrows = 8, 6
+        x_start, y_start = 0.5, 0.5
+        cell_w, cell_h = 0.45, 0.45
+        
+        # Izgara çizgilerini çizme
+        for r in range(nrows + 1):
+            ax.plot([x_start, x_start + ncols * cell_w], [y_start + r * cell_h, y_start + r * cell_h], color='#38bdf8', linewidth=1.5)
+        for c in range(ncols + 1):
+            ax.plot([x_start + c * cell_w, x_start + c * cell_w], [y_start, y_start + nrows * cell_h], color='#38bdf8', linewidth=1.5)
             
-        ax.text(3.0, 3.1, etiketler.get("Baslik", "Sudoku Bulmacası"), fontsize=10, fontweight='bold', ha='center', color='#0f172a')
-        ax.text(3.0, 0.2, etiketler.get("Alt", "Sütun"), fontsize=9, fontweight='bold', ha='center', color='#0f172a')
-        ax.text(0.7, 1.7, etiketler.get("Sol", "Satır"), fontsize=9, fontweight='bold', rotation=90, ha='center', color='#0f172a')
-        ax.text(5.3, 1.7, etiketler.get("Sag", "Bölge"), fontsize=9, fontweight='bold', rotation=270, ha='center', color='#0f172a')
+        # Hücre içerisindeki sayıları yerleştirme
+        for r in range(nrows):
+            for c in range(ncols):
+                main_val, small_val = sudoku_data[nrows - 1 - r][c] # Görsel sırasına göre üstten alta
+                cx = x_start + c * cell_w + cell_w / 2
+                cy = y_start + r * cell_h + cell_h / 2
+                
+                if main_val != '':
+                    ax.text(cx, cy, str(main_val), fontsize=10, fontweight='bold', ha='center', va='center', color='#0f172a')
+                if small_val != '':
+                    # Küçük ipucu sayıları köşeye yerleştirilir
+                    ax.text(cx - cell_w*0.3, cy + cell_h*0.3, str(small_val), fontsize=6, fontweight='bold', ha='center', va='center', color='#0f172a')
+
+        # Çevre etiketleri ve başlık
+        ax.text(x_start + (ncols * cell_w)/2, y_start + nrows * cell_h + 0.2, etiketler.get("Baslik", "Sudoku Bulmacası"), fontsize=10, fontweight='bold', ha='center', color='#0f172a')
+        ax.text(x_start + (ncols * cell_w)/2, y_start - 0.25, etiketler.get("Alt", "Sütun"), fontsize=9, fontweight='bold', ha='center', color='#0f172a')
+        ax.text(x_start - 0.25, y_start + (nrows * cell_h)/2, etiketler.get("Sol", "Satır"), fontsize=9, fontweight='bold', rotation=90, ha='center', color='#0f172a')
+        ax.text(x_start + ncols * cell_w + 0.25, y_start + (nrows * cell_h)/2, etiketler.get("Sag", "Bölge"), fontsize=9, fontweight='bold', rotation=270, ha='center', color='#0f172a')
 
     else:
         plt.close(fig)
         return None
 
-    ax.set_xlim(0, 6)
-    ax.set_ylim(0, 5.0)
+    ax.set_xlim(0, 5.5)
+    ax.set_ylim(0, 4.0)
     
     buf = io.BytesIO()
     plt.savefig(buf, format='png', bbox_inches='tight', dpi=180, transparent=True)
