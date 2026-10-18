@@ -388,7 +388,7 @@ MUGREDAT = {
     },
     "5. Sınıf": {
         "Türkçe": ["Sözcükte Anlam", "Cümlede Anlam", "Metin Yorumlama ve Paragraf", "Yazım Kuralları", "Noktalama İşaretleri"],
-        "Matematik": ["Tümler ve Bütünler açı","Çokgenler Düzgün Çokgenler"," Çevre Uzunlukları ve Alan","Çember ve Daire","Doğru Doğru Parçası Dikme ve Çember","Temel Geometrik Kavramlar ve Doğrular"],
+        "Matematik": ["Tümler ve Bütünler açı","Çokgenler Düzgün Çokgenler"," Zihinden İşlem","yuvarlama ve tahmin","Doğru Doğru Parçası Dikme ve Çember","Sayı ve basamak değeri,bölükler,sayı okunuşları"],
         "Fen Bilimleri": ["Güneş, Dünya ve Ay", "Canlılar Dünyası", "Hava Direnci ve Su Direnci","Kuvvetin Uygulanması ve Sürtünme", "Maddenin Hâl Değişimi ve Isı", "Kuvveti Tanıyalım", "Işığın Yayılması"],
         "Sosyal Bilgiler": ["Birlikte Yaşamak,Birey ve Toplum", "Kültür ve Ortak Mirasımız", "Evimiz Dünya", "Yaşayan Demokrasimiz", "Hayatımızda Ekonomi", "Teknoloji ve Sosyal Bilimler", "Üretim, Dağıtım ve Tüketim"],
         "Din Kültürü": ["Allah İnancı ve İnsan", "Allahın İsimleri Esmaül Hüsna","Hz. Muhammed ve Aile Hayatı", "İslam'ın Temel İbadetleri","Namaz","Kuran Kerim","Peygamber Kıssaları","Mimarimizde dini Motifler", "Ahlaki Değerler"],
