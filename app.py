@@ -560,7 +560,7 @@ with st.sidebar:
                 secili_ders_unite_haritasi[ders_adi] = secili_alt_uniteler if secili_alt_uniteler else uniteler_listesi
 
     st.markdown("---")
-    soru_sayisi = st.slider("🔢 Soru Sayısı:", 3, 5, 5, key=f"slider_soru_{st.session_state.secim_sifirla_tetikleyici}")
+    soru_sayisi = st.slider("🔢 Soru Sayısı:", 5, 8, 5, key=f"slider_soru_{st.session_state.secim_sifirla_tetikleyici}")
 
     if st.button("🚀 Soruları Üret", use_container_width=True, type="primary"):
         if not API_KEYS or "buraya_gercek" in API_KEYS[0]:
