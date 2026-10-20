@@ -701,7 +701,7 @@ if st.session_state.quiz_ready_to_start and st.session_state.quiz_data and not s
     st.markdown("<h2 style='text-align: center;'>🎓 Sınav Hazır!</h2>", unsafe_allow_html=True)
     toplam_soru_sayisi = len(st.session_state.quiz_data)
     otomatik_sure_dk = (toplam_soru_sayisi * 80) // 60
-    st.markdown(f"<p style='text-align: center; font-size: 18px;'>Toplam <b>{toplam_soru_sayisi}</b> sorudan oluşan sınavınız başarıyla oluşturulmuştur.<br>Sınav süresi her soru için <b>80 saniye</b> hesaba katılarak otomatik olarak <b>{otomatik_sure_dk} dakika</b> olarak ayarlanmıştır.</p>", unsafe_allow_html=True)
+    st.markdown(f"<p style='text-align: center; font-size: 18px;'>Toplam <b>{toplam_soru_sayisi}</b> sorudan oluşan sınavınız başarıyla oluşturulmuştur.<br>Sınav süresi her soru için <b>120 saniye</b> hesaba katılarak otomatik olarak <b>{otomatik_sure_dk} dakika</b> olarak ayarlanmıştır.</p>", unsafe_allow_html=True)
     
     col_A, col_B, col_C = st.columns([1, 2, 1])
     with col_B:
