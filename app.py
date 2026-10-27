@@ -537,6 +537,7 @@ with st.sidebar:
         "Yanlışlardan Üretilen Sorular",
         "LGS Geçmiş Yıllar Çıkmış Sorular",
         "Hazır Bulunuşluk Sınavı",
+        "MEB Maarif Modeli",
         "Yeni Nesil Sorular"
     ], key=f"tur_secim_{st.session_state.secim_sifirla_tetikleyici}")
 
