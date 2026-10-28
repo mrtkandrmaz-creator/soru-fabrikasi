@@ -255,68 +255,7 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
 
     import matplotlib.pyplot as plt
 
-def cember_geometri_cizimi(ax, tip, etiketler):
-    ax.clear()
-    tip = str(tip).lower().strip()
-    
-    # 1. KESİŞEN ÇEMBERLER VE ORTAK TEĞET GEOMETRİSİ
-    if "cember_kesisimi" in tip or "kesisen_cember" in tip:
-        merkez1, merkez2 = (2.5, 2.5), (4.5, 2.5)
-        r1, r2 = 2.0, 2.0
-        
-        cember1 = plt.Circle(merkez1, r1, color='#0f172a', fill=False, linewidth=2.2)
-        cember2 = plt.Circle(merkez2, r2, color='#2563eb', fill=False, linewidth=2.2)
-        ax.add_patch(cember1)
-        ax.add_patch(cember2)
-        
-        # Merkezler ve Doğrular
-        ax.plot(merkez1[0], merkez1[1], 'ko', markersize=5)
-        ax.plot(merkez2[0], merkez2[1], 'ko', markersize=5)
-        ax.text(merkez1[0] - 0.25, merkez1[1] + 0.15, etiketler.get("O1", "O₁"), fontsize=11, fontweight='bold', color='#0f172a')
-        ax.text(merkez2[0] + 0.12, merkez2[1] + 0.15, etiketler.get("O2", "O₂"), fontsize=11, fontweight='bold', color='#2563eb')
-        ax.plot([merkez1[0], merkez2[0]], [merkez1[1], merkez2[1]], color='#64748b', linewidth=1.5, linestyle=':')
-        
-        # Kesişim Noktaları ve Kiriş
-        kesisim_ust = (3.5, 2.5 + 1.732)
-        kesisim_alt = (3.5, 2.5 - 1.732)
-        ax.plot(kesisim_ust[0], kesisim_ust[1], 'ro', markersize=4)
-        ax.plot(kesisim_alt[0], kesisim_alt[1], 'ro', markersize=4)
-        ax.text(kesisim_ust[0] + 0.1, kesisim_ust[1] + 0.05, etiketler.get("A", "A"), fontsize=10, fontweight='bold', color='#dc2626')
-        ax.text(kesisim_alt[0] + 0.1, kesisim_alt[1] - 0.3, etiketler.get("B", "B"), fontsize=10, fontweight='bold', color='#dc2626')
-        ax.plot([kesisim_ust[0], kesisim_alt[0]], [kesisim_ust[1], kesisim_alt[1]], color='#dc2626', linewidth=1.8, linestyle='--')
-        
-        # Ortak Teğet
-        ax.plot([0.5, 6.5], [4.5, 4.5], color='#16a34a', linewidth=1.8, linestyle='-')
-        ax.text(3.5, 4.65, etiketler.get("TegetAciklama", "Ortak Dış Teğet Doğrusu"), fontsize=9, fontweight='bold', ha='center', color='#16a34a')
-        
-        ax.text(3.5, -0.6, etiketler.get("Aciklama", "Kesişen Çemberler ve Teğet Geometrisi"), fontsize=9, fontweight='bold', ha='center', color='#475569')
-        ax.set_xlim(-0.5, 7.5)
-        ax.set_ylim(-1.2, 6.0)
-
-    # 2. ÇEMBERDE AÇI (MERKEZ VE ÇEVRE AÇI) GEOMETRİSİ
-    elif "cemberde_aci" in tip or "cevre_aci" in tip or "merkez_aci" in tip:
-        merkez = (3.0, 2.5)
-        r = 2.0
-        cember = plt.Circle(merkez, r, color='#0f172a', fill=False, linewidth=2.2)
-        ax.add_patch(cember)
-        
-        ax.plot(merkez[0], merkez[1], 'ko', markersize=5)
-        ax.text(merkez[0] - 0.25, merkez[1] + 0.15, etiketler.get("O", "O"), fontsize=11, fontweight='bold', color='#0f172a')
-        
-        # Çevre üzerindeki A, B noktaları ve merkez ile bağlantılar
-        A = (1.4, 3.7)
-        B = (4.6, 3.7)
-        ax.plot([A[0], merkez[0], B[0]], [A[1], merkez[1], B[1]], color='#2563eb', linewidth=1.5, linestyle='-')
-        ax.plot(A[0], A[1], 'ro', markersize=4)
-        ax.plot(B[0], B[1], 'ro', markersize=4)
-        ax.text(A[0] - 0.3, A[1] + 0.1, etiketler.get("A", "A"), fontsize=10, fontweight='bold', color='#dc2626')
-        ax.text(B[0] + 0.1, B[1] + 0.1, etiketler.get("B", "B"), fontsize=10, fontweight='bold', color='#dc2626')
-        
-        ax.text(3.0, 0.4, etiketler.get("Aciklama", "Çemberde Merkez / Çevre Açı"), fontsize=9, fontweight='bold', ha='center', color='#475569')
-        ax.set_xlim(-0.5, 6.5)
-        ax.set_ylim(-0.5, 5.5)
-
-    # 3. TEĞET - KİRİŞ AÇI GEOMETRİSİ
+# 3. TEĞET - KİRİŞ AÇI GEOMETRİSİ
     elif "teget_kiris" in tip:
         merkez = (3.0, 2.5)
         r = 2.0
@@ -340,10 +279,19 @@ def cember_geometri_cizimi(ax, tip, etiketler):
         ax.set_xlim(-0.5, 6.5)
         ax.set_ylim(-1.0, 5.5)
 
-    # Ortak Aspect ve Çerçeve Temizliği
-    ax.set_aspect('equal')
-    ax.axis('off') # Soru içinde daha temiz görünmesi için eksen çizgilerini gizleyebilirsiniz
-
+    # 4. DİK ÜÇGEN GEOMETRİSİ (Hata alınan satır ve devamı)
+    elif "dik_ucgen" in tip:
+        # Örnek dik üçgen koordinatları
+        koseler_x = [1.0, 4.0, 1.0]
+        koseler_y = [1.0, 1.0, 5.0]
+        
+        ax.plot(koseler_x + [koseler_x[0]], koseler_y + [koseler_y[0]], color='#0f172a', linewidth=2.2)
+        ax.text(2.5, 0.6, etiketler.get("a", "a"), fontsize=10, fontweight='bold', ha='center', color='#0f172a')
+        ax.text(0.6, 3.0, etiketler.get("b", "b"), fontsize=10, fontweight='bold', ha='center', color='#0f172a')
+        
+        ax.text(2.5, -0.5, etiketler.get("Aciklama", "Dik Üçgen Geometrisi"), fontsize=9, fontweight='bold', ha='center', color='#475569')
+        ax.set_xlim(0, 6)
+        ax.set_ylim(-1, 6)
     elif "dik_ucgen" in tip:
         lbl_a, lbl_b, lbl_c = get_custom_labels(etiketler, ("A", "B", "C"))
         bx, by = 1.2, 1.0
