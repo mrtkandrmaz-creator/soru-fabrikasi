@@ -253,45 +253,15 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
         ax.text(3.0, 0.3, etiketler.get("X2", "B"), fontsize=9, fontweight='bold', ha='center', color='#ffffff')
         ax.text(4.5, 0.3, etiketler.get("X3", "C"), fontsize=9, fontweight='bold', ha='center', color='#ffffff')
 
-    import matplotlib.pyplot as plt
-
-# 3. TEĞET - KİRİŞ AÇI GEOMETRİSİ
-    elif "teget_kiris" in tip:
-        merkez = (3.0, 2.5)
-        r = 2.0
-        cember = plt.Circle(merkez, r, color='#0f172a', fill=False, linewidth=2.2)
+    elif "cember" in tip or "daire" in tip:
+        cember = plt.Circle((3.0, 2.5), 1.5, color='#0f172a', fill=False, linewidth=2.2)
         ax.add_patch(cember)
-        
-        # Teğet doğrusu (Alttan teğet, y = 0.5 doğrusu, T(3.0, 0.5) değme noktası)
-        ax.plot([0.5, 5.5], [0.5, 0.5], color='#16a34a', linewidth=1.8, linestyle='-')
-        T = (3.0, 0.5)
-        A = (4.8, 3.8) # Kirişin diğer ucu
-        
-        ax.plot(T[0], T[1], 'ro', markersize=4)
-        ax.plot(A[0], A[1], 'ro', markersize=4)
-        ax.text(T[0] + 0.1, T[1] - 0.3, etiketler.get("T", "T (Teğet Noktası)"), fontsize=10, fontweight='bold', color='#16a34a')
-        ax.text(A[0] + 0.1, A[1] + 0.05, etiketler.get("A", "A"), fontsize=10, fontweight='bold', color='#dc2626')
-        
-        # Teğet-Kiriş çizgisi (T ile A arası)
-        ax.plot([T[0], A[0]], [T[1], A[1]], color='#dc2626', linewidth=1.8, linestyle='-')
-        
-        ax.text(3.0, -0.6, etiketler.get("Aciklama", "Teğet - Kiriş Açı Geometrisi"), fontsize=9, fontweight='bold', ha='center', color='#475569')
-        ax.set_xlim(-0.5, 6.5)
-        ax.set_ylim(-1.0, 5.5)
+        ax.plot(3.0, 2.5, 'ko', markersize=5)
+        ax.text(3.1, 2.65, etiketler.get("M", "M"), fontsize=11, fontweight='bold', color='#0f172a')
+        ax.plot([3.0, 4.5], [2.5, 2.5], color='#dc2626', linewidth=1.8, linestyle='--')
+        ax.text(3.75, 2.7, etiketler.get("r", "r"), fontsize=10, fontweight='bold', color='#dc2626')
+        ax.text(3.0, 0.4, etiketler.get("Aciklama", "Çember Geometrisi"), fontsize=9, fontweight='bold', ha='center', color='#475569')
 
-    # 4. DİK ÜÇGEN GEOMETRİSİ (Hata alınan satır ve devamı)
-    elif "dik_ucgen" in tip:
-        # Örnek dik üçgen koordinatları
-        koseler_x = [1.0, 4.0, 1.0]
-        koseler_y = [1.0, 1.0, 5.0]
-        
-        ax.plot(koseler_x + [koseler_x[0]], koseler_y + [koseler_y[0]], color='#0f172a', linewidth=2.2)
-        ax.text(2.5, 0.6, etiketler.get("a", "a"), fontsize=10, fontweight='bold', ha='center', color='#0f172a')
-        ax.text(0.6, 3.0, etiketler.get("b", "b"), fontsize=10, fontweight='bold', ha='center', color='#0f172a')
-        
-        ax.text(2.5, -0.5, etiketler.get("Aciklama", "Dik Üçgen Geometrisi"), fontsize=9, fontweight='bold', ha='center', color='#475569')
-        ax.set_xlim(0, 6)
-        ax.set_ylim(-1, 6)
     elif "dik_ucgen" in tip:
         lbl_a, lbl_b, lbl_c = get_custom_labels(etiketler, ("A", "B", "C"))
         bx, by = 1.2, 1.0
@@ -418,7 +388,7 @@ MUGREDAT = {
     },
     "5. Sınıf": {
         "Türkçe": ["Sözcükte Anlam", "Cümlede Anlam", "Metin Yorumlama ve Paragraf", "Yazım Kuralları", "Noktalama İşaretleri"],
-        "Matematik": ["Tümler ve Bütünler açı","Çokgenler Düzgün Çokgenler"," çokgen çeşitleri ve çap yarıçap","çokgenlerde köşegen ve açılar ","Doğru Doğru Parçası Dikme ve Çember","Çember Kesişimleri"],
+        "Matematik": ["Tümler ve Bütünler açı","Çokgenler Düzgün Çokgenler"," çokgen çeşitleri","çokgenlerde köşegen ve açılar ","Doğru Doğru Parçası Dikme ve Çember","Çember Çap ve yarıçap uzunlukları"],
         "Fen Bilimleri": ["Güneş, Dünya ve Ay","Hava Direnci ve Su Direnci","Kuvvetin Uygulanması ve Sürtünme","Ayın evreleri", "Dinamometre","Sürtünme kuvveti ", "Kuvveti tanıyalım"],
         "Sosyal Bilgiler": ["Birlikte Yaşamak,Birey ve Toplum", "Kültür ve Ortak Mirasımız", "Evimiz Dünya", "Yaşayan Demokrasimiz", "Hayatımızda Ekonomi", "Teknoloji ve Sosyal Bilimler", "Üretim, Dağıtım ve Tüketim"],
         "Din Kültürü": ["Allah İnancı ve İnsan", "Allahın İsimleri ","Hz. Muhammed ve Aile Hayatı", "İslam'ın Temel İbadetleri","Namaz","Kuran Kerim","Peygamber Kıssaları","Mimarimizde dini Motifler", "Ahlaki Değerler"],
