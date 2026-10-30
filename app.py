@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 import io
 import base64
 import threading
+import html
 import numpy as np
 
 # --- RENDER / SAYFA AYARI ---
@@ -24,127 +25,203 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- MODERN VE YÜKSEK OKUNABİLİR ÖZEL CSS ---
+# --- MODERN ARAYÜZ TASARIMI (CSS) ---
 st.markdown("""
 <style>
-    .main {
-        background-color: #f8fafc;
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+    :root {
+        --ac1: #6366f1;
+        --ac2: #8b5cf6;
+        --ink: #0f172a;
+        --ink2: #334155;
+        --muted: #64748b;
+        --line: #e2e8f0;
     }
-    .custom-card {
-        background-color: #ffffff;
-        border: 1px solid #cbd5e1;
-        padding: 30px;
-        border-radius: 16px;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-        margin-bottom: 20px;
+
+    html, body, .stApp, .stMarkdown, .stButton button, label, p, input, textarea {
+        font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
     }
-    .soru-metni-kutusu {
-        font-size: 21px !important;
-        font-weight: 600 !important;
-        color: #0f172a !important;
-        line-height: 1.6 !important;
-        text-align: left !important;
+    .stApp {
+        background:
+            radial-gradient(900px 480px at 100% -5%, rgba(99,102,241,.14), transparent 60%),
+            radial-gradient(800px 460px at -5% 105%, rgba(236,72,153,.10), transparent 55%),
+            #f8fafc;
     }
-    .gorsel-sema-kutusu {
-        background-color: #ffffff;
-        color: #0f172a;
-        padding: 16px;
-        border-radius: 12px;
-        text-align: center;
-        margin: 12px auto;
-        border: 2px solid #cbd5e1;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-        max-width: 100%;
+    header[data-testid="stHeader"] { background: transparent; }
+    .block-container { padding-top: 2.2rem; padding-bottom: 3rem; max-width: 1080px; }
+    h1, h2, h3, h4, h5, h6 { color: var(--ink); letter-spacing: -0.02em; font-weight: 800; }
+
+    /* ---------- KARŞILAMA / HAZIR EKRANI ---------- */
+    .hero {
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 55%, #db2777 130%);
+        color: #fff; border-radius: 28px; padding: 44px 40px;
+        box-shadow: 0 24px 50px -20px rgba(79,70,229,.55);
+        position: relative; overflow: hidden;
     }
-    .stRadio label {
-        font-size: 19px !important;
-        font-weight: 700 !important;
-        color: #1e293b !important;
+    .hero::after {
+        content: ""; position: absolute; right: -60px; top: -60px; width: 260px; height: 260px;
+        border-radius: 50%; background: rgba(255,255,255,.12);
     }
-    div.stButton > button {
-        border-radius: 12px;
-        font-weight: 600;
-        transition: all 0.2s ease-in-out;
+    .hero h1 { color: #fff !important; font-size: 34px; margin: 0 0 10px 0; }
+    .hero p { color: rgba(255,255,255,.9); font-size: 17px; margin: 0; max-width: 640px; line-height: 1.6; }
+    .hero.orta { text-align: center; }
+    .hero.orta p { margin: 0 auto; }
+    .hero-chipler { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 24px; position: relative; z-index: 1; }
+    .hero-chip { background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.32); border-radius: 18px; padding: 12px 24px; }
+    .hero-chip b { display: block; font-size: 26px; }
+    .hero-chip span { font-size: 13px; opacity: .92; }
+    .ozellik-izgara { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 20px; }
+    .ozellik { background: #fff; border: 1px solid var(--line); border-radius: 20px; padding: 20px; box-shadow: 0 8px 24px -14px rgba(15,23,42,.25); }
+    .ozellik .ikon { font-size: 28px; }
+    .ozellik b { display: block; margin: 8px 0 4px; color: var(--ink); font-size: 16px; }
+    .ozellik span { color: var(--muted); font-size: 14px; line-height: 1.55; }
+
+    /* ---------- SINAV EKRANI ---------- */
+    .ust-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+    .soru-no { font-size: 24px; font-weight: 800; color: var(--ink); }
+    .soru-no small { font-size: 16px; color: var(--muted); font-weight: 600; }
+    .sure {
+        display: inline-flex; align-items: center; gap: 8px; padding: 9px 20px; border-radius: 999px;
+        background: #fff7ed; border: 1.5px solid #fdba74; color: #c2410c; font-weight: 800; font-size: 18px;
     }
-    div.stButton > button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(249, 115, 22, 0.35);
+    .sure.az { background: #fef2f2; border-color: #fca5a5; color: #b91c1c; }
+    .ilerleme-cubuk { height: 10px; background: #e2e8f0; border-radius: 999px; overflow: hidden; }
+    .ilerleme-cubuk > div { height: 100%; background: linear-gradient(90deg, #6366f1, #a855f7, #ec4899); border-radius: 999px; transition: width .3s; }
+    .nokta-sira { display: flex; gap: 8px; flex-wrap: wrap; margin: 14px 0 6px; }
+    .nokta {
+        width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center;
+        border-radius: 11px; background: #fff; border: 1.5px solid var(--line); color: var(--muted); font-weight: 700; font-size: 13px;
     }
-    /* Sınav İçi Navigasyon Butonları (Turuncu Dolgulu ve Büyük) */
+    .nokta.cevapli { background: linear-gradient(135deg, #6366f1, #8b5cf6); border-color: transparent; color: #fff; }
+    .nokta.aktif { border-color: #f97316; box-shadow: 0 0 0 3px rgba(249,115,22,.28); }
+    .nokta.aktif:not(.cevapli) { color: #c2410c; background: #fff7ed; }
+    .cevap-ozet { color: var(--muted); font-size: 14px; font-weight: 600; margin: 4px 0 18px; }
+
+    .soru-karti {
+        background: #fff; border: 1px solid var(--line); border-radius: 26px; padding: 28px 32px 26px 36px;
+        box-shadow: 0 18px 40px -22px rgba(79,70,229,.35); margin-bottom: 18px; position: relative;
+    }
+    .soru-karti::before {
+        content: ""; position: absolute; left: 0; top: 26px; bottom: 26px; width: 5px; border-radius: 0 6px 6px 0;
+        background: linear-gradient(180deg, var(--ac1), var(--ac2));
+    }
+    .rozet { display: inline-block; padding: 5px 14px; border-radius: 999px; background: #eef2ff; color: #4338ca; font-weight: 700; font-size: 13px; margin-bottom: 14px; }
+    .soru-metni-kutusu { font-size: 21px; font-weight: 600; color: var(--ink); line-height: 1.65; text-align: left; }
+    .gorsel-sema-kutusu { background: #f8fafc; border: 1.5px dashed #cbd5e1; border-radius: 18px; padding: 14px; text-align: center; margin: 18px auto 4px auto; max-width: 100%; }
+    .alt-baslik { font-size: 13px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 6px 0 10px; }
+
+    /* Şıklar: seçilince kart boyanır */
+    div[data-testid="stRadio"] div[role="radiogroup"] { gap: 10px; }
+    div[data-testid="stRadio"] label[data-baseweb="radio"] {
+        background: #fff; border: 2px solid var(--line); border-radius: 16px; padding: 14px 18px;
+        width: 100%; cursor: pointer; transition: all .18s ease;
+    }
+    div[data-testid="stRadio"] label[data-baseweb="radio"]:hover { border-color: #a5b4fc; background: #f5f7ff; }
+    div[data-testid="stRadio"] label[data-baseweb="radio"] p { font-size: 18px !important; font-weight: 600 !important; color: var(--ink) !important; margin: 0; }
+    @supports selector(:has(*)) {
+        div[data-testid="stRadio"] label[data-baseweb="radio"]:has(input:checked) {
+            border-color: #6366f1; background: linear-gradient(135deg, #eef2ff, #f5f3ff);
+            box-shadow: 0 10px 22px -12px rgba(99,102,241,.6);
+        }
+        div[data-testid="stRadio"] label[data-baseweb="radio"]:has(input:checked) p { color: #3730a3 !important; font-weight: 700 !important; }
+    }
+
+    /* ---------- BUTONLAR ---------- */
+    div.stButton > button { border-radius: 14px; font-weight: 700; transition: all .2s ease-in-out; border: none; }
+    div.stButton > button:hover { transform: translateY(-2px); }
     div.stButton > button[kind="secondary"] {
-        background: linear-gradient(135deg, #f97316 0%, #ea580c) !important;
-        border: none !important;
-        color: #ffffff !important;
-        padding: 0.75rem 1.5rem !important;
-        font-size: 18px !important;
-        font-weight: 700 !important;
-        box-shadow: 0 8px 16px -4px rgba(249, 115, 22, 0.4);
+        background: linear-gradient(135deg, #fb923c 0%, #ea580c 100%) !important; color: #fff !important;
+        padding: 0.75rem 1.5rem !important; font-size: 18px !important; font-weight: 700 !important;
+        box-shadow: 0 10px 20px -8px rgba(249,115,22,.55);
     }
-    div.stButton > button[kind="secondary"]:hover {
-        background: linear-gradient(135deg, #ea580c 0%, #c2410c) !important;
-        box-shadow: 0 12px 20px -4px rgba(249, 115, 22, 0.6);
-    }
-    /* Birincil Butonlar (Mor/Gradient) */
+    div.stButton > button[kind="secondary"]:hover { box-shadow: 0 14px 24px -8px rgba(234,88,12,.7); }
     div.stButton > button[kind="primary"] {
-        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
-        border: none !important;
-        color: #ffffff !important;
-        padding: 0.85rem 2rem;
-        font-size: 19px !important;
-        font-weight: 700 !important;
-        letter-spacing: 0.5px;
-        box-shadow: 0 10px 20px -5px rgba(124, 58, 237, 0.4);
-        border-radius: 14px !important;
-        transition: all 0.3s ease;
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important; color: #fff !important;
+        padding: 0.85rem 2rem; font-size: 18px !important; font-weight: 700 !important; letter-spacing: .3px;
+        box-shadow: 0 12px 24px -10px rgba(124,58,237,.6); border-radius: 14px !important;
     }
-    div.stButton > button[kind="primary"]:hover {
-        background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%) !important;
-        box-shadow: 0 14px 24px -4px rgba(124, 58, 237, 0.6);
-        transform: translateY(-3px);
+    div.stButton > button[kind="primary"]:hover { box-shadow: 0 16px 28px -10px rgba(124,58,237,.75); }
+
+    /* ---------- SONUÇ EKRANI ---------- */
+    .skor-banner {
+        display: flex; flex-wrap: wrap; align-items: center; gap: 28px;
+        background: linear-gradient(135deg, #4f46e5, #7c3aed 60%, #db2777); border-radius: 28px;
+        padding: 30px 34px; color: #fff; box-shadow: 0 24px 50px -22px rgba(79,70,229,.6); margin-bottom: 20px;
     }
+    .skor-puan { font-size: 60px; font-weight: 800; line-height: 1; }
+    .skor-puan small { font-size: 20px; opacity: .8; font-weight: 600; }
+    .skor-mesaj { font-size: 20px; font-weight: 700; margin-top: 6px; }
+    .skor-chipler { display: flex; gap: 12px; margin-left: auto; flex-wrap: wrap; }
+    .chip { background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.3); border-radius: 18px; padding: 12px 22px; text-align: center; min-width: 90px; }
+    .chip b { display: block; font-size: 26px; }
+    .chip span { font-size: 12px; opacity: .92; }
+    .sik { padding: 10px 14px; border-radius: 12px; border: 1.5px solid var(--line); margin: 6px 0; background: #fff; font-size: 16px; color: var(--ink2); }
+    .sik.dogru { background: #f0fdf4; border-color: #86efac; color: #166534; font-weight: 700; }
+    .sik.yanlis { background: #fef2f2; border-color: #fca5a5; color: #991b1b; font-weight: 700; }
+    .sik span { float: right; font-size: 12px; font-weight: 700; }
+    .cozum { background: #fffbeb; border: 1px solid #fde68a; border-radius: 14px; padding: 12px 16px; color: #78350f; margin-top: 12px; line-height: 1.6; }
+
+    /* ---------- ÜRETİM KARTI ---------- */
+    .uretim-karti { background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 18px; text-align: center; box-shadow: 0 8px 24px -14px rgba(15,23,42,.3); margin-bottom: 16px; }
+    .uretim-karti h4 { color: #4f46e5; margin: 10px 0 4px; font-size: 15px; }
+    .uretim-karti p { color: var(--ink2); font-size: 13px; margin: 0; }
+    .uretim-sure { color: #ea580c; font-weight: 700; font-size: 14px; margin-top: 8px; }
+    .uretim-sure span { color: var(--muted); font-weight: 500; font-size: 12px; }
+    .yukleniyor { width: 34px; height: 34px; margin: 0 auto; border-radius: 50%; border: 4px solid #e0e7ff; border-top-color: #6366f1; animation: don 0.9s linear infinite; }
+    @keyframes don { to { transform: rotate(360deg); } }
+
+    /* ---------- METRİK / GENEL KARTLAR ---------- */
     div[data-testid="stMetric"] {
-        background-color: #ffffff;
-        border: 1px solid #cbd5e1;
-        padding: 16px;
-        border-radius: 12px;
-        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+        background: #fff; border: 1px solid var(--line); padding: 14px 16px; border-radius: 16px;
+        box-shadow: 0 6px 18px -12px rgba(15,23,42,.3); border-left: 5px solid var(--ac1);
     }
-    div[data-testid="stMetric"] div[data-testid="stMetricValue"] {
-        color: #4f46e5 !important;
+    div[data-testid="stMetric"] div[data-testid="stMetricValue"] { color: #4f46e5 !important; font-weight: 800; }
+    [data-testid="stExpander"] { border: 1px solid var(--line) !important; border-radius: 16px !important; background: #fff !important; overflow: hidden; }
+    [data-testid="stExpander"] summary { font-weight: 700; }
+
+    /* ---------- KENAR ÇUBUĞU ---------- */
+    section[data-testid="stSidebar"] { background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%); border-right: 1px solid var(--line); }
+    .marka { display: flex; align-items: center; gap: 12px; padding: 4px 2px 2px; }
+    .marka-logo {
+        width: 44px; height: 44px; border-radius: 14px; background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        display: flex; align-items: center; justify-content: center; font-size: 22px; box-shadow: 0 10px 20px -8px rgba(99,102,241,.7);
     }
-    h1, h2, h3, h4, h5, h6 {
-        color: #0f172a;
-        font-family: 'Segoe UI', sans-serif;
-    }
-    section[data-testid="stSidebar"] {
-        background-color: #ffffff;
-        border-right: 1px solid #e2e8f0;
-    }
-    section[data-testid="stSidebar"] .stExpander {
-        background-color: #f8fafc !important;
-        border: 1px solid #cbd5e1 !important;
-        border-radius: 10px !important;
-        margin-bottom: 8px !important;
-    }
-    section[data-testid="stSidebar"] .stExpander summary {
-        font-weight: 700 !important;
-        color: #1e293b !important;
-    }
-    div.row-widget.stCheckbox {
-        background-color: #ffffff !important;
-        padding: 10px 14px !important;
-        border-radius: 8px !important;
-        border: 1px solid #cbd5e1 !important;
-        margin-bottom: 8px !important;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.03);
-    }
-    div.row-widget.stCheckbox label p {
-        color: #0f172a !important;
-        font-weight: 600 !important;
-        font-size: 15px !important;
+    .marka b { font-size: 17px; color: var(--ink); display: block; line-height: 1.2; }
+    .marka span { font-size: 12px; color: var(--muted); }
+    section[data-testid="stSidebar"] div[data-baseweb="select"] > div { border-radius: 12px; border-color: var(--line); background: #f8fafc; }
+    section[data-testid="stSidebar"] [data-testid="stExpander"] { box-shadow: 0 6px 16px -12px rgba(15,23,42,.35); margin-bottom: 10px; }
+
+    /* ---------- SEÇİM KUTULARI (ders / ünite): tik yok, seçilince boya ile dolar ---------- */
+    div[data-testid="stCheckbox"] { background: #f8fafc; border: 1.5px solid var(--line); border-radius: 14px; padding: 9px 12px; margin-bottom: 7px; transition: all .18s ease; }
+    div[data-testid="stCheckbox"]:hover { border-color: #a5b4fc; background: #f5f7ff; }
+    div[data-testid="stCheckbox"] label { width: 100%; cursor: pointer; align-items: center; }
+    div[data-testid="stCheckbox"] label p { font-size: 14px !important; font-weight: 600 !important; color: #1e293b !important; margin: 0; }
+    div[data-testid="stCheckbox"] svg { display: none !important; }
+    @supports selector(:has(*)) {
+        div[data-testid="stCheckbox"]:has(input:checked) {
+            background: linear-gradient(135deg, #eef2ff 0%, #f5f3ff 100%); border-color: #6366f1;
+            box-shadow: 0 8px 18px -10px rgba(99,102,241,.6);
+        }
+        div[data-testid="stCheckbox"]:has(input:checked) label p { color: #4338ca !important; }
+        div[data-testid="stCheckbox"] label[data-baseweb="checkbox"] > span:first-child {
+            width: 22px !important; height: 22px !important; border-radius: 8px !important;
+            border: 2px solid #cbd5e1 !important; background: #ffffff !important; background-image: none !important;
+            box-shadow: none !important; transition: all .18s ease;
+        }
+        div[data-testid="stCheckbox"] label[data-baseweb="checkbox"]:has(input:checked) > span:first-child {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6) !important; border-color: transparent !important;
+            box-shadow: 0 5px 12px -3px rgba(99,102,241,.65) !important;
+        }
+        div[data-testid="stCheckbox"] label[data-baseweb="checkbox"] > span:first-child svg,
+        div[data-testid="stCheckbox"] label[data-baseweb="checkbox"] > span:first-child::before,
+        div[data-testid="stCheckbox"] label[data-baseweb="checkbox"] > span:first-child::after {
+            display: none !important; content: none !important;
+        }
     }
 </style>
 """, unsafe_allow_html=True)
+
 
 # --- KALICI GÜNLÜK SAYAC YÖNETİMİ (DOSYA BAZLI) ---
 SAYAC_DOSYASI = "soru_sayac_veritabani.json"
@@ -244,6 +321,8 @@ def ay_evreleri_ciz(ax, etiketler=None, gorsel_tipi=""):
     etiketler = etiketler if isinstance(etiketler, dict) else {}
     hedef = evre_bul(etiketler.get("evre"), gorsel_tipi)
     adlari_goster = _norm(etiketler.get("etiket_goster", "hayir")) in ("evet", "true", "1", "goster")
+    vurgula = str(etiketler.get("vurgula", "")).strip().upper()
+    gorunum = _norm(etiketler.get("gorunum_goster", "hayir")) in ("evet", "true", "1")
 
     # Yalnızca Dünya'dan görünen evre isteniyorsa
     if _norm(etiketler.get("gosterim", "")) == "sadece_evre" and hedef:
@@ -275,7 +354,7 @@ def ay_evreleri_ciz(ax, etiketler=None, gorsel_tipi=""):
         ang = np.radians(180 + p)
         mx, my = ex + R * np.cos(ang), ey + R * np.sin(ang)
         rm = 0.19
-        vurgulu = (key == hedef)
+        vurgulu = bool(vurgula) and (harf == vurgula)
         if vurgulu:
             ax.add_patch(plt.Circle((mx, my), rm + 0.1, fill=False, edgecolor="#f97316",
                                     linewidth=2.2, zorder=4))
@@ -289,7 +368,7 @@ def ay_evreleri_ciz(ax, etiketler=None, gorsel_tipi=""):
                 ha="center", va="center", color="#0f172a", zorder=6)
 
     # Dünya'dan görünüş (soru hangi evreyi soruyorsa o)
-    if hedef:
+    if hedef and gorunum:
         _ay_diski(ax, 5.45, 2.5, 0.55, _AC[hedef])
         ax.text(5.45, 3.35, "Dünya'dan\ngörünüş", fontsize=6, fontweight="bold",
                 ha="center", color="#475569")
@@ -303,7 +382,8 @@ def matplotlib_wedge(mx, my, rm):
                  linewidth=1.0, zorder=6)
 
 # --- GÖRSEL YARDIMCILARI (SORUDAKİ VERİYLE BİREBİR UYUMLU ÇİZİM) ---
-from matplotlib.patches import Rectangle, Arc, Polygon, Wedge
+import textwrap
+from matplotlib.patches import Rectangle, Arc, Polygon, Wedge, FancyBboxPatch
 
 
 def _t(x):
@@ -683,7 +763,159 @@ def _cember_ciz(ax, et):
         ax.text(3.0, 0.3, _t(et["baslik"]), fontsize=9, fontweight='bold', ha='center', color='#475569')
 
 
-# --- DİNAMOMETRE ---
+# --- GRAFİK / TABLO (bağımsız figür: yazılar üst üste binmez) ---
+def _sar(metin, genislik=11):
+    return textwrap.fill(_t(metin), genislik, break_long_words=False, break_on_hyphens=False)
+
+
+def _guzel_adim(ust):
+    for st_ in (0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000):
+        if ust / st_ <= 10:
+            return st_
+    return max(ust / 10, 1)
+
+
+def _fig_png(fig):
+    buf = io.BytesIO()
+    fig.savefig(buf, format='png', bbox_inches='tight', dpi=180, transparent=True, pad_inches=0.12)
+    buf.seek(0)
+    img = base64.b64encode(buf.read()).decode('utf-8')
+    plt.close(fig)
+    return f"data:image/png;base64,{img}"
+
+
+def _grafik_fig(tip, et):
+    kat = [_t(x) for x in liste_cek(et.get("kategoriler") if et.get("kategoriler") is not None else et.get("x_etiketler"))]
+    deg = [sayi_cek(x, 0.0) for x in liste_cek(et.get("degerler"))]
+    if not deg:
+        kat = [_t(et.get(k)) for k in ("X1", "X2", "X3") if et.get(k)]
+        deg = [3.0, 5.0, 2.0][:len(kat)] if kat else []
+    if not deg:
+        kat, deg = ["A", "B", "C"], [3.0, 5.0, 2.0]
+    if not kat:
+        kat = [str(i + 1) for i in range(len(deg))]
+    n = min(len(kat), len(deg), 10)
+    kat, deg = kat[:n], deg[:n]
+    deg2 = [sayi_cek(x, 0.0) for x in liste_cek(et.get("degerler2"))][:n]
+    tur = _norm(et.get("tur", ""))
+    if not tur:
+        tur = "cizgi" if "cizgi" in tip else ("daire" if ("daire" in tip or "pasta" in tip) else "sutun")
+    goster = _norm(et.get("deger_goster", "hayir")) in ("evet", "true", "1")
+    baslik = _t(et.get("baslik", ""))
+    s1, s2 = _t(et.get("seri1_adi", "")), _t(et.get("seri2_adi", ""))
+    PAL = ['#38bdf8', '#f97316', '#a855f7', '#22c55e', '#ef4444', '#eab308', '#14b8a6', '#6366f1', '#ec4899', '#84cc16']
+
+    if tur in ("daire", "pasta"):
+        fig, ax = plt.subplots(figsize=(5.4, 3.5), constrained_layout=True)
+        ax.set_aspect('equal')
+        dilimler, _, *oto = ax.pie(
+            [max(d, 0) for d in deg], colors=PAL[:n], startangle=90, counterclock=False,
+            wedgeprops={'edgecolor': 'white', 'linewidth': 2},
+            autopct=(lambda p: f"{p * sum(deg) / 100:g}") if goster else None, pctdistance=0.72,
+            textprops={'fontsize': 10, 'fontweight': 'bold', 'color': '#0f172a'})
+        ax.legend(dilimler, [_sar(k, 16) for k in kat], loc='center left', bbox_to_anchor=(1.02, 0.5),
+                  frameon=False, fontsize=10, handlelength=1.2)
+        if baslik:
+            ax.set_title(_sar(baslik, 36), fontsize=11, fontweight='bold', pad=10)
+        return _fig_png(fig)
+
+    gen = min(7.4, max(4.6, 0.85 * n + 2.4))
+    fig, ax = plt.subplots(figsize=(gen, 3.6), constrained_layout=True)
+    ust = max(deg + (deg2 or [0.0]))
+    adim = _guzel_adim(ust if ust > 0 else 1)
+    ymax = (np.floor(ust / adim) + 1) * adim
+    ax.set_ylim(0, ymax)
+    ax.set_yticks(np.arange(0, ymax + adim / 2, adim))
+    ax.tick_params(axis='y', labelsize=9)
+    ax.spines[['top', 'right']].set_visible(False)
+    ax.set_axisbelow(True)
+    ax.grid(axis='y', color='#e2e8f0', linewidth=0.9)
+    xs = np.arange(n)
+    if tur == "cizgi":
+        ax.plot(xs, deg, marker='o', color='#2563eb', linewidth=2.4, markersize=6, label=s1 or None)
+        if deg2:
+            ax.plot(xs, deg2, marker='s', color='#f97316', linewidth=2.4, markersize=6, label=s2 or None)
+        if goster:
+            for x, d in zip(xs, deg):
+                ax.annotate(f"{d:g}", (x, d), textcoords="offset points", xytext=(0, 7), ha='center', fontsize=9, fontweight='bold')
+        ax.set_xlim(-0.5, n - 0.5)
+    else:
+        if deg2:
+            bw = 0.36
+            g = [(ax.bar(xs - bw / 2, deg, bw, color='#38bdf8', ec='#0f172a', linewidth=1.2, label=s1 or None), deg),
+                 (ax.bar(xs + bw / 2, deg2, bw, color='#f97316', ec='#0f172a', linewidth=1.2, label=s2 or None), deg2)]
+        else:
+            g = [(ax.bar(xs, deg, 0.58, color=PAL[:n], ec='#0f172a', linewidth=1.2), deg)]
+        if goster:
+            for bars, vals in g:
+                for b, d in zip(bars, vals):
+                    ax.text(b.get_x() + b.get_width() / 2, d + adim * 0.08, f"{d:g}", ha='center', va='bottom', fontsize=9, fontweight='bold')
+    ax.set_xticks(xs)
+    uzun = max(len(k) for k in kat)
+    dondur = 28 if (n > 8 or (n > 6 and uzun > 10)) else 0
+    ax.set_xticklabels([_sar(k, 12) for k in kat], fontsize=9.5 if n <= 6 else 8.5,
+                       rotation=dondur, ha='right' if dondur else 'center', rotation_mode='anchor')
+    if et.get("y_baslik"):
+        ax.set_ylabel(_sar(et["y_baslik"], 22), fontsize=9.5, fontweight='bold')
+    if et.get("x_baslik"):
+        ax.set_xlabel(_sar(et["x_baslik"], 40), fontsize=9.5, fontweight='bold')
+    if baslik:
+        ax.set_title(_sar(baslik, 44), fontsize=11, fontweight='bold', pad=10)
+    if s1 or s2:
+        ax.legend(loc='upper left', bbox_to_anchor=(1.01, 1.0), frameon=False, fontsize=9.5)
+    return _fig_png(fig)
+
+
+def _tablo_fig(et):
+    sut = [_t(x) for x in liste_cek(et.get("sutunlar"))]
+    sat = et.get("satirlar")
+    satirlar = []
+    if isinstance(sat, list):
+        for r in sat:
+            satirlar.append([_t(c) for c in (r if isinstance(r, (list, tuple)) else liste_cek(r))])
+    elif isinstance(sat, str):
+        satirlar = [[_t(c) for c in liste_cek(r)] for r in re.split(r'[;|]', sat) if r.strip()]
+    if not satirlar and et.get("kategoriler") is not None and et.get("degerler") is not None:
+        kat, deg = liste_cek(et["kategoriler"]), liste_cek(et["degerler"])
+        satirlar = [[_t(k), _t(d)] for k, d in zip(kat, deg)]
+        sut = sut or [_t(et.get("kategori_baslik", "Kategori")), _t(et.get("deger_baslik", "Değer"))]
+    if not satirlar:
+        return None
+    satirlar = satirlar[:10]
+    m = max(len(r) for r in satirlar + ([sut] if sut else []))
+    satirlar = [[_sar(c, 16) for c in (r + [""] * (m - len(r)))] for r in satirlar]
+    sut = [_sar(c, 16) for c in (sut + [""] * (m - len(sut)))] if sut else None
+    baslik = _t(et.get("baslik", ""))
+    satir_say = len(satirlar) + (1 if sut else 0)
+    fig, ax = plt.subplots(figsize=(min(7.4, max(3.6, 1.5 * m + 0.8)), 0.55 * satir_say + (0.7 if baslik else 0.25)),
+                           constrained_layout=True)
+    ax.axis('off')
+    tbl = ax.table(cellText=satirlar, colLabels=sut, loc='center', cellLoc='center', bbox=[0, 0, 1, 1])
+    tbl.auto_set_font_size(False)
+    tbl.set_fontsize(11)
+    for (r, c), cell in tbl.get_celld().items():
+        cell.set_edgecolor('#94a3b8')
+        cell.set_linewidth(1.1)
+        cell.set_text_props(color='#0f172a')
+        if sut and r == 0:
+            cell.set_facecolor('#e0e7ff')
+            cell.set_text_props(fontweight='bold', color='#312e81')
+        elif (r % 2 == 0):
+            cell.set_facecolor('#f8fafc')
+        if c == 0 and not (sut and r == 0):
+            cell.set_text_props(fontweight='bold')
+    if baslik:
+        ax.set_title(_sar(baslik, 44), fontsize=11, fontweight='bold', pad=8)
+    return _fig_png(fig)
+
+
+def _serbest_ciz(tip, et):
+    if "tablo" in tip:
+        return _tablo_fig(et)
+    return _grafik_fig(tip, et)
+
+
+# --- DİNAMOMETRE (yeniden tasarım) ---
 def _guzel_maks(v):
     for m in (5, 10, 20, 25, 50, 100, 200, 500):
         if v <= m:
@@ -691,40 +923,49 @@ def _guzel_maks(v):
     return float(np.ceil(v / 100) * 100)
 
 
-def _dinamometre_tek(ax, cx, kuvvet, maks, ad="", yuk="", w=0.8, kucuk=False, deger_yaz=False):
-    ust, alt = 4.25, 1.85
-    fs = 6 if kucuk else 7
-    ax.add_patch(plt.Circle((cx, 4.65), 0.14, fill=False, ec='#475569', linewidth=2.5))
-    ax.plot([cx, cx], [4.51, ust], color='#475569', linewidth=3)
-    ax.add_patch(Rectangle((cx - w / 2, alt), w, ust - alt, fc='#f1f5f9', ec='#0f172a', linewidth=2, zorder=2))
-    s0, s1 = ust - 0.25, alt + 0.25
+def _dinamometre_tek(ax, cx, kuvvet, maks, ad="", yuk="", n=1, deger_yaz=False):
+    w = 1.3 if n == 1 else 1.18
+    ust, alt = 4.5, 1.9
+    kuvvet = min(max(kuvvet, 0.0), maks)
+    # asma halkası + gövde
+    ax.add_patch(plt.Circle((cx, 4.78), 0.15, fill=False, ec='#475569', linewidth=2.4, zorder=2))
+    ax.plot([cx, cx], [4.63, ust], color='#475569', linewidth=2.6, zorder=2)
+    ax.add_patch(FancyBboxPatch((cx - w / 2, alt), w, ust - alt, boxstyle="round,pad=0,rounding_size=0.12",
+                                fc='#e2e8f0', ec='#0f172a', linewidth=2.2, zorder=2))
+    px0, px1 = cx - w / 2 + 0.09, cx + w / 2 - 0.09
+    ax.add_patch(Rectangle((px0, alt + 0.1), px1 - px0, ust - alt - 0.2, fc='#ffffff', ec='#94a3b8', linewidth=1.2, zorder=3))
+    s0, s1 = ust - 0.32, alt + 0.3
 
     def yv(v):
         return s0 - (v / maks) * (s0 - s1)
-    step = 1.0 if maks <= 10 else maks / 10
-    ticks = np.arange(0, maks + 1e-9, step)
-    for v in ticks:
-        ax.plot([cx + w / 2 - 0.2, cx + w / 2], [yv(v), yv(v)], color='#0f172a', linewidth=1.3, zorder=3)
-        ax.text(cx + w / 2 + 0.07, yv(v), f"{v:g}", fontsize=fs, va='center', ha='left', color='#0f172a', zorder=3)
-        if v + step / 2 <= maks + 1e-9:
-            ax.plot([cx + w / 2 - 0.1, cx + w / 2], [yv(v + step / 2)] * 2, color='#0f172a', linewidth=0.9, zorder=3)
-    ax.text(cx + w / 2 + 0.07, ust - 0.03, "N", fontsize=fs + 1, fontweight='bold', color='#dc2626', va='center')
-    kuvvet = min(max(kuvvet, 0), maks)
+    adim = 1.0 if maks <= 10 else maks / 10.0
+    for v in np.arange(0, maks + 1e-9, adim):
+        ax.plot([px0, px0 + 0.16], [yv(v), yv(v)], color='#0f172a', linewidth=1.4, zorder=4)
+        ax.text(px0 + 0.21, yv(v), f"{v:g}", fontsize=7.5, va='center', ha='left', color='#0f172a', zorder=4)
+        if v + adim / 2 <= maks + 1e-9:
+            ax.plot([px0, px0 + 0.08], [yv(v + adim / 2)] * 2, color='#0f172a', linewidth=0.9, zorder=4)
+    ax.text(px1 - 0.03, ust - 0.2, "N", fontsize=9, fontweight='bold', color='#dc2626', ha='right', va='center', zorder=4)
+    # kılavuz yuva
+    ax.add_patch(Rectangle((cx - 0.045, yv(maks) - 0.06), 0.09, (yv(0) - yv(maks)) + 0.12, fc='#cbd5e1', ec='none', zorder=3))
+    # ibre + çubuk + kanca
     yp = yv(kuvvet)
-    m = 17
-    ys = np.linspace(ust - 0.03, yp, m)
-    xs = (cx - w * 0.2) + 0.08 * np.where(np.arange(m) % 2 == 0, 1, -1)
-    ax.plot(xs, ys, color='#f97316', linewidth=1.8, zorder=3)
-    ax.plot([cx - w / 2 + 0.03, cx + w / 2 - 0.03], [yp, yp], color='#dc2626', linewidth=2.4, zorder=4)
-    if deger_yaz:
-        ax.text(cx - w / 2 - 0.07, yp, f"{kuvvet:g} N", fontsize=fs + 1, fontweight='bold', color='#dc2626',
-                ha='right', va='center')
-    ax.plot([cx, cx], [alt, 1.3], color='#475569', linewidth=2.5)
-    bw = 0.8 if kucuk else 0.95
-    ax.add_patch(Rectangle((cx - bw / 2, 0.5), bw, 0.8, fc='#cbd5e1', ec='#0f172a', linewidth=2, zorder=3))
-    ax.text(cx, 0.9, _t(yuk) or "Yük", fontsize=fs + 1, fontweight='bold', ha='center', va='center', color='#0f172a', zorder=4)
+    ext = 0.1 + 0.3 * (kuvvet / maks)
+    uc = alt - ext
+    ax.plot([cx, cx], [yp, uc], color='#64748b', linewidth=3, zorder=4, solid_capstyle='butt')
+    ax.plot([px0 + 0.02, cx - 0.09], [yp, yp], color='#dc2626', linewidth=1.2, zorder=3.5, alpha=0.9)
+    ax.plot([cx - 0.09, px1 - 0.02], [yp, yp], color='#dc2626', linewidth=3.2, zorder=5, solid_capstyle='round')
+    ax.add_patch(plt.Circle((cx, uc - 0.08), 0.08, fill=False, ec='#475569', linewidth=2, zorder=4))
+    ip_ust = uc - 0.16
+    bw, bh = (0.92, 0.6) if n == 1 else (0.8, 0.54)
+    ax.plot([cx, cx], [ip_ust, ip_ust - 0.2], color='#475569', linewidth=2, zorder=4)
+    wy = ip_ust - 0.2 - bh
+    ax.add_patch(Rectangle((cx - bw / 2, wy), bw, bh, fc='#cbd5e1', ec='#0f172a', linewidth=2, zorder=4))
+    ax.text(cx, wy + bh / 2, _t(yuk) or "Yük", fontsize=8.5 if n == 1 else 8, fontweight='bold', ha='center', va='center', color='#0f172a', zorder=5)
     if ad:
-        ax.text(cx, 0.22, _t(ad), fontsize=10, fontweight='bold', ha='center', color='#0f172a')
+        ax.text(cx, max(wy - 0.22, 0.2), _t(ad), fontsize=12, fontweight='bold', ha='center', va='center', color='#0f172a')
+    if deger_yaz:
+        ax.text(cx + w / 2 + 0.1, yp, f"{kuvvet:g} N", fontsize=9, fontweight='bold', color='#dc2626', ha='left', va='center',
+                bbox=dict(boxstyle='round,pad=0.2', fc='white', ec='#fca5a5', lw=1), zorder=6)
 
 
 def _dinamometre_ciz(ax, et):
@@ -739,8 +980,8 @@ def _dinamometre_ciz(ax, et):
     merkezler = {1: [3.0], 2: [1.9, 4.1], 3: [1.0, 3.0, 5.0]}[n]
     for i, (cx, kv) in enumerate(zip(merkezler, ks)):
         _dinamometre_tek(ax, cx, kv, maks, isimler[i] if i < len(isimler) else "",
-                         yukler[i] if i < len(yukler) else "", w=0.8 if n == 1 else 0.7,
-                         kucuk=n > 1, deger_yaz=deger_yaz)
+                         yukler[i] if i < len(yukler) else "", n=n, deger_yaz=deger_yaz)
+
 
 
 def _surtunme_ciz(ax, et):
@@ -774,107 +1015,6 @@ def _surtunme_ciz(ax, et):
     if _norm(et.get("surtunme_goster", "evet")) not in ("hayir", "false", "0"):
         ax.annotate("", xy=(0.45, zy + 0.12), xytext=(0.9, zy + 0.12), arrowprops=dict(arrowstyle='->', color='#dc2626', lw=2.2))
         ax.text(0.62, zy + 0.32, "Sürtünme", fontsize=7.5, fontweight='bold', color='#dc2626', ha='center')
-
-
-# --- GRAFİK / TABLO ---
-_PALET = ['#38bdf8', '#f97316', '#a855f7', '#22c55e', '#ef4444', '#eab308', '#14b8a6', '#6366f1']
-
-
-def _grafik_ciz(ax, tip, et):
-    kat = [_t(x) for x in liste_cek(et.get("kategoriler") if et.get("kategoriler") is not None else et.get("x_etiketler"))]
-    deg = [sayi_cek(x, 0.0) for x in liste_cek(et.get("degerler"))]
-    if not deg:
-        kat = [_t(et.get(k)) for k in ("X1", "X2", "X3") if et.get(k)]
-        deg = [3.0, 5.0, 2.0][:len(kat)] if kat else []
-    if not deg:
-        kat, deg = ["A", "B", "C"], [3.0, 5.0, 2.0]
-    if not kat:
-        kat = [str(i + 1) for i in range(len(deg))]
-    n = min(len(kat), len(deg))
-    kat, deg = kat[:n], deg[:n]
-    deg2 = [sayi_cek(x, 0.0) for x in liste_cek(et.get("degerler2"))][:n]
-    tur = _norm(et.get("tur", ""))
-    if not tur:
-        tur = "cizgi" if "cizgi" in tip else ("daire" if ("daire" in tip or "pasta" in tip) else "sutun")
-    goster = _norm(et.get("deger_goster", "evet")) not in ("hayir", "false", "0")
-    baslik = _t(et.get("baslik", ""))
-    if baslik:
-        ax.text(0.5, 0.97, baslik, fontsize=9, fontweight='bold', ha='center', va='top', color='#0f172a', transform=ax.transAxes)
-
-    if tur in ("daire", "pasta"):
-        iax = ax.inset_axes([0.22, 0.02, 0.56, 0.8])
-        etik = [f"{k} ({d:g})" if goster else k for k, d in zip(kat, deg)]
-        iax.pie(deg, labels=etik, colors=[_PALET[i % len(_PALET)] for i in range(n)],
-                textprops={'fontsize': 8, 'fontweight': 'bold'}, wedgeprops={'edgecolor': 'white', 'linewidth': 1.5})
-        return
-
-    iax = ax.inset_axes([0.15, 0.2, 0.8, 0.6])
-    iax.spines[['top', 'right']].set_visible(False)
-    iax.set_axisbelow(True)
-    iax.grid(axis='y', color='#e2e8f0', linewidth=0.8)
-    iax.tick_params(labelsize=7)
-    xs = np.arange(n)
-    ust = max(deg + (deg2 or [0]))
-    iax.set_ylim(0, ust * 1.22 if ust > 0 else 1)
-    if tur == "cizgi":
-        iax.plot(xs, deg, marker='o', color='#2563eb', linewidth=2.2, label=_t(et.get("seri1_adi", "")) or None)
-        if deg2:
-            iax.plot(xs, deg2, marker='s', color='#f97316', linewidth=2.2, label=_t(et.get("seri2_adi", "")) or None)
-        if goster:
-            for x, d in zip(xs, deg):
-                iax.annotate(f"{d:g}", (x, d), textcoords="offset points", xytext=(0, 5), ha='center', fontsize=7, fontweight='bold')
-    else:
-        if deg2:
-            bw = 0.38
-            b1 = iax.bar(xs - bw / 2, deg, bw, color='#38bdf8', ec='#0f172a', linewidth=1.2, label=_t(et.get("seri1_adi", "")) or None)
-            b2 = iax.bar(xs + bw / 2, deg2, bw, color='#f97316', ec='#0f172a', linewidth=1.2, label=_t(et.get("seri2_adi", "")) or None)
-            gruplar = [(b1, deg), (b2, deg2)]
-        else:
-            b1 = iax.bar(xs, deg, 0.6, color=[_PALET[i % len(_PALET)] for i in range(n)], ec='#0f172a', linewidth=1.2)
-            gruplar = [(b1, deg)]
-        if goster:
-            for bars, vals in gruplar:
-                for b, d in zip(bars, vals):
-                    iax.text(b.get_x() + b.get_width() / 2, d + ust * 0.02, f"{d:g}", ha='center', va='bottom', fontsize=7, fontweight='bold')
-    iax.set_xticks(xs)
-    iax.set_xticklabels(kat, fontsize=7, rotation=0 if max(len(k) for k in kat) <= 8 else 30)
-    if et.get("y_baslik"):
-        iax.set_ylabel(_t(et["y_baslik"]), fontsize=7)
-    if et.get("seri1_adi") or et.get("seri2_adi"):
-        iax.legend(fontsize=7, frameon=False, loc='upper right')
-
-
-def _tablo_ciz(ax, et):
-    sut = [_t(x) for x in liste_cek(et.get("sutunlar"))]
-    sat = et.get("satirlar")
-    satirlar = []
-    if isinstance(sat, list):
-        for r in sat:
-            satirlar.append([_t(c) for c in (r if isinstance(r, (list, tuple)) else liste_cek(r))])
-    elif isinstance(sat, str):
-        satirlar = [[_t(c) for c in liste_cek(r)] for r in re.split(r'[;|]', sat) if r.strip()]
-    if not satirlar and et.get("kategoriler") is not None and et.get("degerler") is not None:
-        kat, deg = liste_cek(et["kategoriler"]), liste_cek(et["degerler"])
-        satirlar = [[_t(k), _t(d)] for k, d in zip(kat, deg)]
-        sut = sut or [_t(et.get("kategori_baslik", "Kategori")), _t(et.get("deger_baslik", "Değer"))]
-    if not satirlar:
-        return False
-    m = max(len(r) for r in satirlar + ([sut] if sut else []))
-    satirlar = [r + [""] * (m - len(r)) for r in satirlar]
-    sut = (sut + [""] * (m - len(sut))) if sut else None
-    baslik = _t(et.get("baslik", ""))
-    if baslik:
-        ax.text(0.5, 0.97, baslik, fontsize=9, fontweight='bold', ha='center', va='top', transform=ax.transAxes)
-    tbl = ax.table(cellText=satirlar, colLabels=sut, loc='center', cellLoc='center', bbox=[0.04, 0.1, 0.92, 0.72])
-    tbl.auto_set_font_size(False)
-    tbl.set_fontsize(10)
-    for (r, c), cell in tbl.get_celld().items():
-        cell.set_edgecolor('#0f172a')
-        cell.set_linewidth(1.2)
-        if sut and r == 0:
-            cell.set_facecolor('#e0e7ff')
-            cell.set_text_props(fontweight='bold')
-    return True
 
 
 # --- BASINÇ ---
@@ -940,12 +1080,327 @@ def _basinc_sivi(ax, et):
             ax.text(cx - 0.1, (yp + seviye) / 2, _t(et["h"]), fontsize=9, fontweight='bold', color='#dc2626', ha='right', va='center', zorder=5)
 
 
+# --- EK GÖRSEL TİPLERİ: MEVSİM, DNA, ÇAPRAZLAMA, DİRENÇ, BASİT MAKİNELER ---
+import itertools
+
+
+def _mevsim_ciz(ax, et):
+    gx, gy, a, b = 3.0, 2.5, 2.05, 1.4
+    th = np.linspace(0, 2 * np.pi, 200)
+    ax.plot(gx + a * np.cos(th), gy + b * np.sin(th), color='#94a3b8', linestyle='--', linewidth=1.2)
+    ax.add_patch(plt.Circle((gx, gy), 0.42, color='#f59e0b', ec='#d97706', linewidth=2, zorder=2))
+    ax.text(gx, gy, _t(et.get("G", "Güneş")), fontsize=6, fontweight='bold', color='#ffffff', ha='center', va='center', zorder=3)
+    # (anahtar, yörünge açısı, tarih, kuzey yarımküre mevsimi) - Dünya saat yönünün tersine döner
+    KON = [("haziran", 180, "21 Haziran", "Yaz"), ("eylul", 270, "23 Eylül", "Sonbahar"),
+           ("aralik", 0, "21 Aralık", "Kış"), ("mart", 90, "21 Mart", "İlkbahar")]
+    harf = {"haziran": "K", "eylul": "L", "aralik": "M", "mart": "N"}
+    vurgu = _norm(et.get("vurgula", ""))
+    tarih = _norm(et.get("tarih_goster", "hayir")) in ("evet", "true", "1")
+    mevsim = _norm(et.get("mevsim_goster", "hayir")) in ("evet", "true", "1")
+    tilt = np.radians(23.5)
+    ux, uy = np.sin(tilt), np.cos(tilt)
+    r = 0.3
+    for key, ang, tr, mv in KON:
+        t = np.radians(ang)
+        ex, ey = gx + a * np.cos(t), gy + b * np.sin(t)
+        ad = _t(et.get(key, harf[key]))
+        if vurgu == key:
+            ax.add_patch(plt.Circle((ex, ey), r + 0.13, fill=False, ec='#f97316', linewidth=2.4, zorder=3))
+        ax.add_patch(plt.Circle((ex, ey), r, fc='#1e3a5f', ec='#0f172a', linewidth=1.4, zorder=4))
+        gd = np.degrees(np.arctan2(gy - ey, gx - ex))
+        ax.add_patch(Wedge((ex, ey), r, gd - 90, gd + 90, fc='#7dd3fc', ec='#0f172a', linewidth=1.0, zorder=5))
+        ax.plot([ex - ux * (r + 0.2), ex + ux * (r + 0.2)], [ey - uy * (r + 0.2), ey + uy * (r + 0.2)],
+                color='#dc2626', linewidth=1.8, zorder=6)
+        ax.plot(ex + ux * (r + 0.2), ey + uy * (r + 0.2), 'o', color='#dc2626', ms=3.5, zorder=7)
+        d = np.array([ex - gx, ey - gy])
+        d = d / np.linalg.norm(d)
+        lx, ly = ex + d[0] * (r + 0.55), ey + d[1] * (r + 0.5)
+        metin = ad
+        if tarih:
+            metin += f"\n{tr}"
+        if mevsim:
+            metin += f"\n{mv}"
+        ax.text(lx, ly, metin, fontsize=9 if metin == ad else 7, fontweight='bold', ha='center', va='center', color='#0f172a', zorder=8)
+    ax.text(0.15, 0.2, "Kırmızı çubuk: Dünya'nın eksen eğikliği (kuzey ucu noktalı)", fontsize=5.5, color='#64748b', va='center')
+
+
+def _dna_ciz(ax, et):
+    dizi = re.sub(r'[^ATGC]', '', str(et.get("baz_dizisi", "ATGCCTAG")).upper())[:10] or "ATGCCTAG"
+    n = len(dizi)
+    comp = {'A': 'T', 'T': 'A', 'G': 'C', 'C': 'G'}
+    renk = {'A': '#ef4444', 'T': '#3b82f6', 'G': '#22c55e', 'C': '#f59e0b'}
+    gizle = _norm(et.get("gizle", "")) in ("tamamlayici", "ikinci_zincir", "evet")
+    xs = np.linspace(0.9, 5.1, n)
+    xx = np.linspace(0.5, 5.5, 300)
+    dalga = 0.14 * np.sin(2 * np.pi * (xx - 0.5) / 1.7)
+    ax.plot(xx, 3.35 + dalga, color='#64748b', linewidth=3.5, solid_capstyle='round', zorder=2)
+    ax.plot(xx, 1.65 - dalga, color='#64748b', linewidth=3.5, solid_capstyle='round', zorder=2)
+    for x, b in zip(xs, dizi):
+        yt = 3.35 + 0.14 * np.sin(2 * np.pi * (x - 0.5) / 1.7)
+        yb = 1.65 - 0.14 * np.sin(2 * np.pi * (x - 0.5) / 1.7)
+        ym = (yt + yb) / 2
+        c2 = comp[b]
+        ax.plot([x, x], [yt, ym], color=renk[b], linewidth=3.2, zorder=3)
+        ax.plot([x, x], [ym, yb], color='#cbd5e1' if gizle else renk[c2], linewidth=3.2, zorder=3)
+        ax.add_patch(plt.Circle((x, yt), 0.17, fc=renk[b], ec='#0f172a', linewidth=1.2, zorder=4))
+        ax.text(x, yt, b, fontsize=8, fontweight='bold', color='#ffffff', ha='center', va='center', zorder=5)
+        ax.add_patch(plt.Circle((x, yb), 0.17, fc='#e2e8f0' if gizle else renk[c2], ec='#0f172a', linewidth=1.2, zorder=4))
+        ax.text(x, yb, "?" if gizle else c2, fontsize=8, fontweight='bold', color='#0f172a' if gizle else '#ffffff',
+                ha='center', va='center', zorder=5)
+    if et.get("baslik"):
+        ax.text(3.0, 0.6, _t(et["baslik"]), fontsize=9, fontweight='bold', ha='center', color='#475569')
+
+
+def _caprazlama_ciz(ax, et):
+    e1 = re.sub(r'[^A-Za-z]', '', str(et.get("ebeveyn1", "Aa")))
+    e2 = re.sub(r'[^A-Za-z]', '', str(et.get("ebeveyn2", "Aa")))
+    if len(e1) < 2 or len(e1) % 2 or len(e1) != len(e2) or len(e1) > 4:
+        e1, e2 = "Aa", "Aa"
+    p1 = [e1[i:i + 2] for i in range(0, len(e1), 2)]
+    p2 = [e2[i:i + 2] for i in range(0, len(e2), 2)]
+    g1 = [''.join(c) for c in itertools.product(*p1)]
+    g2 = [''.join(c) for c in itertools.product(*p2)]
+    goster = _norm(et.get("hucreleri_goster", "hayir")) in ("evet", "true", "1")
+    n1, n2 = len(g2), len(g1)
+    cw = min(0.95, 3.6 / n1)
+    ch = min(0.7, 2.8 / n2)
+    x0, y0 = 1.6, 3.9 - ch
+    ax.text(x0 - 0.12, y0 - (n2 * ch) / 2, _t(et.get("ad1", e1)), fontsize=10, fontweight='bold', ha='right', va='center', color='#4f46e5')
+    ax.text(x0 + 0.5 + cw * n1 / 2, y0 + ch * 0.6 + 0.12, _t(et.get("ad2", e2)), fontsize=10, fontweight='bold', ha='center', va='bottom', color='#db2777')
+    for j, g in enumerate(g2):
+        ax.add_patch(Rectangle((x0 + 0.5 + j * cw, y0 + ch * 0.0 + 0.0), cw, ch * 0.6, fc='#fce7f3', ec='#0f172a', linewidth=1.2))
+        ax.text(x0 + 0.5 + (j + 0.5) * cw, y0 + ch * 0.3, g, fontsize=8, fontweight='bold', ha='center', va='center')
+    top = y0
+    for i, g in enumerate(g1):
+        yy = top - (i + 1) * ch
+        ax.add_patch(Rectangle((x0, yy), 0.5, ch, fc='#e0e7ff', ec='#0f172a', linewidth=1.2))
+        ax.text(x0 + 0.25, yy + ch / 2, g, fontsize=8, fontweight='bold', ha='center', va='center')
+        for j, h in enumerate(g2):
+            gen = []
+            for k in range(len(p1)):
+                ik = g[k] + h[k]
+                gen.append(''.join(sorted(ik, key=lambda c: (c.islower(), c))))
+            ax.add_patch(Rectangle((x0 + 0.5 + j * cw, yy), cw, ch, fc='#ffffff', ec='#0f172a', linewidth=1.2))
+            ax.text(x0 + 0.5 + (j + 0.5) * cw, yy + ch / 2, ''.join(gen) if goster else "", fontsize=9, fontweight='bold',
+                    ha='center', va='center', color='#0f172a')
+
+
+def _direnc_ciz(ax, et):
+    su = _norm(et.get("ortam", "hava")) == "su"
+    isim = liste_cek(et.get("isimler")) or ["K", "L"]
+    alan = liste_cek(et.get("alanlar")) or ["genis", "dar"]
+    n = max(1, min(len(alan), 3))
+    isim = (isim + ["K", "L", "M"])[:n]
+    sozlu = {"genis": 1.5, "buyuk": 1.5, "orta": 1.0, "dar": 0.6, "kucuk": 0.6}
+    ham = []
+    for a in alan[:n]:
+        v = olcu_cek(a)
+        ham.append(v if v is not None else sozlu.get(_norm(a), 1.0))
+    mx = max(ham)
+    w = [max(0.45, 1.5 * h / mx) if all(olcu_cek(a) is not None for a in alan[:n]) else h for h, a in zip(ham, alan[:n])]
+    parasut = _norm(et.get("sekil", "levha")) == "parasut"
+    if su:
+        ax.add_patch(Rectangle((0.2, 0.3), 5.6, 4.3, fc='#e0f2fe', ec='#38bdf8', linewidth=1.5, zorder=0))
+        for y in (1.0, 2.0, 3.0, 4.0):
+            xs = np.linspace(0.3, 5.7, 60)
+            ax.plot(xs, y + 0.05 * np.sin(xs * 6), color='#7dd3fc', linewidth=1, zorder=0)
+    merkez = {1: [3.0], 2: [1.8, 4.2], 3: [1.1, 3.0, 4.9]}[n]
+    kg = _norm(et.get("kuvvet_goster", "hayir")) in ("evet", "true", "1")
+    for cx, wi, ad in zip(merkez, w, isim):
+        yc = 3.0
+        if parasut:
+            ax.add_patch(Wedge((cx, yc + 0.2), wi / 2 + 0.2, 0, 180, fc='#fbbf24', ec='#0f172a', linewidth=1.8, zorder=3))
+            ax.plot([cx - wi / 2 - 0.2, cx], [yc + 0.2, yc - 0.45], color='#0f172a', linewidth=1, zorder=3)
+            ax.plot([cx + wi / 2 + 0.2, cx], [yc + 0.2, yc - 0.45], color='#0f172a', linewidth=1, zorder=3)
+            ax.add_patch(Rectangle((cx - 0.17, yc - 0.75), 0.34, 0.3, fc='#cbd5e1', ec='#0f172a', linewidth=1.5, zorder=4))
+            ymid = yc - 0.3
+        else:
+            ax.add_patch(Rectangle((cx - wi / 2, yc), wi, 0.16, fc='#cbd5e1', ec='#0f172a', linewidth=1.8, zorder=3))
+            ymid = yc + 0.08
+        if kg:
+            ax.annotate("", xy=(cx, ymid - 1.0), xytext=(cx, ymid), arrowprops=dict(arrowstyle='->', color='#0f172a', lw=2.2), zorder=6)
+            ax.text(cx + 0.1, ymid - 0.75, "G", fontsize=9, fontweight='bold', va='center')
+            rl = 0.35 + 0.65 * (wi / 1.5)
+            ax.annotate("", xy=(cx, ymid + rl + (0.35 if parasut else 0.0)), xytext=(cx, ymid),
+                        arrowprops=dict(arrowstyle='->', color='#dc2626', lw=2.2), zorder=6)
+            ax.text(cx + 0.1, ymid + rl * 0.5 + (0.2 if parasut else 0.0), "R", fontsize=9, fontweight='bold', color='#dc2626', va='center')
+        ax.text(cx, 1.05, ad, fontsize=11, fontweight='bold', ha='center', color='#0f172a', zorder=6)
+    ax.text(5.7, 4.5, "Su" if su else "Hava", fontsize=8, fontweight='bold', ha='right', color='#0369a1' if su else '#64748b')
+
+
+def _kaldirac_ciz(ax, et):
+    tur = _norm(et.get("tur", "birinci"))
+    ky, yy = olcu_cek(et.get("kuvvet_kolu")), olcu_cek(et.get("yuk_kolu"))
+    ky_var, yy_var = ky is not None, yy is not None
+    ky, yy = ky or 3.0, yy or 1.0
+    if tur.startswith("ucuncu") and not (ky_var and yy_var):
+        ky, yy = 2.0, 4.0
+    L, x0, yb = 4.4, 0.8, 2.3
+    if tur.startswith("ikinci"):
+        yy = min(yy, ky * 0.9)
+        xf, xl, xk = x0, x0 + L * yy / ky, x0 + L
+        kuvvet_yon = "yukari"
+    elif tur.startswith("ucuncu"):
+        ky = min(ky, yy * 0.9)
+        xf, xk, xl = x0, x0 + L * ky / yy, x0 + L
+        kuvvet_yon = "yukari"
+    else:
+        xf, xl, xk = x0 + L * yy / (yy + ky), x0, x0 + L
+        kuvvet_yon = "asagi"
+    ax.add_patch(Rectangle((x0 - 0.1, yb), L + 0.2, 0.14, fc='#d6a65c', ec='#0f172a', linewidth=2, zorder=3))
+    ax.add_patch(Polygon([[xf, yb], [xf - 0.3, yb - 0.6], [xf + 0.3, yb - 0.6]], fc='#94a3b8', ec='#0f172a', linewidth=2, zorder=2))
+    ax.plot([xf - 0.7, xf + 0.7], [yb - 0.6, yb - 0.6], color='#0f172a', linewidth=2.5)
+    ax.text(xf, yb - 0.85, "Destek", fontsize=7.5, fontweight='bold', ha='center', color='#475569')
+    # yük: kirişten sarkan blok
+    ax.plot([xl, xl], [yb, yb - 0.55], color='#475569', linewidth=2)
+    ax.add_patch(Rectangle((xl - 0.28, yb - 1.15), 0.56, 0.6, fc='#cbd5e1', ec='#0f172a', linewidth=2, zorder=3))
+    ax.text(xl, yb - 0.85, _t(et.get("yuk", "Yük")), fontsize=7.5, fontweight='bold', ha='center', va='center', zorder=4)
+    kt = _t(et.get("kuvvet", "F"))
+    if kuvvet_yon == "asagi":
+        ax.annotate("", xy=(xk, yb + 0.14), xytext=(xk, yb + 1.0), arrowprops=dict(arrowstyle='<-', color='#dc2626', lw=2.4), zorder=6)
+        ax.text(xk + 0.12, yb + 0.6, kt, fontsize=9, fontweight='bold', color='#dc2626', va='center')
+    else:
+        ax.annotate("", xy=(xk, yb + 0.16), xytext=(xk, yb - 0.85), arrowprops=dict(arrowstyle='<-', color='#dc2626', lw=2.4), zorder=6)
+        ax.text(xk + 0.12, yb - 0.5, kt, fontsize=9, fontweight='bold', color='#dc2626', va='center')
+
+    def kol(xa, xb, y, metin, renk):
+        ax.annotate("", xy=(xb, y), xytext=(xa, y), arrowprops=dict(arrowstyle='<->', color=renk, lw=1.4))
+        ax.text((xa + xb) / 2, y + 0.12, metin, fontsize=7.5, fontweight='bold', ha='center', color=renk)
+    yk_m = _t(et.get("yuk_kolu")) if yy_var else "Yük kolu"
+    kk_m = _t(et.get("kuvvet_kolu")) if ky_var else "Kuvvet kolu"
+    kol(min(xf, xl), max(xf, xl), 3.5, yk_m, '#475569')
+    kol(min(xf, xk), max(xf, xk), 4.0, kk_m, '#dc2626')
+
+
+def _egik_duzlem_ciz(ax, et):
+    uz, yk, tb = olcu_cek(et.get("uzunluk")), olcu_cek(et.get("yukseklik")), olcu_cek(et.get("taban"))
+    if uz and yk and uz > yk:
+        tb = (uz ** 2 - yk ** 2) ** 0.5
+    elif yk and tb and not uz:
+        uz = (yk ** 2 + tb ** 2) ** 0.5
+    elif uz and tb and tb < uz:
+        yk = (uz ** 2 - tb ** 2) ** 0.5
+    if not (yk and tb):
+        yk, tb = 2.0, 4.0
+    s = min(4.2 / tb, 2.7 / yk)
+    W, H = tb * s, yk * s
+    A = np.array([0.8, 1.0])
+    C = np.array([0.8 + W, 1.0])
+    D = np.array([0.8 + W, 1.0 + H])
+    ax.add_patch(Polygon([A, C, D], fc='#f1f5f9', ec='#0f172a', linewidth=2.2, zorder=2))
+    ax.plot([C[0] - 0.25, C[0] - 0.25, C[0]], [C[1], C[1] + 0.25, C[1] + 0.25], color='#0f172a', linewidth=1.4)
+    u = (D - A) / np.linalg.norm(D - A)
+    nrm = np.array([-u[1], u[0]])
+    p = A + u * np.linalg.norm(D - A) * 0.55
+    bw, bh = 0.7, 0.45
+    blok = [p - u * bw / 2, p + u * bw / 2, p + u * bw / 2 + nrm * bh, p - u * bw / 2 + nrm * bh]
+    ax.add_patch(Polygon(blok, fc='#cbd5e1', ec='#0f172a', linewidth=2, zorder=4))
+    bc = p + nrm * bh / 2
+    ax.annotate("", xy=bc + u * 1.2, xytext=bc, arrowprops=dict(arrowstyle='->', color='#dc2626', lw=2.4), zorder=6)
+    ft = bc + u * 1.3 + nrm * 0.15
+    ax.text(ft[0], ft[1], _t(et.get("kuvvet", "F")), fontsize=10, fontweight='bold', color='#dc2626', zorder=6)
+    ax.annotate("", xy=bc + np.array([0, -0.95]), xytext=bc, arrowprops=dict(arrowstyle='->', color='#0f172a', lw=2.2), zorder=6)
+    ax.text(bc[0] + 0.1, bc[1] - 0.75, _t(et.get("yuk", "G")), fontsize=9, fontweight='bold', zorder=6)
+    m = (A + D) / 2
+    uzt = _t(et.get("uzunluk", ""))
+    if uzt:
+        m2 = A + u * np.linalg.norm(D - A) * 0.2
+        q = m2 + np.array([-u[1], u[0]]) * 0.32
+        ax.text(q[0], q[1], uzt, fontsize=9, fontweight='bold', color='#2563eb', ha='center', va='center', rotation=np.degrees(np.arctan2(u[1], u[0])))
+    ykt = _t(et.get("yukseklik", ""))
+    if ykt:
+        ax.text(D[0] + 0.15, (C[1] + D[1]) / 2, ykt, fontsize=9, fontweight='bold', color='#16a34a', va='center')
+    tbt = _t(et.get("taban", ""))
+    if tbt:
+        ax.text((A[0] + C[0]) / 2, A[1] - 0.25, tbt, fontsize=9, fontweight='bold', color='#475569', ha='center')
+
+
+def _makara_ciz(ax, et):
+    tur = _norm(et.get("tur", "sabit"))
+    yuk, kt = _t(et.get("yuk", "Yük")), _t(et.get("kuvvet", "F"))
+    ax.plot([1.6, 4.4], [4.6, 4.6], color='#0f172a', linewidth=3)
+    for x in np.arange(1.7, 4.4, 0.2):
+        ax.plot([x, x + 0.12], [4.6, 4.75], color='#94a3b8', linewidth=1)
+    r = 0.45
+    if tur.startswith("hareketli"):
+        pc = (3.0, 2.9)
+        ax.plot([2.55, 2.55], [4.6, pc[1]], color='#0f172a', linewidth=1.8)
+        th = np.linspace(np.pi, 2 * np.pi, 40)
+        ax.plot(pc[0] + r * np.cos(th), pc[1] + r * np.sin(th), color='#0f172a', linewidth=1.8)
+        ax.plot([3.45, 3.45], [pc[1], 4.1], color='#0f172a', linewidth=1.8)
+        ax.add_patch(plt.Circle(pc, r, fc='#e2e8f0', ec='#0f172a', linewidth=2, alpha=0.9, zorder=3))
+        ax.plot(*pc, 'ko', ms=4, zorder=4)
+        ax.plot([pc[0], pc[0]], [pc[1], 1.9], color='#475569', linewidth=2)
+        ax.add_patch(Rectangle((2.65, 1.2), 0.7, 0.7, fc='#cbd5e1', ec='#0f172a', linewidth=2, zorder=3))
+        ax.text(3.0, 1.55, yuk, fontsize=8, fontweight='bold', ha='center', va='center', zorder=4)
+        ax.annotate("", xy=(3.45, 4.5), xytext=(3.45, 3.85), arrowprops=dict(arrowstyle='->', color='#dc2626', lw=2.4), zorder=6)
+        ax.text(3.6, 4.15, kt, fontsize=10, fontweight='bold', color='#dc2626', va='center')
+    else:
+        pc = (3.0, 3.7)
+        ax.plot([3.0, 3.0], [4.6, pc[1] + r], color='#0f172a', linewidth=2)
+        ax.add_patch(plt.Circle(pc, r, fc='#e2e8f0', ec='#0f172a', linewidth=2, alpha=0.9, zorder=3))
+        ax.plot(*pc, 'ko', ms=4, zorder=4)
+        ax.plot([2.55, 2.55], [pc[1], 1.9], color='#0f172a', linewidth=1.8)
+        ax.add_patch(Rectangle((2.2, 1.2), 0.7, 0.7, fc='#cbd5e1', ec='#0f172a', linewidth=2, zorder=3))
+        ax.text(2.55, 1.55, yuk, fontsize=8, fontweight='bold', ha='center', va='center', zorder=4)
+        ax.plot([3.45, 3.45], [pc[1], 2.5], color='#0f172a', linewidth=1.8)
+        ax.annotate("", xy=(3.45, 1.7), xytext=(3.45, 2.5), arrowprops=dict(arrowstyle='->', color='#dc2626', lw=2.4), zorder=6)
+        ax.text(3.6, 2.1, kt, fontsize=10, fontweight='bold', color='#dc2626', va='center')
+
+
+def _disli_ciz(ax, et):
+    sayilar = [max(6, min(int(sayi_cek(x, 20)), 60)) for x in liste_cek(et.get("dislerin_sayisi"))][:3] or [20, 40]
+    isimler = (liste_cek(et.get("isimler")) + ["K", "L", "M"])[:len(sayilar)]
+    yonler = liste_cek(et.get("yonler"))
+    dis_goster = _norm(et.get("dis_goster", "evet")) not in ("hayir", "false", "0")
+    s = min(0.06, 5.2 / (2 * sum(sayilar)))
+    yaricap = [n * s for n in sayilar]
+    cx = 0.45 + yaricap[0]
+    cy = 2.5
+    phi_onceki, n_onceki = None, None
+    for i, (n, r, ad) in enumerate(zip(sayilar, yaricap, isimler)):
+        adim = 2 * np.pi / n
+        if i == 0:
+            phi = 0.0
+        else:
+            frac = ((0 - phi_onceki) / n_onceki) % 1
+            tooth = frac < 0.25 or frac > 0.75
+            phi = np.pi + adim / 2 if tooth else np.pi
+        pts = []
+        for k in range(n):
+            a0 = phi + k * adim
+            for da, rr in ((-0.32, 0.88), (-0.2, 1.1), (0.2, 1.1), (0.32, 0.88)):
+                a = a0 + da * adim
+                pts.append((cx + r * rr * np.cos(a), cy + r * rr * np.sin(a)))
+        renk = ['#93c5fd', '#fdba74', '#86efac'][i % 3]
+        ax.add_patch(Polygon(pts, fc=renk, ec='#0f172a', linewidth=1.6, zorder=3))
+        ax.add_patch(plt.Circle((cx, cy), r * 0.13, fc='#ffffff', ec='#0f172a', linewidth=1.2, zorder=4))
+        fs_ad = 9 if r < 0.7 else 11
+        ax.text(cx, cy + r * 0.62, _t(ad), fontsize=fs_ad, fontweight='bold', ha='center', va='center', zorder=5)
+        if dis_goster:
+            ax.text(cx, cy - r * 0.62, f"{n} diş", fontsize=7 if r < 0.7 else 8, fontweight='bold', ha='center', va='center', zorder=5)
+        yon = _norm(yonler[i]) if i < len(yonler) else ("saat" if i == 0 else "")
+        if yon in ("saat", "ters"):
+            ra = min(0.3, r * 0.3)
+            t = np.radians(np.linspace(50, 300, 30)) if yon == "ters" else np.radians(np.linspace(300, 50, 30))
+            px, py = cx + ra * np.cos(t), cy + ra * np.sin(t)
+            ax.plot(px[:-1], py[:-1], color='#dc2626', linewidth=1.8, zorder=6)
+            ax.annotate("", xy=(px[-1], py[-1]), xytext=(px[-3], py[-3]), arrowprops=dict(arrowstyle='->', color='#dc2626', lw=1.8), zorder=6)
+        phi_onceki, n_onceki = phi, n
+        if i + 1 < len(sayilar):
+            cx += r + yaricap[i + 1]
+
+
 # --- ANA ÇİZİCİ ---
 def _ciz_ic(gorsel_tipi, etiketler):
     et = etiketler if isinstance(etiketler, dict) else {}
     tip = _norm(gorsel_tipi)
     if tip in ("yok", "", "none"):
         return None
+
+    if "tablo" in tip or any(k in tip for k in ("grafik", "veri", "histogram", "sutun", "cizgi")):
+        if not any(k in tip for k in ("ay_evre", "dinamometre", "surtunme", "basinc")):
+            return _serbest_ciz(tip, et)
 
     fig, ax = plt.subplots(figsize=(4.5, 3.3))
     ax.set_aspect('equal')
@@ -956,12 +1411,24 @@ def _ciz_ic(gorsel_tipi, etiketler):
         ay_evreleri_ciz(ax, et, tip)
     elif "surtunme" in tip:
         _surtunme_ciz(ax, et)
+    elif "mevsim" in tip:
+        _mevsim_ciz(ax, et)
+    elif "dna" in tip or "genetik" in tip:
+        _dna_ciz(ax, et)
+    elif "caprazlama" in tip or "punnett" in tip:
+        _caprazlama_ciz(ax, et)
+    elif "direnc" in tip:
+        _direnc_ciz(ax, et)
+    elif "kaldirac" in tip:
+        _kaldirac_ciz(ax, et)
+    elif "egik" in tip:
+        _egik_duzlem_ciz(ax, et)
+    elif "makara" in tip:
+        _makara_ciz(ax, et)
+    elif "disli" in tip:
+        _disli_ciz(ax, et)
     elif "dinamometre" in tip or "kuvvet_hareket" in tip:
         _dinamometre_ciz(ax, et)
-    elif "tablo" in tip:
-        cizildi = _tablo_ciz(ax, et)
-    elif any(k in tip for k in ("grafik", "veri", "histogram", "sutun", "cizgi")):
-        _grafik_ciz(ax, tip, et)
     elif "basinc" in tip:
         if "sivi" in tip or _norm(et.get("tur", "")) == "sivi" or et.get("sivi_adi") or et.get("noktalar") or et.get("kap_sayisi"):
             _basinc_sivi(ax, et)
@@ -1148,9 +1615,26 @@ if "yanlis_sorular_arsivi" not in st.session_state:
 if "secim_sifirla_tetikleyici" not in st.session_state:
     st.session_state.secim_sifirla_tetikleyici = 0
 
+# --- SEÇİM CALLBACK'LERİ (Tüm kategori -> tüm üniteleri seçer / seçimi kaldırır) ---
+def _tumunu_sec(ders_key, unite_keys):
+    deger = bool(st.session_state.get(ders_key, False))
+    for k in unite_keys:
+        st.session_state[k] = deger
+
+def _ders_durumunu_guncelle(ders_key, unite_keys):
+    st.session_state[ders_key] = bool(unite_keys) and all(st.session_state.get(k, False) for k in unite_keys)
+
+def esc(x):
+    return html.escape(temizle_latex_metin(x), quote=False)
+
 # --- KENAR ÇUBUĞU ---
 with st.sidebar:
-    st.markdown("### 🔮 Soru Fabrikası Soru Paneli")
+    st.markdown("""
+    <div class="marka">
+        <div class="marka-logo">🔮</div>
+        <div><b>Soru Fabrikası</b><span>Yapay zeka destekli sınav modülü</span></div>
+    </div>
+    """, unsafe_allow_html=True)
     st.markdown("---")
 
     bugunku_toplam = bugunku_soru_sayisini_getir()
@@ -1180,16 +1664,20 @@ with st.sidebar:
     mevcut_dersler = MUGREDAT.get(secili_sinif, {})
     secili_ders_unite_haritasi = {}
 
+    trg = st.session_state.secim_sifirla_tetikleyici
     for ders_adi, uniteler_listesi in mevcut_dersler.items():
+        ders_key = f"chk_ders_{trg}_{secili_sinif}_{ders_adi}"
+        unite_keys = [f"chk_unite_{trg}_{secili_sinif}_{ders_adi}_{u}" for u in uniteler_listesi]
         with st.expander(f"📘 {ders_adi}"):
-            ders_secildi = st.checkbox(f"Tüm {ders_adi} Kategorisini Dahil Et", key=f"chk_ders_{st.session_state.secim_sifirla_tetikleyici}_{secili_sinif}_{ders_adi}")
+            st.checkbox(f"Tüm {ders_adi} kategorisini dahil et", key=ders_key,
+                        on_change=_tumunu_sec, args=(ders_key, unite_keys))
             secili_alt_uniteler = []
-            for unite in uniteler_listesi:
-                if st.checkbox(unite, key=f"chk_unite_{secili_sinif}_{ders_adi}_{unite}"):
+            for unite, uk in zip(uniteler_listesi, unite_keys):
+                if st.checkbox(unite, key=uk, on_change=_ders_durumunu_guncelle, args=(ders_key, unite_keys)):
                     secili_alt_uniteler.append(unite)
-            
-            if ders_secildi or secili_alt_uniteler:
-                secili_ders_unite_haritasi[ders_adi] = secili_alt_uniteler if secili_alt_uniteler else uniteler_listesi
+            st.caption(f"{len(secili_alt_uniteler)} / {len(uniteler_listesi)} ünite seçili")
+            if secili_alt_uniteler:
+                secili_ders_unite_haritasi[ders_adi] = secili_alt_uniteler
 
     st.markdown("---")
     soru_sayisi = st.slider("🔢 Soru Sayısı:", 5, 8, 5, key=f"slider_soru_{st.session_state.secim_sifirla_tetikleyici}")
@@ -1220,31 +1708,40 @@ with st.sidebar:
 
             gorsel_talimati = """
             GÖRSEL SORU KURALLARI (ÇOK ÖNEMLİ - ÇİZİM SORUYLA BİREBİR UYUMLU OLMALIDIR):
-            Uygulama görseli senin verdiğin `gorsel_tipi` ve `etiketler` değerlerinden ÇİZER. Bu yüzden soru metnindeki TÜM sayılar, harfler ve isimler `etiketler` içinde AYNEN yer almalı; soru metni, şıklar, çözüm ve etiketler birbiriyle çelişmemelidir. Çizim sayısal ölçülere göre ölçeklenir (ör. 3-4-5 dik üçgen gerçekten 3-4-5 oranında çizilir), bu yüzden verdiğin ölçüler geometrik olarak TUTARLI olmalıdır (hipotenüs en uzun kenar, açı toplamı 180° vb.).
-            Görsel gerektirmeyen sorularda `gorsel_tipi` kesinlikle "yok" olmalıdır. Geometri, fen (Güneş-Dünya-Ay, dinamometre, sürtünme, basınç) ve veri (grafik, tablo) konularındaki sorularda uygun `gorsel_tipi` MUTLAKA atanmalıdır.
-            Sorunun cevabı görselden okunacaksa (ör. "ibre kaç N gösteriyor?") cevabı etiket olarak çizime YAZDIRMA; ölçüyü yalnızca çizimi belirleyen sayısal alana yaz.
+            Uygulama görseli senin verdiğin `gorsel_tipi` ve `etiketler` değerlerinden ÇİZER. Soru metnindeki TÜM verilen sayılar, harfler ve isimler `etiketler` içinde AYNEN yer almalı; soru metni, şıklar, çözüm ve etiketler birbiriyle çelişmemelidir. Çizim sayısal ölçülere göre ölçeklenir (3-4-5 dik üçgen gerçekten 3-4-5 oranında çizilir); verdiğin ölçüler geometrik olarak TUTARLI olmalıdır (hipotenüs en uzun kenar, açı toplamı 180° vb.).
+            Görsel gerektirmeyen sorularda `gorsel_tipi` kesinlikle "yok" olmalıdır. Geometri, fen (Güneş-Dünya-Ay, mevsimler, dinamometre, sürtünme, direnç, basınç, basit makineler, DNA, çaprazlama) ve veri (grafik, tablo) konularındaki sorularda uygun `gorsel_tipi` MUTLAKA atanmalıdır.
+
+            CEVABA İPUCU VERME KURALI (ÇOK ÖNEMLİ): Görsel yalnızca soruda VERİLEN bilgiyi göstermelidir. Sorunun İSTEDİĞİ değer, ad, evre, yön veya sonuç görselde YAZILMAMALI/GÖSTERİLMEMELİDİR. Bilinmeyen büyüklüğü "x" veya "?" ile yaz (ör. "DE": "x"). `deger_yaz`, `deger_goster`, `etiket_goster`, `hucreleri_goster`, `gorunum_goster`, `kuvvet_goster` gibi anahtarları yalnızca o bilgi soruda zaten VERİLİYORSA "evet" yap; aksi halde yazma (varsayılan "hayir"dır).
 
             GEÇERLİ `gorsel_tipi` DEĞERLERİ VE `etiketler` ŞEMALARI:
-            1) "dinamometre": {"kuvvetler": [4], "maks": 10, "yukler": ["400 g"], "isimler": ["K"], "deger_yaz": "hayir"}
-               - kuvvetler: ibrenin gösterdiği N değerleri (en fazla 3 dinamometre yan yana; ör. [2, 6] ile isimler ["K","L"]). maks: skala üst sınırı (kuvvetler <= maks). yukler: asılı cisim etiketleri. deger_yaz "evet" ise okunan değer çizimde yazar.
+            1) "dinamometre": {"kuvvetler": [4], "maks": 10, "yukler": ["400 g"], "isimler": ["K"]}
+               - kuvvetler: ibrenin gösterdiği N değerleri (en fazla 3 dinamometre yan yana; ör. [2, 6] ile isimler ["K","L"]). maks: skala üst sınırı (kuvvetler <= maks). yukler: asılı cisim etiketleri. İbre okuması soruda isteniyorsa "deger_yaz" YAZMA.
             2) "surtunme": {"kuvvet": 3, "maks": 10, "yuk": "2 kg", "yuzey": "Pürüzlü yüzey", "surtunme_goster": "evet"}
-               - Yatay yüzeyde dinamometre ile çekilen cisim; kuvvet ibrenin gösterdiği N değeridir.
-            3) "ay_evreleri" (Güneş-Dünya-Ay): {"evre": "ilk_dordun", "etiket_goster": "hayir"}
-               - evre değerleri: "yeni_ay","ilk_hilal","ilk_dordun","sisman_buyuyen","dolunay","sisman_kuculen","son_dordun","son_hilal". Soru hangi evreyi anlatıyorsa AYNISI yazılmalıdır. Konum harfleri: A Yeni Ay, B İlk Hilal, C İlk Dördün, D Şişkin Ay (büyüyen), E Dolunay, F Şişkin Ay (küçülen), G Son Dördün, H Son Hilal. Yalnızca Dünya'dan görünen şekil için "gosterim": "sadece_evre" ekle. Evre adı cevabı veriyorsa etiket_goster "hayir" bırak.
-            4) "grafik": {"tur": "sutun", "baslik": "Sınıfın Sevdiği Sporlar", "kategoriler": ["Futbol","Basketbol","Voleybol"], "degerler": [12, 8, 5], "y_baslik": "Öğrenci Sayısı", "deger_goster": "evet"}
-               - tur: "sutun", "cizgi" veya "daire". İki seri için "degerler2", "seri1_adi", "seri2_adi" ekle. Kategori ve değer sayıları eşit olmalı. Soru metnindeki sayılar grafikteki değerlerle aynı olmalı.
-            5) "tablo": {"baslik": "Satış Tablosu", "sutunlar": ["Ay","Satış"], "satirlar": [["Ocak","40"],["Şubat","55"]]}
+               - Yatay yüzeyde dinamometre ile çekilen cisim; kuvvet ibrenin gösterdiği N değeridir. Sürtünmenin yönü/büyüklüğü sorulacaksa "surtunme_goster": "hayir" yaz.
+            3) "ay_evreleri" (Güneş-Dünya-Ay): varsayılan çizim Ay'ın 8 konumunu (A Yeni Ay, B İlk Hilal, C İlk Dördün, D Şişkin Ay büyüyen, E Dolunay, F Şişkin Ay küçülen, G Son Dördün, H Son Hilal) TARAFSIZ gösterir, hiçbirini vurgulamaz. {"etiket_goster": "hayir"}
+               - Soru "Ay C konumundayken Dünya'dan nasıl görülür?" gibi VERİLEN bir konumdan söz ediyorsa "vurgula": "C" ekle (yalnızca soruda verilen harf).
+               - Soru bir EVRE ADI verip konum soruyorsa ("İlk dördün hangi konumdadır?") vurgu YAPMA ve evre adını yazma.
+               - Soru Ay'ın Dünya'dan görünen ŞEKLİNİ verip evre/konum soruyorsa "gosterim": "sadece_evre" ve "evre" (yeni_ay, ilk_hilal, ilk_dordun, sisman_buyuyen, dolunay, sisman_kuculen, son_dordun, son_hilal) ekle; şekil o evreye göre çizilir (ilk dördün: sağ yarı aydınlık, son dördün: sol yarı aydınlık). "etiket_goster" YAZMA.
+               - "gorunum_goster": "evet" (sağda Dünya'dan görünüşü de çizer) yalnızca soru bunu zaten veriyorsa kullanılır.
+            4) "grafik": {"tur": "sutun", "baslik": "Sınıfın Sevdiği Sporlar", "kategoriler": ["Futbol","Basketbol","Voleybol"], "degerler": [12, 8, 5], "y_baslik": "Öğrenci Sayısı", "x_baslik": "Spor"}
+               - tur: "sutun", "cizgi" veya "daire". İki seri için "degerler2", "seri1_adi", "seri2_adi" ekle. Kategori ve değer sayıları eşit olmalı (en çok 10). Değerler grafikteki ızgaradan okunur; sütun üstüne yazılması için "deger_goster": "evet" yalnızca değerler soruda zaten veriliyorsa kullanılır. Kategori adlarını kısa tut.
+            5) "tablo": {"baslik": "Satış Tablosu", "sutunlar": ["Ay","Satış"], "satirlar": [["Ocak","40"],["Şubat","55"]]} (en çok 10 satır; sorulan değeri hücreye yazma, "?" kullan)
             6) Üçgenler. Köşe KONUMLARI sabittir: A üst köşe, B sol alt köşe, C sağ alt köşe. `etiketler` içinde "A","B","C" anahtarlarının DEĞERLERİ ekranda görünecek gerçek köşe harfleridir (ör. KLM üçgeni için {"A":"K","B":"L","C":"M"}). Kenarlar KONUM anahtarlarıyla verilir: "AB" (sol kenar), "BC" (alt kenar), "CA" (sağ kenar). Açılar: "aci_A","aci_B","aci_C" (ör. "40°"). Bilinmeyenler "x" gibi yazılabilir (çizimde ölçeklenmez).
-               - "dik_ucgen": dik açı HER ZAMAN B köşesindedir; AB ve BC dik kenarlar, CA hipotenüstür. Örn: {"A":"A","B":"B","C":"C","AB":"6 cm","BC":"8 cm","CA":"10 cm"}
-               - "eskenar_ucgen": {"A":"A","B":"B","C":"C","kenar":"5 cm"} (tüm kenarlar eşit işaretlenir; açı etiketi gerekirse aci_A vb.)
-               - "ikizkenar_ucgen": A tepe köşesidir, AB = CA eşit kenarlar, BC tabandır. Örn: {"A":"A","B":"B","C":"C","AB":"7 cm","CA":"7 cm","BC":"5 cm","aci_A":"40°"} (tepe açısı verilirse ona göre çizilir)
+               - "dik_ucgen": dik açı HER ZAMAN B köşesindedir; AB ve BC dik kenarlar, CA hipotenüstür. Örn: {"A":"A","B":"B","C":"C","AB":"6 cm","BC":"8 cm","CA":"x"}
+               - "eskenar_ucgen": {"A":"A","B":"B","C":"C","kenar":"5 cm"}
+               - "ikizkenar_ucgen": A tepe köşesidir, AB = CA eşit kenarlar, BC tabandır. Örn: {"A":"A","B":"B","C":"C","AB":"7 cm","CA":"7 cm","BC":"5 cm","aci_A":"40°"}
                - "cesitkenar_ucgen": üç kenar veya en az iki açı sayısal verilirse üçgen gerçek ölçüyle çizilir. Örn: {"AB":"5 cm","BC":"7 cm","CA":"6 cm"} veya {"aci_A":"50°","aci_B":"60°"}
-               - "benzer_ucgen": iki ayrı benzer üçgen ABC ve DEF: {"A":"A","B":"B","C":"C","D":"D","E":"E","F":"F","AB":"3 cm","BC":"4 cm","CA":"5 cm","DE":"6 cm","EF":"8 cm","FD":"10 cm"}; oran kenarlardan hesaplanır, yoksa "oran": 2 ver. İç içe (DE // BC) şekil için "duzen": "ic_ice" ekle ve kenarları "AD","DB","AE","EC","DE","BC" anahtarlarıyla ver (D, AB üzerinde; E, AC üzerinde).
-            7) "cember": {"M":"M","r":"5 cm","cap":"10 cm","aci":"60°","A":"A","B":"B","yay":"20π cm","kiris":"8 cm","k1":"K","k2":"L"}
-               - Yalnızca soruda geçen ögeleri ekle: r (yarıçap), cap (çap, uç noktalar "uc1","uc2"), aci (merkez açı; A ve B uç noktaları, "yay" ile yay uzunluğu), kiris (alt kiriş, k1/k2 uç harfleri).
-            8) "basinc":
-               - Katı basıncı: {"cisim":"5 kg","G":"50 N","F":"20 N","S":"100 cm²","durus":"yatay"} (durus: "yatay" geniş yüzey üstte durur, "dikey" dar yüzey üstte durur; F yalnızca ek kuvvet varsa)
-               - Sıvı basıncı: {"sivi_adi":"Su","kap_sayisi":2,"h":"20 cm","P":"P"} veya aynı kapta farklı derinlikler için {"sivi_adi":"Su","noktalar":["K","L","M"],"derinlikler":["10 cm","20 cm","30 cm"]}
+               - "benzer_ucgen": iki ayrı benzer üçgen ABC ve DEF: {"A":"A","B":"B","C":"C","D":"D","E":"E","F":"F","AB":"3 cm","BC":"4 cm","CA":"5 cm","DE":"6 cm","EF":"8 cm","FD":"x"}; oran kenarlardan hesaplanır, yoksa "oran": 2 ver. İç içe (DE // BC) şekil için "duzen": "ic_ice" ekle ve kenarları "AD","DB","AE","EC","DE","BC" anahtarlarıyla ver.
+            7) "cember": {"M":"M","r":"5 cm","cap":"10 cm","aci":"60°","A":"A","B":"B","yay":"x","kiris":"8 cm","k1":"K","k2":"L"} - yalnızca soruda geçen ögeleri ekle (r, cap, aci+A+B, yay, kiris).
+            8) "basinc": Katı: {"cisim":"5 kg","G":"50 N","F":"20 N","S":"100 cm²","durus":"yatay"} (durus: "yatay"/"dikey"). Sıvı: {"sivi_adi":"Su","kap_sayisi":2,"h":"20 cm","P":"P"} veya {"sivi_adi":"Su","noktalar":["K","L","M"],"derinlikler":["10 cm","20 cm","30 cm"]}
+            9) "mevsim" (Dünya'nın yörüngesi): {"K":"K","L":"L","M":"M","N":"N","vurgula":"haziran","tarih_goster":"hayir","mevsim_goster":"hayir"} - Konumlar: K=21 Haziran, L=23 Eylül, M=21 Aralık, N=21 Mart. "vurgula" (haziran/eylul/aralik/mart) yalnızca soruda verilen konum içindir; tarih veya mevsim adı sorulacaksa onları gösterme.
+            10) "dna": {"baz_dizisi": "ATGCCTAG", "gizle": "tamamlayici"} - baz_dizisi en çok 10 harf (A,T,G,C); tamamlayıcı zincir SORULUYORSA "gizle": "tamamlayici" yaz.
+            11) "caprazlama" (Punnett karesi): {"ebeveyn1":"Aa","ebeveyn2":"Aa","hucreleri_goster":"hayir"} - iki özellik için "AaBb". Hücre sonuçları sorulan değerse "hayir" bırak; kare zaten verilmişse "evet".
+            12) "hava_direnci" / "su_direnci": {"ortam":"hava","isimler":["K","L"],"alanlar":["genis","dar"],"sekil":"levha"} - alanlar "genis","orta","dar" veya sayı ("20 cm²"); "sekil": "levha" ya da "parasut"; ortam "su" ise su içinde çizilir. Direnç oklarını çizmek için "kuvvet_goster": "evet" yalnızca soru bunu veriyorsa.
+            13) "kaldirac": {"tur":"birinci","yuk":"60 N","kuvvet":"F","yuk_kolu":"1 m","kuvvet_kolu":"3 m"} - tur: "birinci","ikinci","ucuncu". Kolların uzunlukları verilmişse oranlı çizilir.
+            14) "egik_duzlem": {"uzunluk":"5 m","yukseklik":"3 m","yuk":"100 N","kuvvet":"F"} - bilinmeyeni "x" yaz.
+            15) "makara": {"tur":"sabit","yuk":"40 N","kuvvet":"F"} - tur: "sabit" veya "hareketli".
+            16) "disli": {"dislerin_sayisi":[20,40],"isimler":["K","L"],"yonler":["saat"]} - en çok 3 dişli; çizim diş sayısına göre ölçeklenir. İlk dişlinin dönüş yönü ("saat"/"ters") verilir, diğerlerinin yönü SORULUYORSA yazma.
             """
 
             rastgele_tohum = random.randint(10000, 99999)
@@ -1324,10 +1821,11 @@ Yanıtı kesinlikle ve sadece şu JSON formatında ver (saf JSON dizisi döndür
                 gecen_sn = int(time.time() - baslangic_zamani)
                 kalan_tahmin = max(1, tahmini_sure_sn - gecen_sn)
                 status_placeholder.markdown(f"""
-                <div style="background-color: #ffffff; border: 2px solid #cbd5e1; padding: 22px; border-radius: 14px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px;">
-                    <h4 style="color: #4f46e5; margin-bottom: 8px;">🤖 Soru Fabrikası Üretim Aşamasında</h4>
-                    <p style="font-size: 17px; color: #1e293b; font-weight: 600;">Yapay zeka senin için harika soruları özenle tasarlıyor ve derliyor...</p>
-                    <p style="font-size: 18px; color: #f97316; font-weight: 700; margin-top: 10px;">⏳ Tahmini Kalan Süre: {kalan_tahmin} saniye <span style="font-size: 14px; color: #64748b; font-weight: normal;">(Geçen: {gecen_sn} sn)</span></p>
+                <div class="uretim-karti">
+                    <div class="yukleniyor"></div>
+                    <h4>Soru Fabrikası üretimde</h4>
+                    <p>Yapay zeka soruları ve görselleri özenle hazırlıyor...</p>
+                    <div class="uretim-sure">⏳ Tahmini kalan: {kalan_tahmin} sn <span>(geçen: {gecen_sn} sn)</span></div>
                 </div>
                 """, unsafe_allow_html=True)
                 time.sleep(0.5)
@@ -1350,13 +1848,30 @@ Yanıtı kesinlikle ve sadece şu JSON formatında ver (saf JSON dizisi döndür
                 st.error(f"❌ Sorular üretilemedi. Hata: {hata_detay}")
 
 # --- ANA EKRAN / SINAV AKIŞI ---
+def gorsel_html(q, yukseklik=260):
+    veri = ciz_vektorel_gorsel(q.get('gorsel_tipi', 'yok'), q.get('etiketler', {}))
+    if not veri:
+        return ""
+    return f"<div class='gorsel-sema-kutusu'><img src='{veri}' style='max-height:{yukseklik}px; max-width:100%;'></div>"
+
+
 if st.session_state.quiz_ready_to_start and st.session_state.quiz_data and not st.session_state.exam_started:
-    st.markdown("---")
-    st.markdown("<h2 style='text-align: center;'>🎓 Sınav Hazır!</h2>", unsafe_allow_html=True)
     toplam_soru_sayisi = len(st.session_state.quiz_data)
     otomatik_sure_dk = (toplam_soru_sayisi * 80) // 60
-    st.markdown(f"<p style='text-align: center; font-size: 18px;'>Toplam <b>{toplam_soru_sayisi}</b> sorudan oluşan sınavınız başarıyla oluşturulmuştur.<br>Sınav süresi her soru için <b>120 saniye</b> hesaba katılarak otomatik olarak <b>{otomatik_sure_dk} dakika</b> olarak ayarlanmıştır.</p>", unsafe_allow_html=True)
-    
+    gorselli = sum(1 for q in st.session_state.quiz_data if str(q.get('gorsel_tipi', 'yok')).lower() != 'yok')
+    st.markdown(f"""
+    <div class="hero orta">
+        <h1>🎓 Sınav Hazır!</h1>
+        <p>Sınavınız başarıyla oluşturuldu. Hazır olduğunda başlat butonuna bas; süre başladığında geri sayım çalışır.</p>
+        <div class="hero-chipler">
+            <div class="hero-chip"><b>{toplam_soru_sayisi}</b><span>Soru</span></div>
+            <div class="hero-chip"><b>{otomatik_sure_dk} dk</b><span>Süre (soru başına 80 sn)</span></div>
+            <div class="hero-chip"><b>{gorselli}</b><span>Görselli soru</span></div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    st.markdown("<br>", unsafe_allow_html=True)
+
     col_A, col_B, col_C = st.columns([1, 2, 1])
     with col_B:
          if st.button("🏁 Sınavı Başlat", use_container_width=True, type="primary"):
@@ -1368,10 +1883,10 @@ if st.session_state.quiz_ready_to_start and st.session_state.quiz_data and not s
 elif st.session_state.exam_started and st.session_state.quiz_data and not st.session_state.quiz_submitted:
     quiz_data = st.session_state.quiz_data
     toplam_soru = len(quiz_data)
-    
+
     gecen_sure_sn = time.time() - st.session_state.start_time
     kalan_sure_sn = st.session_state.total_duration - gecen_sure_sn
-    
+
     if kalan_sure_sn <= 0:
         st.session_state.quiz_submitted = True
         st.warning("⏰ Sınav süresi sona erdi! Cevaplarınız otomatik olarak gönderildi.")
@@ -1379,82 +1894,75 @@ elif st.session_state.exam_started and st.session_state.quiz_data and not st.ses
 
     kalan_dk = int(kalan_sure_sn // 60)
     kalan_sn = int(kalan_sure_sn % 60)
-
-    st.markdown(f"### 📝 Soru {st.session_state.current_question + 1} / {toplam_soru}")
-    
-    st.markdown(f"""
-    <div style="background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%); border: 2px solid #f97316; padding: 14px; border-radius: 12px; text-align: center; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(249,115,22,0.12);">
-        <span style="font-size: 22px; font-weight: 800; color: #c2410c;">⏳ Kalan Sınav Süresi: {kalan_dk:02d} Dakika {kalan_sn:02d} Saniye</span>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    st.progress((st.session_state.current_question + 1) / toplam_soru)
-    st.markdown("---")
-
     q_idx = st.session_state.current_question
     q = quiz_data[q_idx]
+    cevaplanan = sum(1 for i in range(toplam_soru) if st.session_state.user_answers.get(i))
+    yuzde = int(((q_idx + 1) / toplam_soru) * 100)
 
-    st.markdown(f"<div class='custom-card'>", unsafe_allow_html=True)
-    st.markdown(f"<p style='font-size: 14px; font-weight: bold; color: #4f46e5;'>Ders / Kategori: {q.get('ders', 'Genel')}</p>", unsafe_allow_html=True)
-    st.markdown(f"<div class='soru-metni-kutusu'>{temizle_latex_metin(q.get('soru_metni', ''))}</div>", unsafe_allow_html=True)
+    noktalar = "".join(
+        f"<span class='nokta{' cevapli' if st.session_state.user_answers.get(i) else ''}{' aktif' if i == q_idx else ''}'>{i + 1}</span>"
+        for i in range(toplam_soru)
+    )
+    st.markdown(f"""
+    <div class="ust-bar">
+        <div class="soru-no">Soru {q_idx + 1} <small>/ {toplam_soru}</small></div>
+        <div class="sure{' az' if kalan_sure_sn < 60 else ''}">⏳ {kalan_dk:02d}:{kalan_sn:02d}</div>
+    </div>
+    <div class="ilerleme-cubuk"><div style="width:{yuzde}%"></div></div>
+    <div class="nokta-sira">{noktalar}</div>
+    <div class="cevap-ozet">{cevaplanan} / {toplam_soru} soru cevaplandı</div>
+    """, unsafe_allow_html=True)
 
-    gorsel_tipi = q.get('gorsel_tipi', 'yok')
-    etiketler = q.get('etiketler', {})
-    gorsel_veri = ciz_vektorel_gorsel(gorsel_tipi, etiketler)
-    if gorsel_veri:
-        st.markdown(f"<div class='gorsel-sema-kutusu'><img src='{gorsel_veri}' style='max-height: 250px;'></div>", unsafe_allow_html=True)
+    st.markdown(f"""
+    <div class="soru-karti">
+        <span class="rozet">📘 {html.escape(str(q.get('ders', 'Genel')))}</span>
+        <div class="soru-metni-kutusu">{esc(q.get('soru_metni', ''))}</div>
+        {gorsel_html(q, 340)}
+    </div>
+    """, unsafe_allow_html=True)
 
-    st.markdown("<br>", unsafe_allow_html=True)
-    
     secenekler = q.get('secenekler', {})
     secenek_anahtarlari = list(secenekler.keys())
-    
+
     mevcut_cevap = st.session_state.user_answers.get(q_idx, None)
     secilen_index = secenek_anahtarlari.index(mevcut_cevap) if mevcut_cevap in secenek_anahtarlari else None
 
+    st.markdown("<div class='alt-baslik'>Cevabını seç</div>", unsafe_allow_html=True)
     secim = st.radio(
         "Lütfen cevabınızı seçiniz:",
         options=secenek_anahtarlari,
         format_func=lambda x: f"{x}) {temizle_latex_metin(secenekler[x])}",
         key=f"radio_soru_{q_idx}",
-        index=secilen_index
+        index=secilen_index,
+        label_visibility="collapsed"
     )
 
     if secim:
         st.session_state.user_answers[q_idx] = secim
 
-    st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("<br>", unsafe_allow_html=True)
 
     # --- HATASIZ TEKİL NAVİGASYON (ÇİFTE RENDER / YANSIMA ÖNLEYİCİ) ---
     col_nav1, col_nav2, col_nav3 = st.columns(3)
-    
+
     with col_nav1:
         if q_idx < toplam_soru - 1:
             if st.button("Sonraki Soru ➡️", key=f"btn_next_{q_idx}", use_container_width=True, type="secondary"):
                 st.session_state.current_question += 1
                 st.rerun()
-                
+
     with col_nav3:
         # Önceki soru butonu (ilk soru hariç her yerde görünecek)
         if q_idx > 0:
             if st.button("⬅️ Önceki Soru", key=f"btn_prev_{q_idx}", use_container_width=True, type="secondary"):
                 st.session_state.current_question -= 1
                 st.rerun()
-        
-        # Sınavı tamamlama butonu (sadece en son soruda görünecek)
-        if q_idx == toplam_soru - 1:
-            if st.button("✅ Sınavı Tamamla", key=f"btn_finish_{q_idx}", use_container_width=True, type="primary"):
-                st.session_state.quiz_submitted = True
-                st.rerun()
-        else:
-            if st.button("✅ Sınavı Tamamla", key=f"btn_finish_{q_idx}", use_container_width=True, type="primary"):
-                st.session_state.quiz_submitted = True
-                st.rerun()
+
+        if st.button("✅ Sınavı Tamamla", key=f"btn_finish_{q_idx}", use_container_width=True, type="primary"):
+            st.session_state.quiz_submitted = True
+            st.rerun()
 
 elif st.session_state.quiz_submitted and st.session_state.quiz_data:
-    st.markdown("---")
-    st.markdown("<h2 style='text-align: center;'>🏆 Sınav Sonuçları ve Çözüm Analizi</h2>", unsafe_allow_html=True)
-    
     quiz_data = st.session_state.quiz_data
     dogru_sayisi = 0
     yanlis_sayisi = 0
@@ -1463,7 +1971,7 @@ elif st.session_state.quiz_submitted and st.session_state.quiz_data:
     for idx, q in enumerate(quiz_data):
         ogrenci_cevabi = st.session_state.user_answers.get(idx, None)
         dogru_cevap = q.get('dogru_cevap', '').strip().upper()
-        
+
         if not ogrenci_cevabi:
             bos_sayisi += 1
         elif ogrenci_cevabi.strip().upper() == dogru_cevap:
@@ -1472,42 +1980,51 @@ elif st.session_state.quiz_submitted and st.session_state.quiz_data:
             yanlis_sayisi += 1
 
     toplam_puan = (dogru_sayisi / len(quiz_data)) * 100 if len(quiz_data) > 0 else 0
+    if toplam_puan >= 85:
+        mesaj = "Harika! Konulara çok iyi hakimsin 🌟"
+    elif toplam_puan >= 60:
+        mesaj = "İyi gidiyorsun, birkaç tekrar mükemmel olur 👍"
+    else:
+        mesaj = "Çözümleri incele ve tekrar dene, gelişeceksin 💪"
 
-    col_m1, col_m2, col_m3, col_m4 = st.columns(4)
-    col_m1.metric("🎯 Toplam Puan", f"{toplam_puan:.1f} / 100")
-    col_m2.metric("✅ Doğru Sayısı", dogru_sayisi)
-    col_m3.metric("❌ Yanlış Sayısı", yanlis_sayisi)
-    col_m4.metric("⭕ Boş Sayısı", bos_sayisi)
+    st.markdown(f"""
+    <div class="skor-banner">
+        <div>
+            <div class="skor-puan">{toplam_puan:.0f}<small> / 100</small></div>
+            <div class="skor-mesaj">{mesaj}</div>
+        </div>
+        <div class="skor-chipler">
+            <div class="chip"><b>{dogru_sayisi}</b><span>✅ Doğru</span></div>
+            <div class="chip"><b>{yanlis_sayisi}</b><span>❌ Yanlış</span></div>
+            <div class="chip"><b>{bos_sayisi}</b><span>⭕ Boş</span></div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
-    st.markdown("---")
     st.markdown("### 📋 Soru Soru Detaylı Çözüm İncelemesi")
 
     for idx, q in enumerate(quiz_data):
         ogrenci_cevabi = st.session_state.user_answers.get(idx, "Boş")
         dogru_cevap = q.get('dogru_cevap', '').strip().upper()
-        durum_ikonu = "✅" if ogrenci_cevabi == dogru_cevap else "❌"
-        
-        with st.expander(f"Soru {idx + 1} {durum_ikonu} - (Ders: {q.get('ders', 'Genel')})"):
-            st.markdown(f"**Soru:** {temizle_latex_metin(q.get('soru_metni', ''))}")
-            
-            gorsel_tipi = q.get('gorsel_tipi', 'yok')
-            etiketler = q.get('etiketler', {})
-            gorsel_veri = ciz_vektorel_gorsel(gorsel_tipi, etiketler)
-            if gorsel_veri:
-                st.markdown(f"<div class='gorsel-sema-kutusu'><img src='{gorsel_veri}' style='max-height: 200px;'></div>", unsafe_allow_html=True)
-                
-            st.markdown("---")
-            for sec_key, sec_val in q.get('secenekler', {}).items():
-                isaret = ""
-                if sec_key == dogru_cevap:
-                    isaret = " 🟢 (Doğru Cevap)"
-                elif sec_key == ogrenci_cevabi:
-                    isaret = " 🔴 (Sizin Cevabınız)"
-                st.markdown(f"- **{sec_key})** {temizle_latex_metin(sec_val)}{isaret}")
-            
-            st.markdown(f"💡 **Çözüm Açıklaması:** {temizle_latex_metin(q.get('cozum_aciklamasi', 'Açıklama bulunmuyor.'))}")
+        durum_ikonu = "✅" if ogrenci_cevabi == dogru_cevap else ("⭕" if ogrenci_cevabi == "Boş" else "❌")
 
-    st.markdown("---")
+        with st.expander(f"Soru {idx + 1} {durum_ikonu} - (Ders: {q.get('ders', 'Genel')})"):
+            sikler = ""
+            for sec_key, sec_val in q.get('secenekler', {}).items():
+                sinif, etiket = "", ""
+                if sec_key == dogru_cevap:
+                    sinif, etiket = " dogru", "Doğru cevap"
+                elif sec_key == ogrenci_cevabi:
+                    sinif, etiket = " yanlis", "Senin cevabın"
+                sikler += f"<div class='sik{sinif}'><b>{html.escape(str(sec_key))})</b> {esc(sec_val)}<span>{etiket}</span></div>"
+            st.markdown(f"""
+            <div class="soru-metni-kutusu" style="font-size:18px;">{esc(q.get('soru_metni', ''))}</div>
+            {gorsel_html(q, 300)}
+            {sikler}
+            <div class="cozum">💡 <b>Çözüm:</b> {esc(q.get('cozum_aciklamasi', 'Açıklama bulunmuyor.'))}</div>
+            """, unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
     col_btn1, col_btn2 = st.columns(2)
     with col_btn1:
         if st.button("🔄 Yeni Sınav Hazırla", use_container_width=True, type="primary"):
@@ -1520,7 +2037,15 @@ elif st.session_state.quiz_submitted and st.session_state.quiz_data:
             st.rerun()
 
 else:
-    st.markdown("<div class='custom-card' style='text-align: center;'>", unsafe_allow_html=True)
-    st.markdown("<h1>🎓 Soru Fabrikası Tablet Sınav Modülüne Hoş Geldiniz!</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='font-size: 18px; color: #475569;'>Sol menüden sınıf seviyesini, sınav türünü ve çalışmak istediğiniz dersleri/üniteleri seçerek anında yapay zeka destekli özgün sınavlar üretebilir ve çözebilirsiniz.</p>", unsafe_allow_html=True)
-    st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("""
+    <div class="hero">
+        <h1>🎓 Soru Fabrikası'na Hoş Geldin</h1>
+        <p>Sol menüden sınıf seviyesini, sınav türünü ve çalışmak istediğin ders ile üniteleri seç; yapay zeka senin için özgün, görselli sorularla dolu bir sınav hazırlasın.</p>
+    </div>
+    <div class="ozellik-izgara">
+        <div class="ozellik"><div class="ikon">🧩</div><b>Özgün sorular</b><span>Her seferinde farklı, MEB müfredatına uygun sorular üretilir.</span></div>
+        <div class="ozellik"><div class="ikon">📐</div><b>Soruyla uyumlu görseller</b><span>Üçgen, grafik, dinamometre, Ay evreleri ve daha fazlası sorudaki verilere göre çizilir.</span></div>
+        <div class="ozellik"><div class="ikon">⏱️</div><b>Süreli sınav</b><span>Tablet dostu ekranda geri sayımlı sınav deneyimi.</span></div>
+        <div class="ozellik"><div class="ikon">🏆</div><b>Detaylı analiz</b><span>Doğru, yanlış, boş sayıları ve her sorunun çözümü.</span></div>
+    </div>
+    """, unsafe_allow_html=True)
