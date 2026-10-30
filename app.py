@@ -190,6 +190,131 @@ def get_custom_labels(etiketler, default_tuple=("A", "B", "C")):
         )
     return default_tuple
 
+# --- GÜNEŞ-DÜNYA-AY / AY EVRELERİ ÇİZİCİ ---
+# (anahtar, Türkçe ad, konum harfi, evre açısı derece)  0=Yeni Ay, 90=İlk Dördün, 180=Dolunay, 270=Son Dördün
+EVRELER = [
+    ("yeni_ay", "Yeni Ay", "A", 0),
+    ("ilk_hilal", "İlk Hilal", "B", 45),
+    ("ilk_dordun", "İlk Dördün", "C", 90),
+    ("sisman_buyuyen", "Şişkin Ay (büyüyen)", "D", 135),
+    ("dolunay", "Dolunay", "E", 180),
+    ("sisman_kuculen", "Şişkin Ay (küçülen)", "F", 225),
+    ("son_dordun", "Son Dördün", "G", 270),
+    ("son_hilal", "Son Hilal", "H", 315),
+]
+_AD = {k: a for k, a, _, _ in EVRELER}
+_AC = {k: p for k, _, _, p in EVRELER}
+
+
+def _norm(s):
+    s = str(s).replace("İ", "i").replace("I", "i").lower()
+    for a, b in zip("çğıöşü", "cgiosu"):
+        s = s.replace(a, b)
+    return s.replace(" ", "_").replace("-", "_").replace("(", "").replace(")", "")
+
+
+def evre_bul(*metinler):
+    """Verilen metinlerden (evre etiketi, görsel tipi...) Ay evresi anahtarını bulur."""
+    for m in metinler:
+        s = _norm(m or "")
+        if not s:
+            continue
+        if "yeni" in s:
+            return "yeni_ay"
+        if "dolunay" in s or "dolu_ay" in s:
+            return "dolunay"
+        if "ilk_dordun" in s or "ilkdordun" in s:
+            return "ilk_dordun"
+        if "son_dordun" in s or "sondordun" in s:
+            return "son_dordun"
+        if "sisman" in s:
+            return "sisman_kuculen" if ("kuculen" in s or "son" in s) else "sisman_buyuyen"
+        if "hilal" in s:
+            return "son_hilal" if ("kuculen" in s or "son" in s) else "ilk_hilal"
+    return None
+
+
+def _ay_diski(ax, cx, cy, r, p_deg, zorder=3):
+    """Dünya'dan görünen Ay diski: karanlık daire + aydınlık kısım (terminatör eğrisiyle)."""
+    ax.add_patch(plt.Circle((cx, cy), r, facecolor="#334155", edgecolor="#0f172a",
+                            linewidth=1.6, zorder=zorder))
+    p = np.radians(p_deg % 360)
+    sign = 1.0 if p <= np.pi else -1.0          # büyüyen: sağ, küçülen: sol
+    pp = p if p <= np.pi else 2 * np.pi - p
+    if pp > 1e-6:
+        t = np.linspace(-np.pi / 2, np.pi / 2, 80)
+        limb_x, ys = r * np.cos(t), r * np.sin(t)
+        term_x = r * np.cos(pp) * np.cos(t)
+        xs = np.concatenate([limb_x, term_x[::-1]])
+        yy = np.concatenate([ys, ys[::-1]])
+        ax.fill(cx + sign * xs, cy + yy, color="#fde68a", zorder=zorder + 1, linewidth=0)
+    ax.add_patch(plt.Circle((cx, cy), r, fill=False, edgecolor="#0f172a",
+                            linewidth=1.6, zorder=zorder + 2))
+
+
+def ay_evreleri_ciz(ax, etiketler=None, gorsel_tipi=""):
+    """ax üzerine 0-6 x 0-5 koordinatlarında çizer. Sorudaki evre 'evre' etiketinden gelir."""
+    etiketler = etiketler if isinstance(etiketler, dict) else {}
+    hedef = evre_bul(etiketler.get("evre"), gorsel_tipi)
+    adlari_goster = _norm(etiketler.get("etiket_goster", "hayir")) in ("evet", "true", "1", "goster")
+
+    # Yalnızca Dünya'dan görünen evre isteniyorsa
+    if _norm(etiketler.get("gosterim", "")) == "sadece_evre" and hedef:
+        _ay_diski(ax, 3.0, 2.6, 1.5, _AC[hedef])
+        if adlari_goster:
+            ax.text(3.0, 0.5, _AD[hedef], fontsize=11, fontweight="bold", ha="center", color="#0f172a")
+        return
+
+    gx, gy = 0.3, 2.5             # Güneş
+    ex, ey, R = 2.85, 2.5, 1.3    # Dünya merkezi ve yörünge yarıçapı
+
+    # Güneş ışınları (soldan, paralel)
+    ax.add_patch(plt.Circle((gx, gy), 0.3, color="#f59e0b", ec="#d97706", linewidth=2, zorder=2))
+    ax.text(gx, gy, etiketler.get("G", "Güneş"), fontsize=5, fontweight="bold",
+            ha="center", va="center", color="#ffffff", zorder=3)
+    for yr in (1.9, 2.25, 2.75, 3.1):
+        ax.annotate("", xy=(1.0, yr), xytext=(0.65, yr),
+                    arrowprops=dict(arrowstyle="->", color="#f59e0b", lw=1.5))
+
+    # Yörünge ve Dünya
+    th = np.linspace(0, 2 * np.pi, 200)
+    ax.plot(ex + R * np.cos(th), ey + R * np.sin(th), color="#94a3b8", linestyle="--", linewidth=1)
+    ax.add_patch(plt.Circle((ex, ey), 0.4, color="#38bdf8", ec="#0284c7", linewidth=2, zorder=2))
+    ax.text(ex, ey, etiketler.get("D", "Dünya"), fontsize=6, fontweight="bold",
+            ha="center", va="center", color="#0f172a", zorder=3)
+
+    # 8 Ay konumu: Yeni Ay Güneş tarafında, saat yönünün tersine ilerler
+    for key, ad, harf, p in EVRELER:
+        ang = np.radians(180 + p)
+        mx, my = ex + R * np.cos(ang), ey + R * np.sin(ang)
+        rm = 0.19
+        vurgulu = (key == hedef)
+        if vurgulu:
+            ax.add_patch(plt.Circle((mx, my), rm + 0.1, fill=False, edgecolor="#f97316",
+                                    linewidth=2.2, zorder=4))
+        # Güneş'e bakan (sol) yarı aydınlık
+        ax.add_patch(plt.Circle((mx, my), rm, facecolor="#334155", edgecolor="#0f172a",
+                                linewidth=1.2, zorder=5))
+        ax.add_patch(matplotlib_wedge(mx, my, rm))
+        lx, ly = ex + (R + 0.45) * np.cos(ang), ey + (R + 0.45) * np.sin(ang)
+        yazi = f"{harf}\n{ad}" if adlari_goster else harf
+        ax.text(lx, ly, yazi, fontsize=5 if adlari_goster else 9, fontweight="bold",
+                ha="center", va="center", color="#0f172a", zorder=6)
+
+    # Dünya'dan görünüş (soru hangi evreyi soruyorsa o)
+    if hedef:
+        _ay_diski(ax, 5.45, 2.5, 0.55, _AC[hedef])
+        ax.text(5.45, 3.35, "Dünya'dan\ngörünüş", fontsize=6, fontweight="bold",
+                ha="center", color="#475569")
+        if adlari_goster:
+            ax.text(5.45, 1.65, _AD[hedef], fontsize=7, fontweight="bold", ha="center", color="#0f172a")
+
+
+def matplotlib_wedge(mx, my, rm):
+    from matplotlib.patches import Wedge
+    return Wedge((mx, my), rm, 90, 270, facecolor="#fde68a", edgecolor="#0f172a",
+                 linewidth=1.0, zorder=6)
+
 # --- VEKTÖREL GÖRSEL ÇİZİCİ ---
 def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
     if not isinstance(etiketler, dict):
@@ -205,22 +330,8 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
         plt.close(fig)
         return None
 
-    elif "gunes_dunya_ay" in tip or "astronomi" in tip:
-        sun = plt.Circle((1.0, 2.5), 0.7, color='#f59e0b', ec='#d97706', linewidth=2)
-        ax.add_patch(sun)
-        ax.text(1.0, 2.5, etiketler.get("G", "GÜNEŞ"), fontsize=8, fontweight='bold', ha='center', va='center', color='#ffffff')
-        
-        earth = plt.Circle((3.0, 2.5), 0.45, color='#38bdf8', ec='#0284c7', linewidth=2)
-        ax.add_patch(earth)
-        ax.text(3.0, 2.5, etiketler.get("D", "DÜNYA"), fontsize=7, fontweight='bold', ha='center', va='center', color='#0f172a')
-        
-        moon = plt.Circle((4.1, 3.2), 0.2, color='#cbd5e1', ec='#64748b', linewidth=1.5)
-        ax.add_patch(moon)
-        ax.text(4.1, 3.2, etiketler.get("A", "AY"), fontsize=6, fontweight='bold', ha='center', va='center', color='#1e293b')
-        
-        theta = np.linspace(0, 2*np.pi, 100)
-        ax.plot(3.0 + 1.1*np.cos(theta), 2.5 + 0.7*np.sin(theta), color='#94a3b8', linestyle='--', linewidth=1)
-        ax.text(3.0, 3.4, etiketler.get("O", "Yörünge"), fontsize=8, color='#64748b', ha='center')
+    elif any(k in tip for k in ("gunes_dunya_ay", "astronomi", "ay_evre", "evre", "ay_evreleri")):
+        ay_evreleri_ciz(ax, etiketler, tip)
 
     elif "dinamometre" in tip or "kuvvet_hareket" in tip:
         ax.plot([3.0, 3.0], [4.4, 4.0], color='#475569', linewidth=3)
@@ -364,7 +475,7 @@ def ciz_vektorel_gorsel(gorsel_tipi="yok", etiketler=None):
         plt.close(fig)
         return None
 
-    ax.set_xlim(0, 6)
+    ax.set_xlim(-0.1, 6.1)
     ax.set_ylim(0, 5.0)
     
     buf = io.BytesIO()
@@ -592,6 +703,12 @@ with st.sidebar:
             1. Üretilen soru havuzunda geometri (dik üçgen, eşkenar üçgen, ikizkenar üçgen, benzer üçgenler, açı veya çember), fen bilimleri (Güneş-Dünya-Ay, dinamometre, basınç vb.) veya veri analizi konularına denk gelen uygun sorular için MUTLAKA uygun `gorsel_tipi` atanmalıdır (Örn: "dik_ucgen", "eskenar_ucgen", "ikizkenar_ucgen", "benzer_ucgen", "cesitkenar_ucgen", "cember", "gunes_dunya_ay", "dinamometre", "grafik", "basinc"). 
             2. Görsel gerektirmeyen tamamen sözel veya düz mantık sorularda `gorsel_tipi` kesinlikle "yok" olmalıdır.
             3. Görsel içeren sorularda, soruda geçen köşe harfleri (örn. A, B, C, D vb.) ve değerler `etiketler` sözlüğünde eksiksiz olarak tanımlanmalı, soru metni ile görsel uyumlu olmalıdır.
+            4. AY EVRELERİ / GÜNEŞ-DÜNYA-AY SORULARI (BİREBİR UYUM ZORUNLU): Ay'ın evreleri, konumları veya Güneş-Dünya-Ay ilişkisi soran her soruda `gorsel_tipi` "ay_evreleri" olmalıdır. `etiketler` içinde MUTLAKA "evre" anahtarı bulunmalı ve değeri sorunun işaret ettiği evre olmalıdır. Geçerli değerler: "yeni_ay", "ilk_hilal", "ilk_dordun", "sisman_buyuyen", "dolunay", "sisman_kuculen", "son_dordun", "son_hilal".
+               - Soru "ilk dördün" ile ilgiliyse "evre": "ilk_dordun" yazılmalı; çizim Ay'ı Güneş-Dünya doğrultusuna dik (yörüngenin 1/4'ünde) ve Dünya'dan bakınca sağ yarısı aydınlık gösterir. Son dördün için "son_dordun" kullan.
+               - Görsel Ay'ın 8 konumunu A (Yeni Ay), B (İlk Hilal), C (İlk Dördün), D (Şişkin Ay büyüyen), E (Dolunay), F (Şişkin Ay küçülen), G (Son Dördün), H (Son Hilal) harfleriyle çizer. Soruda konum harfi sorulacaksa bu harfleri kullan: çizimde sorunun işaret ettiği konum turuncu halkayla vurgulanır.
+               - Cevabı görselin kendisinden okunacak sorularda evre adını açık etme: "etiket_goster": "hayir" yaz. Evre adlarının görselde yazılması gerekiyorsa "etiket_goster": "evet" yaz.
+               - Sadece Dünya'dan görünen Ay şekli sorulacaksa "gosterim": "sadece_evre" ekle.
+               - Soru metni, seçenekler, çözüm açıklaması ve "evre" değeri birbiriyle çelişmemelidir.
             """
 
             rastgele_tohum = random.randint(10000, 99999)
