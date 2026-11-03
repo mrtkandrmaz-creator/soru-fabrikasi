@@ -1602,7 +1602,7 @@ MUGREDAT = {
     },
     "5. Sınıf": {
         "Türkçe": ["Sözcükte Anlam", "Cümlede Anlam", "Metin Yorumlama ve Paragraf", "Yazım Kuralları", "Noktalama İşaretleri"],
-        "Matematik": ["Tümler ve Bütünler açı", "Çokgenler Düzgün Çokgenler", "Çokgen çeşitleri", "Çokgenlerde köşegen ve açılar", "Doğru Doğru Parçası Dikme ve Çember", "Çember Çap ve yarıçap uzunlukları"],
+        "Matematik": ["Tümler ve Bütünler açı", "Kareli Düzlem", "Çokgen çeşitleri", "Çokgenlerde köşegen ve çevre uzunluğu", "Doğru Doğru Parçası Dikme ve Çember", "Düzgün Çokgenler"],
         "Fen Bilimleri": ["Güneş, Dünya ve Ay", "Hava Direnci ve Su Direnci", "Kuvvetin Uygulanması ve Sürtünme", "Ayın evreleri", "Dinamometre", "Sürtünme kuvveti", "Kuvveti tanıyalım"],
         "Sosyal Bilgiler": ["Birlikte Yaşamak", "Birey ve Toplum", "Kültür ve Ortak Mirasımız", "Evimiz Dünya", "Yaşayan Demokrasimiz", "Hayatımızda Ekonomi", "Teknoloji ve Sosyal Bilimler", "Üretim, Dağıtım ve Tüketim"],
         "Din Kültürü": ["Allah İnancı ve İnsan", "Allahın İsimleri", "Hz. Muhammed ve Aile Hayatı", "İslam'ın Temel İbadetleri", "Namaz", "Kuran Kerim", "Peygamber Kıssaları", "Mimarimizde dini Motifler", "Ahlaki Değerler"],
