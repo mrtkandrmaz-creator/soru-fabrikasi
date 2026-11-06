@@ -2678,16 +2678,18 @@ elif st.session_state.exam_started and st.session_state.quiz_data and not st.ses
     <div class="cevap-ozet"><b>{cevaplanan}</b> / {toplam_soru} soru cevaplandı · {len(isaretliler)} işaretli</div>
     """, unsafe_allow_html=True)
 
-    # Tıklanabilir soru paleti: cevaplı = mor dolu kutu, boş = beyaz, 🚩 işaretli, mavi dolu = şu anki soru
+    # Tıklanabilir soru paleti: cevaplı = mor dolu kutu, boş = beyaz, 🚩 işaretli, turuncu = şu anki soru
     cevapli_idx = [i for i in range(toplam_soru) if st.session_state.user_answers.get(i)]
-    if cevapli_idx:
-        kurallar = "".join(
-            f".stApp .st-key-pal_{i} button {{ background: #7c3aed !important; border-color: #5b21b6 !important; color: #fff !important; }}"
-            f".stApp .st-key-pal_{i} button p {{ color: #fff !important; }}"
-            for i in cevapli_idx)
-        if q_idx in cevapli_idx:  # şu anki soru da cevaplıysa mor kalsın, mavi halkayla ayrışsın
-            kurallar += f".stApp .st-key-pal_{q_idx} button {{ outline: 3px solid var(--pen); outline-offset: 2px; }}"
-        st.markdown(f"<style>{kurallar}</style>", unsafe_allow_html=True)
+    kurallar = "".join(
+        f".stApp .st-key-pal_{i} button {{ background: #7c3aed !important; border-color: #5b21b6 !important; color: #fff !important; }}"
+        f".stApp .st-key-pal_{i} button p {{ color: #fff !important; }}"
+        for i in cevapli_idx)
+    # şu anki soru her zaman turuncu (cevaplıysa mor halkayla cevaplı olduğu belli olur)
+    kurallar += (f".stApp .st-key-pal_{q_idx} button {{ background: #f97316 !important; border-color: #c2410c !important; color: #fff !important; }}"
+                 f".stApp .st-key-pal_{q_idx} button p {{ color: #fff !important; }}")
+    if q_idx in cevapli_idx:
+        kurallar += f".stApp .st-key-pal_{q_idx} button {{ outline: 3px solid #7c3aed; outline-offset: 2px; }}"
+    st.markdown(f"<style>{kurallar}</style>", unsafe_allow_html=True)
     st.markdown("<div class='pal-marker'></div>", unsafe_allow_html=True)
     pal = st.columns(toplam_soru)
     for i, kol in enumerate(pal):
@@ -2698,7 +2700,7 @@ elif st.session_state.exam_started and st.session_state.quiz_data and not st.ses
                 "background:#7c3aed;vertical-align:-1px;margin-right:4px'></span>cevaplandı · "
                 "<span style='display:inline-block;width:12px;height:12px;border-radius:4px;background:#fff;"
                 "border:1.5px solid var(--ink);vertical-align:-1px;margin-right:4px'></span>boş · 🚩 işaretli · "
-                "<span style='display:inline-block;width:12px;height:12px;border-radius:4px;background:var(--pen);"
+                "<span style='display:inline-block;width:12px;height:12px;border-radius:4px;background:#f97316;"
                 "vertical-align:-1px;margin-right:4px'></span>şu anki soru</div>", unsafe_allow_html=True)
 
     rozetler = f"<span class='rozet'>📘 {html.escape(str(q.get('ders', 'Genel')))}</span>"
