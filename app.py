@@ -252,17 +252,71 @@ st.markdown("""
     [data-testid="stExpander"] { border: 2px solid var(--line) !important; border-radius: 16px !important; background: #fff !important; overflow: hidden; }
     [data-testid="stExpander"] summary { font-weight: 600; }
 
-    /* ---------- KENAR ÇUBUĞU ---------- */
-    section[data-testid="stSidebar"] { background: #fff; border-right: 2px solid var(--ink); }
-    .marka { display: flex; align-items: center; gap: 12px; padding: 4px 2px 2px; }
-    .marka-logo {
-        width: 44px; height: 44px; border-radius: 12px; background: var(--pen); color: #fff;
-        display: flex; align-items: center; justify-content: center; font-size: 22px; box-shadow: 0 4px 0 var(--pen-d);
+    /* ---------- KENAR ÇUBUĞU (modern, eşit boyutlu kontroller) ---------- */
+    section[data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #ffffff 0%, #f5f7ff 100%);
+        border-right: 1px solid var(--line); box-shadow: 4px 0 24px rgba(19,32,63,.06);
     }
-    .marka b { font-size: 17px; color: var(--ink); display: block; line-height: 1.2; }
-    .marka span { font-size: 12px; color: var(--muted); }
-    section[data-testid="stSidebar"] div[data-baseweb="select"] > div { border-radius: 12px; border: 2px solid var(--line); background: #fff; }
-    section[data-testid="stSidebar"] [data-testid="stExpander"] { margin-bottom: 10px; }
+    section[data-testid="stSidebar"] > div:first-child { padding-top: .6rem; }
+    section[data-testid="stSidebar"] [data-testid="stVerticalBlock"] { gap: .7rem; }
+    section[data-testid="stSidebar"] hr { margin: .4rem 0; border-color: var(--line); }
+
+    .marka {
+        display: flex; align-items: center; gap: 12px; padding: 14px 14px; border-radius: 18px;
+        background: linear-gradient(135deg, var(--pen) 0%, #5b7cff 100%);
+        box-shadow: 0 10px 24px rgba(35,71,255,.28);
+    }
+    .marka-logo {
+        width: 44px; height: 44px; border-radius: 14px; background: rgba(255,255,255,.2); color: #fff;
+        display: flex; align-items: center; justify-content: center; font-size: 22px;
+        border: 1px solid rgba(255,255,255,.35); backdrop-filter: blur(4px);
+    }
+    .marka b { font-size: 17px; color: #fff; display: block; line-height: 1.2; }
+    .marka span { font-size: 12px; color: rgba(255,255,255,.82); }
+    .yan-baslik {
+        font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+        color: var(--muted); margin: 10px 2px -2px; display: flex; align-items: center; gap: 10px;
+    }
+    .yan-baslik::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+
+    /* Etiketler */
+    section[data-testid="stSidebar"] label[data-testid="stWidgetLabel"] p,
+    section[data-testid="stSidebar"] [data-testid="stWidgetLabel"] p { font-size: 13px; font-weight: 600; color: var(--ink2); }
+
+    /* Metrik kartı */
+    section[data-testid="stSidebar"] div[data-testid="stMetric"] {
+        background: #fff; border: 1px solid var(--line); border-left: 5px solid var(--pen);
+        border-radius: 16px; padding: 12px 16px; box-shadow: 0 4px 14px rgba(19,32,63,.05);
+    }
+    section[data-testid="stSidebar"] div[data-testid="stMetric"] label p { font-size: 12px; color: var(--muted); font-weight: 600; }
+
+    /* EŞİT BOYUT: açılır liste, ders kutusu ve buton aynı yükseklik / yuvarlaklık */
+    section[data-testid="stSidebar"] div[data-baseweb="select"] > div {
+        min-height: 50px; border-radius: 14px; border: 1.5px solid var(--line); background: #fff;
+        box-shadow: 0 2px 8px rgba(19,32,63,.04); transition: border-color .15s ease, box-shadow .15s ease;
+    }
+    section[data-testid="stSidebar"] div[data-baseweb="select"] > div:hover,
+    section[data-testid="stSidebar"] div[data-baseweb="select"] > div:focus-within {
+        border-color: var(--pen); box-shadow: 0 0 0 3px var(--pen-soft);
+    }
+    section[data-testid="stSidebar"] [data-testid="stExpander"] {
+        margin-bottom: 0; border: 1.5px solid var(--line) !important; border-radius: 14px !important;
+        background: #fff !important; box-shadow: 0 2px 8px rgba(19,32,63,.04);
+    }
+    section[data-testid="stSidebar"] [data-testid="stExpander"] summary {
+        min-height: 50px; display: flex; align-items: center; padding: 0 14px; font-size: 14px; font-weight: 600; color: var(--ink);
+    }
+    section[data-testid="stSidebar"] [data-testid="stExpander"] summary:hover { background: var(--pen-soft); }
+    section[data-testid="stSidebar"] div.stButton > button,
+    section[data-testid="stSidebar"] div.stButton > button[kind="primary"],
+    section[data-testid="stSidebar"] button[data-testid="stBaseButton-primary"] {
+        min-height: 50px; border-radius: 14px !important; font-size: 15px !important; font-weight: 700; padding: 0 1.2rem;
+        border: none !important; transform: none;
+        background: linear-gradient(135deg, var(--pen) 0%, #4f6dff 100%) !important; color: #fff !important;
+        box-shadow: 0 8px 20px rgba(35,71,255,.30) !important; transition: box-shadow .15s ease, filter .15s ease;
+    }
+    section[data-testid="stSidebar"] div.stButton > button:hover { filter: brightness(1.07); box-shadow: 0 10px 24px rgba(35,71,255,.38) !important; transform: none; }
+    section[data-testid="stSidebar"] div.stButton > button:active { filter: brightness(.95); box-shadow: 0 4px 10px rgba(35,71,255,.3) !important; transform: none; }
 
     /* ---------- SEÇİM KUTULARI (ders / ünite): seçilince fosforlu işaretlenir ---------- */
     div[data-testid="stCheckbox"] { background: #fff; border: 2px solid var(--line); border-radius: 12px; padding: 8px 12px; margin-bottom: 7px; transition: border-color .15s ease, background .15s ease; }
@@ -285,6 +339,19 @@ st.markdown("""
         div[data-testid="stCheckbox"] label[data-baseweb="checkbox"] > span:first-child::before,
         div[data-testid="stCheckbox"] label[data-baseweb="checkbox"] > span:first-child::after {
             display: none !important; content: none !important;
+        }
+    }
+
+    /* Sidebar ünite kutuları: eşit yükseklik, yumuşak görünüm */
+    section[data-testid="stSidebar"] div[data-testid="stCheckbox"] {
+        min-height: 44px; display: flex; align-items: center; border: 1.5px solid var(--line);
+        border-radius: 12px; padding: 4px 12px; margin-bottom: 6px; background: #fbfcff;
+    }
+    section[data-testid="stSidebar"] div[data-testid="stCheckbox"]:hover { border-color: var(--pen); background: var(--pen-soft); }
+    @supports selector(:has(*)) {
+        section[data-testid="stSidebar"] div[data-testid="stCheckbox"]:has(input:checked) { background: var(--pen-soft); border-color: var(--pen); }
+        section[data-testid="stSidebar"] div[data-testid="stCheckbox"] label[data-baseweb="checkbox"]:has(input:checked) > span:first-child {
+            background: var(--pen) !important; border-color: var(--pen) !important;
         }
     }
 </style>
@@ -2228,7 +2295,27 @@ def yeni_sinav():
 # =====================================================================
 # ÜRETİM AKIŞI (sidebar'daki butondan çağrılır)
 # =====================================================================
-def sorulari_uret(sinif, tur, zorluk, adet, haritasi, sure_soru):
+def otomatik_sure_soru(sorular, zorluk):
+    """Soru başına süreyi (sn) zorluğa, görsel varlığına ve soru uzunluğuna göre otomatik hesaplar."""
+    taban = {"Kolay": 60, "Orta": 80, "Zor": 100, "Olimpik": 120, "Karma / Dengeli": 90}.get(zorluk, 80)
+    if not sorular:
+        return taban
+    toplam = 0
+    for q in sorular:
+        sn = taban
+        if str(q.get("gorsel_tipi", "yok")).lower() != "yok":
+            sn += 15                                   # şekli/grafiği incelemek için ek süre
+        uzunluk = len(str(q.get("soru_metni", ""))) + sum(len(str(v)) for v in (q.get("secenekler") or {}).values())
+        if uzunluk > 450:
+            sn += 15
+        elif uzunluk > 300:
+            sn += 8
+        toplam += sn
+    ort = toplam / len(sorular)
+    return int(min(150, max(45, round(ort / 5) * 5)))
+
+
+def sorulari_uret(sinif, tur, zorluk, adet, haritasi):
     ders_unite_detay = "".join(
         f"- Ders/Kategori: {d}, Alt Başlıklar/Üniteler: {', '.join(u)}\n" for d, u in haritasi.items())
     ek_baglam = EK_BAGLAM.get(tur, "")
@@ -2291,6 +2378,7 @@ def sorulari_uret(sinif, tur, zorluk, adet, haritasi, sure_soru):
         return False, (hata or "Üretilen sorular doğrulamadan geçemedi, lütfen tekrar deneyin.")
 
     gecerli = gecerli[:adet]
+    sure_soru = otomatik_sure_soru(gecerli, zorluk)
     st.session_state.quiz_data = gecerli
     st.session_state.user_answers = {}
     st.session_state.quiz_submitted = False
@@ -2449,14 +2537,13 @@ with st.sidebar:
         <div><b>Soru Fabrikası</b><span>Yapay zeka destekli sınav modülü</span></div>
     </div>
     """, unsafe_allow_html=True)
-    st.markdown("---")
 
     bugunku_toplam = bugunku_soru_sayisini_getir()
     if GUNLUK_LIMIT > 0:
         st.metric(label="📅 Bugün Üretilen / Limit", value=f"{bugunku_toplam} / {GUNLUK_LIMIT}")
     else:
         st.metric(label="📅 Bugün Üretilen Toplam Soru", value=bugunku_toplam)
-    st.markdown("---")
+    st.markdown("<div class='yan-baslik'>Sınav ayarları</div>", unsafe_allow_html=True)
 
     if not anahtar_gecerli():
         st.warning("⚠️ `.streamlit/secrets.toml` dosyasına geçerli Gemini API anahtarınızı ekleyin.")
@@ -2479,8 +2566,7 @@ with st.sidebar:
     zorluk_seviyesi = st.selectbox("🎯 Soru Zorluk Seviyesi:", ["Kolay", "Orta", "Zor", "Olimpik", "Karma / Dengeli"],
                                    key=f"zorluk_secim_{trg}")
 
-    st.markdown("---")
-    st.markdown("📚 **Dersler ve Üniteler**")
+    st.markdown("<div class='yan-baslik'>Dersler ve üniteler</div>", unsafe_allow_html=True)
 
     mevcut_dersler = MUGREDAT.get(secili_sinif, {})
     secili_ders_unite_haritasi = {}
@@ -2498,11 +2584,8 @@ with st.sidebar:
             if secili_alt_uniteler:
                 secili_ders_unite_haritasi[ders_adi] = secili_alt_uniteler
 
-    st.markdown("---")
+    st.markdown("<div class='yan-baslik'>Üretim</div>", unsafe_allow_html=True)
     soru_sayisi = st.slider("🔢 Soru Sayısı:", 5, 10, 8, key=f"slider_soru_{trg}")
-    sure_soru = st.select_slider("⏱️ Soru başına süre (sn):", options=[60, 80, 100, 120, 150], value=80,
-                                 key=f"sure_soru_{trg}")
-    st.caption(f"Toplam süre: {_sn_yaz(soru_sayisi * sure_soru)}")
 
     secili_toplam = sum(len(u) for u in secili_ders_unite_haritasi.values())
     if st.button("🚀 Soruları Üret", use_container_width=True, type="primary"):
@@ -2514,7 +2597,7 @@ with st.sidebar:
             st.error(f"Günlük soru limiti doldu ({bugunku_toplam}/{GUNLUK_LIMIT}). Yarın tekrar dene.")
         else:
             ok, hata_detay = sorulari_uret(secili_sinif, sinav_turu, zorluk_seviyesi, soru_sayisi,
-                                           secili_ders_unite_haritasi, sure_soru)
+                                           secili_ders_unite_haritasi)
             if ok:
                 st.rerun()
             else:
@@ -2794,7 +2877,7 @@ else:
     <div class="ozellik-izgara">
         <div class="ozellik"><div class="ikon">🧩</div><b>Her seferinde yeni sorular</b><span>Daha önce sorulanlar tekrar edilmez; sorular MEB müfredatına göre hazırlanır.</span></div>
         <div class="ozellik"><div class="ikon">📐</div><b>Soruyla uyumlu görseller</b><span>Üçgen, grafik, dinamometre, Ay evreleri ve daha fazlası sorudaki verilere göre çizilir.</span></div>
-        <div class="ozellik"><div class="ikon">⏱️</div><b>Süreli sınav</b><span>Soru başına süreyi sen seçersin; soru paletinden istediğin soruya geçer, zor soruları işaretlersin.</span></div>
+        <div class="ozellik"><div class="ikon">⏱️</div><b>Süreli sınav</b><span>Süre soru sayısına ve zorluğa göre otomatik ayarlanır; soru paletinden istediğin soruya geçer, zor soruları işaretlersin.</span></div>
         <div class="ozellik"><div class="ikon">🏆</div><b>Konu bazlı analiz</b><span>Hangi ünitede zorlandığını gör; yanlışlarından yeni sorular üret.</span></div>
     </div>
     """, unsafe_allow_html=True)
