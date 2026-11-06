@@ -299,6 +299,12 @@ st.markdown("""
     section[data-testid="stSidebar"] div[data-baseweb="select"] > div:focus-within {
         border-color: var(--pen); box-shadow: 0 0 0 3px var(--pen-soft);
     }
+    section[data-testid="stSidebar"] div[data-baseweb="input"] > div {
+        min-height: 50px; border-radius: 14px; border: 1.5px solid var(--line); background: #fff;
+        box-shadow: 0 2px 8px rgba(19,32,63,.04);
+    }
+    section[data-testid="stSidebar"] div[data-baseweb="input"] > div:focus-within { border-color: var(--pen); box-shadow: 0 0 0 3px var(--pen-soft); }
+    .benzer-kutu { background: var(--pen-soft); border: 1.5px solid var(--pen); border-radius: 16px; padding: 14px 18px; margin: 14px 0 8px; }
     section[data-testid="stSidebar"] [data-testid="stExpander"] {
         margin-bottom: 0; border: 1.5px solid var(--line) !important; border-radius: 14px !important;
         background: #fff !important; box-shadow: 0 2px 8px rgba(19,32,63,.04);
@@ -422,6 +428,133 @@ def gecmis_ekle(ozetler):
         g = (g if isinstance(g, list) else []) + list(ozetler)
         db["_gecmis"] = g[-80:]
         veritabani_kaydet(db)
+
+
+# =====================================================================
+# SORU BANKASI (üretilen sorular saklanır; istenirse yeniden kullanılır)
+# =====================================================================
+BANKA_DOSYASI = "soru_bankasi.json"
+BANKA_LIMIT = 1500
+
+
+def _json_oku(yol, varsayilan):
+    try:
+        if os.path.exists(yol):
+            with open(yol, "r", encoding="utf-8") as f:
+                veri = json.load(f)
+            return veri if isinstance(veri, type(varsayilan)) else varsayilan
+    except Exception:
+        pass
+    return varsayilan
+
+
+def _json_yaz(yol, veri):
+    try:
+        with open(yol + ".tmp", "w", encoding="utf-8") as f:
+            json.dump(veri, f, ensure_ascii=False, default=str)
+        os.replace(yol + ".tmp", yol)
+    except Exception:
+        pass
+
+
+def banka_say():
+    return len(_json_oku(BANKA_DOSYASI, []))
+
+
+def banka_ekle(sorular, sinif, tur, zorluk):
+    """Yeni üretilen soruları bankaya ekler (aynı soru metni iki kez eklenmez)."""
+    if not sorular or tur == "Yanlışlardan Üretilen Sorular":
+        return
+    with _db_kilidi():
+        liste = _json_oku(BANKA_DOSYASI, [])
+        var = {_ozet(q) for q in liste}
+        for q in sorular:
+            if _ozet(q) in var:
+                continue
+            var.add(_ozet(q))
+            kayit = copy.deepcopy(q)
+            kayit.update({"_sinif": sinif, "_tur": tur, "_zorluk": zorluk})
+            liste.append(kayit)
+        _json_yaz(BANKA_DOSYASI, liste[-BANKA_LIMIT:])
+
+
+def banka_sec(sinif, tur, zorluk, haritasi, adet, gorulen):
+    """Seçili sınıf/tür/zorluk/ders/ünite ile eşleşen, daha önce görülmemiş soruları bankadan seçer."""
+    if tur == "Yanlışlardan Üretilen Sorular" or adet <= 0:
+        return []
+    adaylar = []
+    for q in _json_oku(BANKA_DOSYASI, []):
+        if q.get("_sinif") != sinif or q.get("_tur") != tur:
+            continue
+        if zorluk != "Karma / Dengeli" and q.get("_zorluk") != zorluk:
+            continue
+        ders, unite = q.get("ders"), q.get("unite")
+        if ders not in haritasi or (unite and unite not in haritasi[ders]):
+            continue
+        if _ozet(q) in gorulen:
+            continue
+        adaylar.append(q)
+    random.shuffle(adaylar)
+    secilen, goruldu = [], set()
+    for q in adaylar:
+        if _ozet(q) in goruldu:
+            continue
+        goruldu.add(_ozet(q))
+        secilen.append({k: copy.deepcopy(v) for k, v in q.items() if not k.startswith("_")})
+        if len(secilen) >= adet:
+            break
+    return secilen
+
+
+# =====================================================================
+# ÖĞRENCİ PROFİLLERİ (ad yazılırsa sınav geçmişi ve yanlış arşivi kalıcı saklanır)
+# =====================================================================
+PROFIL_DOSYASI = "ogrenci_profilleri.json"
+
+
+def _profil_ad_temizle(ad):
+    return re.sub(r"\s+", " ", str(ad or "")).strip()[:30]
+
+
+def _profil_anahtar(ad):
+    return _profil_ad_temizle(ad).casefold()
+
+
+def profil_kaydet():
+    ad = _profil_ad_temizle(st.session_state.get("profil_adi"))
+    if not ad:
+        return
+    with _db_kilidi():
+        p = _json_oku(PROFIL_DOSYASI, {})
+        p[_profil_anahtar(ad)] = {
+            "ad": ad, "guncelleme": datetime.now().strftime("%Y-%m-%d %H:%M"),
+            "performance_history": list(st.session_state.performance_history)[-30:],
+            "yanlis_sorular_arsivi": list(st.session_state.yanlis_sorular_arsivi)[-60:],
+        }
+        if len(p) > 300:                                     # en eski profilleri at
+            for k in sorted(p, key=lambda x: p[x].get("guncelleme", ""))[:len(p) - 300]:
+                p.pop(k, None)
+        _json_yaz(PROFIL_DOSYASI, p)
+
+
+def profil_degistir():
+    """Öğrenci adı kutusu değişince çalışır: kayıtlı geçmişi yükler (yoksa yeni profil açar)."""
+    yeni = _profil_ad_temizle(st.session_state.get("ogrenci_adi_girdi", ""))
+    eski = _profil_ad_temizle(st.session_state.get("profil_adi", ""))
+    if yeni == eski:
+        return
+    st.session_state.profil_adi = yeni
+    if not yeni:
+        return
+    kayit = _json_oku(PROFIL_DOSYASI, {}).get(_profil_anahtar(yeni))
+    if kayit:
+        st.session_state.performance_history = list(kayit.get("performance_history", []))[-30:]
+        st.session_state.yanlis_sorular_arsivi = list(kayit.get("yanlis_sorular_arsivi", []))[-60:]
+    else:
+        if eski:                                             # başka öğrencinin verisi yeni profile geçmesin
+            st.session_state.performance_history = []
+            st.session_state.yanlis_sorular_arsivi = []
+        profil_kaydet()
 
 
 # =====================================================================
@@ -2105,6 +2238,7 @@ _VARSAYILANLAR = {
     "isaretli": [], "soru_sureleri": {}, "q_giris": None, "bitir_onay": False,
     "sonuc_islendi": False, "sure_doldu": False, "gecmis_ozetler": [], "sinav_meta": {},
     "giris_ok": False, "oturum_yuklendi": False, "temizlik_yapildi": False,
+    "benzer_sorular": {}, "profil_adi": "",
 }
 for _k, _v in _VARSAYILANLAR.items():
     if _k not in st.session_state:
@@ -2115,7 +2249,7 @@ OTURUM_KLASORU = "oturumlar"
 _KAYIT_ANAHTARLARI = [
     "quiz_data", "user_answers", "quiz_submitted", "quiz_ready_to_start", "exam_started", "start_time",
     "total_duration", "current_question", "performance_history", "yanlis_sorular_arsivi", "isaretli",
-    "soru_sureleri", "bitir_onay", "sonuc_islendi", "sure_doldu", "gecmis_ozetler", "sinav_meta",
+    "soru_sureleri", "bitir_onay", "sonuc_islendi", "sure_doldu", "gecmis_ozetler", "sinav_meta", "profil_adi",
 ]
 
 
@@ -2288,6 +2422,7 @@ def yeni_sinav():
     st.session_state.bitir_onay = False
     st.session_state.sonuc_islendi = False
     st.session_state.sure_doldu = False
+    st.session_state.benzer_sorular = {}
     st.session_state.secim_sifirla_tetikleyici += 1
     oturum_sil()
 
@@ -2295,6 +2430,47 @@ def yeni_sinav():
 # =====================================================================
 # ÜRETİM AKIŞI (sidebar'daki butondan çağrılır)
 # =====================================================================
+_ZORLUK_SIRA = ["Kolay", "Orta", "Zor", "Olimpik"]
+ZORLUK_OTOMATIK = "🤖 Otomatik (performansa göre)"
+
+
+def onerilen_zorluk():
+    """Son 3 sınavın ortalamasına göre bir sonraki sınav için zorluk önerir -> (zorluk, açıklama)."""
+    son = st.session_state.performance_history[-3:]
+    if not son:
+        return "Orta", "henüz sınav yok, Orta ile başla"
+    ort = round(sum(p.get("puan", 0) for p in son) / len(son))
+    onceki = son[-1].get("zorluk", "")
+    i = _ZORLUK_SIRA.index(onceki) if onceki in _ZORLUK_SIRA else 1
+    if ort >= 85:
+        return _ZORLUK_SIRA[min(i + 1, 3)], f"son {len(son)} sınav ort. %{ort}, bir seviye yukarı"
+    if ort < 50:
+        return _ZORLUK_SIRA[max(i - 1, 0)], f"son {len(son)} sınav ort. %{ort}, bir seviye aşağı"
+    return _ZORLUK_SIRA[i], f"son {len(son)} sınav ort. %{ort}, seviye aynı kalsın"
+
+
+def benzer_soru_uret(q, sinif, zorluk):
+    """Yanlış/boş bırakılan soruyla aynı kazanımı farklı sayı-bağlamla ölçen tek bir yeni soru üretir."""
+    ders = q.get("ders") or ""
+    uniteler = [q["unite"]] if q.get("unite") else list(MUGREDAT.get(sinif, {}).get(ders, []))
+    haritasi = {ders: uniteler}
+    detay = f"- Ders/Kategori: {ders}, Alt Başlıklar/Üniteler: {', '.join(uniteler)}\n"
+    arsiv = [{"ders": ders, "unite": q.get("unite", ""), "soru": q.get("soru_metni", "")}]
+    ek = (EK_BAGLAM["Yanlışlardan Üretilen Sorular"]
+          + f" Ölçülen kazanım: {q.get('kazanim', '')}. Aynı kazanımı farklı sayı ve bağlamla ölçen TEK bir soru üret.")
+    hata = None
+    for _ in range(2):
+        p = prompt_olustur(1, 1, 1, sinif, "Yanlışlardan Üretilen Sorular", zorluk, detay, ek,
+                           [str(q.get("soru_metni", ""))[:80]], arsiv, random.randint(10000, 99999))
+        for liste, h in paralel_uret([p], lambda: None):
+            hata = h or hata
+            for ham in liste:
+                temiz = soru_dogrula(ham, haritasi)
+                if temiz and _ozet(temiz) != _ozet(q):
+                    return temiz, None
+    return None, (hata or "Geçerli bir soru üretilemedi, tekrar dene.")
+
+
 def otomatik_sure_soru(sorular, zorluk):
     """Soru başına süreyi (sn) zorluğa, görsel varlığına ve soru uzunluğuna göre otomatik hesaplar."""
     taban = {"Kolay": 60, "Orta": 80, "Zor": 100, "Olimpik": 120, "Karma / Dengeli": 90}.get(zorluk, 80)
@@ -2315,7 +2491,7 @@ def otomatik_sure_soru(sorular, zorluk):
     return int(min(150, max(45, round(ort / 5) * 5)))
 
 
-def sorulari_uret(sinif, tur, zorluk, adet, haritasi):
+def sorulari_uret(sinif, tur, zorluk, adet, haritasi, banka_kullan=False):
     ders_unite_detay = "".join(
         f"- Ders/Kategori: {d}, Alt Başlıklar/Üniteler: {', '.join(u)}\n" for d, u in haritasi.items())
     ek_baglam = EK_BAGLAM.get(tur, "")
@@ -2324,11 +2500,15 @@ def sorulari_uret(sinif, tur, zorluk, adet, haritasi):
     if tur == "Yanlışlardan Üretilen Sorular" and not arsiv:
         ek_baglam += " (Henüz kayıtlı yanlış yok; seçilen konulardaki temel zorlanılan kazanımlardan üret.)"
 
-    parca_say = 2 if adet >= 7 else 1
-    adetler = [adet] if parca_say == 1 else [(adet + 1) // 2, adet // 2]
+    gorulen = {g[:60] for g in map(_norm, gecmis)}
+    banka_soru = banka_sec(sinif, tur, zorluk, haritasi, adet, gorulen) if banka_kullan else []
+    adet_uret = adet - len(banka_soru)
+    gorulen |= {_ozet(q) for q in banka_soru}
+
+    adet_g = max(adet_uret, 1)
+    parca_say = 2 if adet_g >= 7 else 1
+    adetler = [adet_g] if parca_say == 1 else [(adet_g + 1) // 2, adet_g // 2]
     tohum = random.randint(10000, 99999)
-    promptlar = [prompt_olustur(a, i + 1, parca_say, sinif, tur, zorluk, ders_unite_detay, ek_baglam,
-                                gecmis, arsiv, tohum + i) for i, a in enumerate(adetler)]
 
     bas = time.time()
     tahmini = int(max(adetler) * 1.5 + 6)
@@ -2345,13 +2525,7 @@ def sorulari_uret(sinif, tur, zorluk, adet, haritasi):
         </div>
         """, unsafe_allow_html=True)
 
-    durum()
-    sonuclar = paralel_uret(promptlar, durum)
-    ham = [q for liste, _ in sonuclar for q in liste]
-    hata = next((h for _, h in sonuclar if h), None)
-
-    durum("Sorular ve çizimler kontrol ediliyor...")
-    gecerli, gorulen = [], {g[:60] for g in map(_norm, gecmis)}
+    gecerli = []
 
     def ekle(liste):
         for q in liste:
@@ -2364,22 +2538,35 @@ def sorulari_uret(sinif, tur, zorluk, adet, haritasi):
             gorulen.add(oz)
             gecerli.append(temiz)
 
-    ekle(ham)
-    if 0 < len(gecerli) < adet:                      # eksik kalanları tek seferde tamamla
-        eksik = adet - len(gecerli)
-        p = prompt_olustur(eksik + 1, 1, 1, sinif, tur, zorluk, ders_unite_detay, ek_baglam,
-                           gecmis + [g["soru_metni"][:80] for g in gecerli], arsiv, tohum + 99)
-        durum("Eksik sorular tamamlanıyor...")
-        ek = paralel_uret([p], durum)
-        ekle([q for liste, _ in ek for q in liste])
+    hata = None
+    if adet_uret > 0:
+        promptlar = [prompt_olustur(a, i + 1, parca_say, sinif, tur, zorluk, ders_unite_detay, ek_baglam,
+                                    gecmis, arsiv, tohum + i) for i, a in enumerate(adetler)]
+        durum()
+        sonuclar = paralel_uret(promptlar, durum)
+        ham = [q for liste, _ in sonuclar for q in liste]
+        hata = next((h for _, h in sonuclar if h), None)
+
+        durum("Sorular ve çizimler kontrol ediliyor...")
+        ekle(ham)
+        if 0 < len(gecerli) < adet_uret:                  # eksik kalanları tek seferde tamamla
+            eksik = adet_uret - len(gecerli)
+            p = prompt_olustur(eksik + 1, 1, 1, sinif, tur, zorluk, ders_unite_detay, ek_baglam,
+                               gecmis + [g["soru_metni"][:80] for g in gecerli], arsiv, tohum + 99)
+            durum("Eksik sorular tamamlanıyor...")
+            ek = paralel_uret([p], durum)
+            ekle([q for liste, _ in ek for q in liste])
     uretim_alani.empty()
 
-    if not gecerli:
+    yeni = gecerli[:max(adet_uret, 0)]
+    toplam = banka_soru + yeni
+    if not toplam:
         return False, (hata or "Üretilen sorular doğrulamadan geçemedi, lütfen tekrar deneyin.")
-
-    gecerli = gecerli[:adet]
-    sure_soru = otomatik_sure_soru(gecerli, zorluk)
+    if banka_soru and yeni:
+        random.shuffle(toplam)
+    gecerli = toplam[:adet]
     st.session_state.quiz_data = gecerli
+    sure_soru = otomatik_sure_soru(gecerli, zorluk)
     st.session_state.user_answers = {}
     st.session_state.quiz_submitted = False
     st.session_state.exam_started = False
@@ -2390,12 +2577,16 @@ def sorulari_uret(sinif, tur, zorluk, adet, haritasi):
     st.session_state.bitir_onay = False
     st.session_state.sonuc_islendi = False
     st.session_state.sure_doldu = False
+    st.session_state.benzer_sorular = {}
     st.session_state.sinav_meta = {"sinif": sinif, "tur": tur, "zorluk": zorluk, "sure_soru": sure_soru,
+                                   "banka": len(banka_soru),
                                    "tarih": datetime.now().strftime("%d.%m.%Y %H:%M")}
     ozetler = [g["soru_metni"][:80] for g in gecerli]
     st.session_state.gecmis_ozetler = (st.session_state.gecmis_ozetler + ozetler)[-40:]
     gecmis_ekle(ozetler)
-    soru_sayisini_artir(len(gecerli))
+    if yeni:
+        banka_ekle(yeni, sinif, tur, zorluk)
+        soru_sayisini_artir(len(yeni))
     return True, ""
 
 
@@ -2543,6 +2734,15 @@ with st.sidebar:
         st.metric(label="📅 Bugün Üretilen / Limit", value=f"{bugunku_toplam} / {GUNLUK_LIMIT}")
     else:
         st.metric(label="📅 Bugün Üretilen Toplam Soru", value=bugunku_toplam)
+    st.markdown("<div class='yan-baslik'>Öğrenci</div>", unsafe_allow_html=True)
+    st.text_input("👤 Öğrenci adı", value=st.session_state.profil_adi, key="ogrenci_adi_girdi",
+                  on_change=profil_degistir, max_chars=30, placeholder="Adını yaz, ilerlemen kaydedilsin",
+                  label_visibility="collapsed")
+    if st.session_state.profil_adi:
+        st.caption(f"📈 {len(st.session_state.performance_history)} sınav kayıtlı · "
+                   f"yanlış arşivinde {len(st.session_state.yanlis_sorular_arsivi)} soru")
+    else:
+        st.caption("Ad yazarsan sınav geçmişin ve yanlış arşivin sonraki girişlerde de saklanır.")
     st.markdown("<div class='yan-baslik'>Sınav ayarları</div>", unsafe_allow_html=True)
 
     if not anahtar_gecerli():
@@ -2563,8 +2763,15 @@ with st.sidebar:
     if sinav_turu == "Yanlışlardan Üretilen Sorular":
         st.caption(f"🧠 Arşivde {len(st.session_state.yanlis_sorular_arsivi)} yanlış soru var; yeni sorular bunlardan üretilir.")
 
-    zorluk_seviyesi = st.selectbox("🎯 Soru Zorluk Seviyesi:", ["Kolay", "Orta", "Zor", "Olimpik", "Karma / Dengeli"],
-                                   key=f"zorluk_secim_{trg}")
+    zorluk_secimi = st.selectbox("🎯 Soru Zorluk Seviyesi:",
+                                 ["Kolay", "Orta", "Zor", "Olimpik", "Karma / Dengeli", ZORLUK_OTOMATIK],
+                                 key=f"zorluk_secim_{trg}")
+    oner_zorluk, oner_neden = onerilen_zorluk()
+    zorluk_seviyesi = oner_zorluk if zorluk_secimi == ZORLUK_OTOMATIK else zorluk_secimi
+    if zorluk_secimi == ZORLUK_OTOMATIK:
+        st.caption(f"🤖 Seçilen zorluk: **{oner_zorluk}** ({oner_neden})")
+    elif st.session_state.performance_history:
+        st.caption(f"💡 Önerilen zorluk: {oner_zorluk} ({oner_neden})")
 
     st.markdown("<div class='yan-baslik'>Dersler ve üniteler</div>", unsafe_allow_html=True)
 
@@ -2587,6 +2794,10 @@ with st.sidebar:
     st.markdown("<div class='yan-baslik'>Üretim</div>", unsafe_allow_html=True)
     soru_sayisi = st.slider("🔢 Soru Sayısı:", 5, 10, 8, key=f"slider_soru_{trg}")
 
+    banka_kullan = st.checkbox("♻️ Kayıtlı soru bankasından da kullan", key=f"banka_{trg}",
+                               help="Daha önce üretilmiş uygun sorular varsa yapay zeka çağrısı azalır, günlük limit korunur.")
+    st.caption(f"🗄️ Bankada {banka_say()} soru kayıtlı")
+
     secili_toplam = sum(len(u) for u in secili_ders_unite_haritasi.values())
     if st.button("🚀 Soruları Üret", use_container_width=True, type="primary"):
         if not anahtar_gecerli():
@@ -2597,7 +2808,7 @@ with st.sidebar:
             st.error(f"Günlük soru limiti doldu ({bugunku_toplam}/{GUNLUK_LIMIT}). Yarın tekrar dene.")
         else:
             ok, hata_detay = sorulari_uret(secili_sinif, sinav_turu, zorluk_seviyesi, soru_sayisi,
-                                           secili_ders_unite_haritasi)
+                                           secili_ders_unite_haritasi, banka_kullan)
             if ok:
                 st.rerun()
             else:
@@ -2632,11 +2843,12 @@ if st.session_state.quiz_ready_to_start and st.session_state.quiz_data and not s
     toplam_dk = max(1, round(toplam_soru_sayisi * sure_pq / 60))
     gorselli = sum(1 for q in st.session_state.quiz_data if str(q.get('gorsel_tipi', 'yok')).lower() != 'yok')
     meta = st.session_state.sinav_meta
+    banka_not = f"<br>♻️ {int(meta.get('banka', 0))} soru kayıtlı bankadan geldi." if meta.get("banka") else ""
     st.markdown(f"""
     <div class="hero orta">
         <h1>Sınavın hazır</h1>
         <p><mark>{html.escape(str(meta.get('sinif', '')))}</mark> · {html.escape(str(meta.get('tur', '')))} · Zorluk: {html.escape(str(meta.get('zorluk', '')))}<br>
-        Hazır olduğunda başlat; süre başlar ve geri sayım çalışır.</p>
+        Hazır olduğunda başlat; süre başlar ve geri sayım çalışır.{banka_not}</p>
         <div class="hero-chipler">
             <div class="hero-chip"><b>{toplam_soru_sayisi}</b><span>Soru</span></div>
             <div class="hero-chip"><b>{toplam_dk} dk</b><span>Süre (soru başına {sure_pq} sn)</span></div>
@@ -2738,8 +2950,9 @@ elif st.session_state.exam_started and st.session_state.quiz_data and not st.ses
         st.button("🚩 İşareti kaldır" if q_idx in isaretliler else "🚩 Sonra bak", key=f"btn_flag_{q_idx}",
                   use_container_width=True, on_click=isaret_degistir, args=(q_idx,))
     with aracl2:
-        st.button("🧹 Cevabı temizle", key=f"btn_clear_{q_idx}", use_container_width=True,
-                  disabled=not st.session_state.user_answers.get(q_idx), on_click=cevap_temizle, args=(q_idx,))
+        if st.session_state.user_answers.get(q_idx):   # cevap yokken solgun/pasif görünmesin diye hiç çizilmez
+            st.button("🧹 Cevabı temizle", key=f"btn_clear_{q_idx}", use_container_width=True,
+                      on_click=cevap_temizle, args=(q_idx,))
 
     st.markdown("<br>", unsafe_allow_html=True)
 
@@ -2784,8 +2997,10 @@ elif st.session_state.quiz_submitted and st.session_state.quiz_data:
         st.session_state.performance_history.append({
             "tarih": datetime.now().strftime("%d.%m %H:%M"), "puan": round(toplam_puan),
             "dogru": dogru_sayisi, "yanlis": yanlis_sayisi, "bos": bos_sayisi,
-            "tur": st.session_state.sinav_meta.get("tur", "")})
+            "tur": st.session_state.sinav_meta.get("tur", ""),
+            "zorluk": st.session_state.sinav_meta.get("zorluk", "")})
         st.session_state.performance_history = st.session_state.performance_history[-30:]
+        profil_kaydet()
         st.session_state.sonuc_islendi = True
 
     if toplam_puan >= 85:
@@ -2824,6 +3039,35 @@ elif st.session_state.quiz_submitted and st.session_state.quiz_data:
     if len(unite_g) > 1:
         kart += f"<div class='analiz-kart'><h4>🧩 Ünite bazlı başarı</h4>{analiz_html(unite_g)}</div>"
     st.markdown(kart, unsafe_allow_html=True)
+
+    # Yanlış/boş bırakılan konulardan tek tıkla yeni sınav
+    meta_s = st.session_state.sinav_meta
+    zayif_harita = {}
+    for r in satirlar:
+        if r["k"] != "d":
+            liste_u = zayif_harita.setdefault(r["ders"], [])
+            if r["unite"] and r["unite"] not in liste_u:
+                liste_u.append(r["unite"])
+    for ders_z, liste_u in zayif_harita.items():
+        if not liste_u:
+            liste_u.extend(MUGREDAT.get(meta_s.get("sinif", ""), {}).get(ders_z, []))
+    zayif_harita = {d: u for d, u in zayif_harita.items() if u}
+    if zayif_harita:
+        if st.button("🎯 Zayıf konulardan yeni sınav hazırla", use_container_width=True, type="primary",
+                     key="btn_zayif_sinav"):
+            adet_z = int(min(10, max(5, len(quiz_data))))
+            bugun_z = bugunku_soru_sayisini_getir()
+            if not anahtar_gecerli():
+                st.error("Geçerli bir API anahtarı bulunamadı!")
+            elif GUNLUK_LIMIT > 0 and bugun_z + adet_z > GUNLUK_LIMIT:
+                st.error(f"Günlük soru limiti doldu ({bugun_z}/{GUNLUK_LIMIT}). Yarın tekrar dene.")
+            else:
+                ok_z, hata_z = sorulari_uret(meta_s.get("sinif", ""), "Konu Tarama Sınavı",
+                                             meta_s.get("zorluk", "Orta"), adet_z, zayif_harita)
+                if ok_z:
+                    st.rerun()
+                else:
+                    st.error(f"❌ Sorular üretilemedi. Hata: {hata_z}")
 
     gecmis_p = st.session_state.performance_history
     if len(gecmis_p) >= 2:
@@ -2870,6 +3114,43 @@ elif st.session_state.quiz_submitted and st.session_state.quiz_data:
             <div class="cozum">💡 <b>Çözüm:</b> {esc(q.get('cozum_aciklamasi', 'Açıklama bulunmuyor.'))}</div>
             """, unsafe_allow_html=True)
 
+            if r["k"] != "d":
+                bq = st.session_state.benzer_sorular.get(idx)
+                if bq is None:
+                    if st.button("🔁 Benzer soru üret", key=f"btn_benzer_{idx}", use_container_width=True):
+                        if not anahtar_gecerli():
+                            st.error("Geçerli bir API anahtarı bulunamadı!")
+                        elif GUNLUK_LIMIT > 0 and bugunku_soru_sayisini_getir() + 1 > GUNLUK_LIMIT:
+                            st.error("Günlük soru limiti doldu. Yarın tekrar dene.")
+                        else:
+                            with st.spinner("Benzer soru hazırlanıyor..."):
+                                yeni_q, hata_b = benzer_soru_uret(q, st.session_state.sinav_meta.get("sinif", ""),
+                                                                  st.session_state.sinav_meta.get("zorluk", "Orta"))
+                            if yeni_q:
+                                st.session_state.benzer_sorular[idx] = yeni_q
+                                soru_sayisini_artir(1)
+                                st.rerun()
+                            else:
+                                st.error(f"❌ Soru üretilemedi. {hata_b}")
+                else:
+                    st.markdown(f"""
+                    <div class="benzer-kutu">
+                        <div class="alt-baslik">🔁 Benzer soru · {html.escape(str(bq.get('ders', '')))}</div>
+                        <div class="soru-metni-kutusu" style="font-size:17px;">{esc(bq.get('soru_metni', ''))}</div>
+                        {gorsel_html(bq, 260)}
+                    </div>
+                    """, unsafe_allow_html=True)
+                    bsec = bq.get("secenekler", {})
+                    bcevap = st.radio("Cevabın:", options=list(bsec.keys()), index=None, key=f"radio_benzer_{idx}",
+                                      format_func=lambda x, _s=bsec: f"{x}) {temizle_latex_metin(_s[x])}")
+                    if bcevap:
+                        if bcevap == bq.get("dogru_cevap"):
+                            st.success("✅ Doğru, tebrikler!")
+                        else:
+                            st.error(f"❌ Doğru cevap: {bq.get('dogru_cevap')}")
+                        st.markdown(f"<div class='cozum'>💡 <b>Çözüm:</b> {esc(bq.get('cozum_aciklamasi', ''))}</div>",
+                                    unsafe_allow_html=True)
+
     st.markdown("<br>", unsafe_allow_html=True)
     if st.session_state.yanlis_sorular_arsivi:
         st.caption(f"🧠 Yanlış arşivinde {len(st.session_state.yanlis_sorular_arsivi)} soru var. "
@@ -2882,7 +3163,9 @@ else:
     if gecmis_p:
         ort = round(sum(p["puan"] for p in gecmis_p) / len(gecmis_p))
         son = gecmis_p[-1]
-        gecmis_html = (f"<div class='gecmis-kutu'><b>Bu oturumda {len(gecmis_p)} sınav çözdün.</b> "
+        _giris = (f"{html.escape(st.session_state.profil_adi)}, şimdiye kadar {len(gecmis_p)} sınav çözdün."
+                  if st.session_state.profil_adi else f"Bu oturumda {len(gecmis_p)} sınav çözdün.")
+        gecmis_html = (f"<div class='gecmis-kutu'><b>{_giris}</b> "
                        f"Ortalama puanın %{ort}, son sınavın %{son['puan']}.</div>")
     st.markdown(f"""
     <div class="hero">
