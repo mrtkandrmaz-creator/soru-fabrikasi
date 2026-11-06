@@ -385,6 +385,71 @@ st.markdown("""
             background: var(--pen) !important; border-color: var(--pen) !important;
         }
     }
+
+    /* ---------- KENAR ÇUBUĞU v2: modern görünüm ---------- */
+    section[data-testid="stSidebar"] {
+        background:
+            radial-gradient(circle at 0% 0%, rgba(35,71,255,.09), transparent 42%),
+            radial-gradient(circle at 100% 100%, rgba(124,58,237,.08), transparent 40%),
+            linear-gradient(180deg, #ffffff 0%, #f4f6ff 100%);
+        border-right: 1px solid rgba(19,32,63,.08);
+    }
+    section[data-testid="stSidebar"] *::-webkit-scrollbar { width: 6px; }
+    section[data-testid="stSidebar"] *::-webkit-scrollbar-thumb { background: #cfd8f3; border-radius: 99px; }
+    section[data-testid="stSidebar"] *::-webkit-scrollbar-track { background: transparent; }
+    section[data-testid="stSidebar"] [data-testid="stCaptionContainer"] { color: var(--muted); font-size: 12.5px; line-height: 1.5; }
+    section[data-testid="stSidebar"] [data-testid="stAlert"] { border-radius: 14px; }
+
+    .marka { position: relative; overflow: hidden; }
+    .marka::after {
+        content: ""; position: absolute; right: -22px; top: -26px; width: 96px; height: 96px; border-radius: 50%;
+        background: rgba(255,255,255,.14);
+    }
+    .yan-baslik { color: var(--ink2); letter-spacing: .14em; margin-top: 16px; }
+    .yan-baslik::before {
+        content: ""; width: 9px; height: 9px; border-radius: 3px; flex: none;
+        background: linear-gradient(135deg, var(--pen), #7c3aed);
+    }
+
+    .kullanim {
+        background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 14px 16px;
+        box-shadow: 0 6px 18px rgba(19,32,63,.06);
+    }
+    .kullanim .ust { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+    .kullanim small { color: var(--muted); font-size: 12px; font-weight: 600; }
+    .kullanim b { font-size: 24px; font-weight: 800; color: var(--ink); line-height: 1; }
+    .kullanim b span { font-size: 13px; color: var(--muted); font-weight: 600; }
+    .kullanim .cubuk { height: 8px; background: var(--grid); border-radius: 99px; overflow: hidden; margin-top: 12px; }
+    .kullanim .cubuk > div { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--pen), #7c3aed); transition: width .4s; }
+    .kullanim .cubuk > div.uyari { background: linear-gradient(90deg, var(--amber), var(--red)); }
+
+    /* Ders kartları */
+    section[data-testid="stSidebar"] [data-testid="stExpander"] { transition: box-shadow .2s ease, border-color .2s ease; }
+    section[data-testid="stSidebar"] [data-testid="stExpander"]:hover { box-shadow: 0 10px 24px rgba(19,32,63,.09); }
+    section[data-testid="stSidebar"] [data-testid="stExpander"] details[open] { border-color: var(--pen); }
+    section[data-testid="stSidebar"] [data-testid="stExpander"] details[open] > summary { background: var(--pen-soft); color: var(--pen-d); }
+
+    /* Ünite kutuları: seçilince solda mavi şerit */
+    section[data-testid="stSidebar"] div[data-testid="stCheckbox"] { border-radius: 12px; transition: all .15s ease; }
+    section[data-testid="stSidebar"] div[data-testid="stCheckbox"] label p { font-size: 13.5px !important; }
+    @supports selector(:has(*)) {
+        section[data-testid="stSidebar"] div[data-testid="stCheckbox"]:has(input:checked) {
+            box-shadow: inset 4px 0 0 var(--pen); background: linear-gradient(90deg, var(--pen-soft), #fbfcff);
+        }
+    }
+
+    /* Kaydırıcı */
+    section[data-testid="stSidebar"] div[data-baseweb="slider"] [role="slider"] {
+        background: var(--pen) !important; border: 3px solid #fff !important; width: 22px !important; height: 22px !important;
+        box-shadow: 0 3px 10px rgba(35,71,255,.45) !important;
+    }
+    section[data-testid="stSidebar"] [data-testid="stSliderThumbValue"] { color: var(--pen-d); font-weight: 700; }
+
+    /* Üret düğmesi: kaydırırken altta sabit kalır */
+    section[data-testid="stSidebar"] .st-key-btn_uret {
+        position: sticky; bottom: 0; z-index: 5; padding: 18px 0 8px;
+        background: linear-gradient(180deg, rgba(244,246,255,0) 0%, #f4f6ff 40%);
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -2783,9 +2848,19 @@ with st.sidebar:
 
     bugunku_toplam = bugunku_soru_sayisini_getir()
     if GUNLUK_LIMIT > 0:
-        st.metric(label="📅 Bugün Üretilen / Limit", value=f"{bugunku_toplam} / {GUNLUK_LIMIT}")
+        _yuzde = min(100, round(bugunku_toplam / GUNLUK_LIMIT * 100))
+        st.markdown(f"""
+        <div class="kullanim">
+            <div class="ust"><small>📅 Bugün üretilen soru</small><b>{bugunku_toplam}<span> / {GUNLUK_LIMIT}</span></b></div>
+            <div class="cubuk"><div class="{'uyari' if _yuzde >= 80 else ''}" style="width:{_yuzde}%"></div></div>
+        </div>
+        """, unsafe_allow_html=True)
     else:
-        st.metric(label="📅 Bugün Üretilen Toplam Soru", value=bugunku_toplam)
+        st.markdown(f"""
+        <div class="kullanim">
+            <div class="ust"><small>📅 Bugün üretilen soru</small><b>{bugunku_toplam}</b></div>
+        </div>
+        """, unsafe_allow_html=True)
     st.markdown("<div class='yan-baslik'>Öğrenci</div>", unsafe_allow_html=True)
     _ad = st.session_state.profil_adi
     if _ad:
@@ -2813,7 +2888,7 @@ with st.sidebar:
         st.warning("⚠️ `.streamlit/secrets.toml` dosyasına geçerli Gemini API anahtarınızı ekleyin.")
 
     trg = st.session_state.secim_sifirla_tetikleyici
-    secili_sinif = st.selectbox("Eğitim Seviyesi / Kategori:", list(MUGREDAT.keys()), key=f"sinif_secim_{trg}")
+    secili_sinif = st.selectbox("🎓 Eğitim Seviyesi / Kategori:", list(MUGREDAT.keys()), key=f"sinif_secim_{trg}")
 
     sinav_turu, _ = onerilen_tur(secili_sinif)    # sınav türü her zaman geçmişe göre otomatik belirlenir
     zorluk_seviyesi, _ = onerilen_zorluk()      # zorluk her zaman geçmiş performansa göre otomatik belirlenir
@@ -2842,7 +2917,7 @@ with st.sidebar:
     st.caption(f"🗄️ Soru bankasında {banka_say()} soru kayıtlı; uygun olanlar otomatik kullanılır.")
 
     secili_toplam = sum(len(u) for u in secili_ders_unite_haritasi.values())
-    if st.button("🚀 Soruları Üret", use_container_width=True, type="primary"):
+    if st.button("🚀 Soruları Üret", key="btn_uret", use_container_width=True, type="primary"):
         if not anahtar_gecerli():
             st.error("Geçerli bir API anahtarı bulunamadı!")
         elif not secili_ders_unite_haritasi:
