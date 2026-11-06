@@ -450,6 +450,15 @@ st.markdown("""
         position: sticky; bottom: 0; z-index: 5; padding: 18px 0 8px;
         background: linear-gradient(180deg, rgba(244,246,255,0) 0%, #f4f6ff 40%);
     }
+
+    /* Kota kartı: yüzde + sona doğru yeşilden kırmızıya */
+    .kullanim .kota-yuzde { font-size: 28px; font-weight: 800; letter-spacing: -.02em; }
+    .kullanim .cubuk { height: 10px; }
+    .kullanim .cubuk > div { transition: width .5s ease; }
+    .kota-alt { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 10px; font-size: 12.5px; color: var(--muted); }
+    .kota-alt b { color: var(--ink); }
+    .kota-alt em { font-style: normal; font-weight: 700; font-size: 11.5px; padding: 3px 10px; border-radius: 99px; white-space: nowrap; }
+    section[data-testid="stSidebar"] .marka { margin-top: 4px; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -2835,33 +2844,47 @@ if sinav_suruyor:
 # Üretim sırasındaki ilerleme kartı ana alanın en üstünde görünür
 uretim_alani = st.empty()
 
+KOTA_TAHMINI = 300      # GUNLUK_LIMIT tanımlı değilse yalnızca gösterim için kullanılan tahmini günlük kota
+
+
+def _kota_renk(y):
+    """0-100 yüzdeyi yeşil -> turuncu -> kırmızı arasında bir renge çevirir."""
+    y = max(0, min(100, y))
+    yesil, turuncu, kirmizi = (18, 160, 100), (245, 158, 11), (229, 56, 59)
+    if y <= 60:
+        t, c1, c2 = y / 60, yesil, turuncu
+    else:
+        t, c1, c2 = (y - 60) / 40, turuncu, kirmizi
+    return "#%02x%02x%02x" % tuple(round(c1[i] + (c2[i] - c1[i]) * t) for i in range(3))
+
+
+def kota_karti_html(bugunku, limit):
+    """Günlük üretim kotası kartı: yüzde, kalan soru ve sona doğru yeşilden kırmızıya dönen çubuk."""
+    tahmini = limit <= 0
+    ref = KOTA_TAHMINI if tahmini else limit
+    y = max(0, min(100, round(bugunku / ref * 100)))
+    renk = _kota_renk(y)
+    kalan = max(0, ref - bugunku)
+    durum = "Rahat" if y < 50 else "Dikkat" if y < 80 else "Kota dolmak üzere" if y < 100 else "Kota doldu"
+    boyut = 10000 / max(y, 1)       # dolgu, tam yeşil→kırmızı şeridin yalnızca dolu kısmını gösterir
+    etiket = "Günlük kota (tahmini)" if tahmini else "Günlük kota"
+    return f"""
+    <div class="kullanim">
+        <div class="ust"><small>📅 {etiket}</small><b class="kota-yuzde" style="color:{renk}">%{y}</b></div>
+        <div class="cubuk"><div style="width:{y}%;background:linear-gradient(90deg,#12a064 0%,#f59e0b 60%,#e5383b 100%) 0 0 / {boyut:.0f}% 100%"></div></div>
+        <div class="kota-alt">
+            <span><b>{bugunku}</b> / {ref} soru · kalan {kalan}</span>
+            <em style="color:{renk};background:{renk}22">{durum}</em>
+        </div>
+    </div>
+    """
+
+
 # =====================================================================
 # KENAR ÇUBUĞU
 # =====================================================================
 with st.sidebar:
-    st.markdown("""
-    <div class="marka">
-        <div class="marka-logo">🔮</div>
-        <div><b>Soru Fabrikası</b><span>Yapay zeka destekli sınav modülü</span></div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    bugunku_toplam = bugunku_soru_sayisini_getir()
-    if GUNLUK_LIMIT > 0:
-        _yuzde = min(100, round(bugunku_toplam / GUNLUK_LIMIT * 100))
-        st.markdown(f"""
-        <div class="kullanim">
-            <div class="ust"><small>📅 Bugün üretilen soru</small><b>{bugunku_toplam}<span> / {GUNLUK_LIMIT}</span></b></div>
-            <div class="cubuk"><div class="{'uyari' if _yuzde >= 80 else ''}" style="width:{_yuzde}%"></div></div>
-        </div>
-        """, unsafe_allow_html=True)
-    else:
-        st.markdown(f"""
-        <div class="kullanim">
-            <div class="ust"><small>📅 Bugün üretilen soru</small><b>{bugunku_toplam}</b></div>
-        </div>
-        """, unsafe_allow_html=True)
-    st.markdown("<div class='yan-baslik'>Öğrenci</div>", unsafe_allow_html=True)
+    # --- ÖĞRENCİ (panelin en üstü) ---
     _ad = st.session_state.profil_adi
     if _ad:
         _avatar = html.escape(_ad[:1].upper())
@@ -2882,6 +2905,19 @@ with st.sidebar:
                       on_change=profil_degistir, placeholder="Adını yaz ve Enter'a bas",
                       label_visibility="collapsed")
         st.caption("Adını yazarsan sınav geçmişin ve yanlış arşivin bir sonraki girişte de saklanır.")
+
+    # --- MARKA ---
+    st.markdown("""
+    <div class="marka">
+        <div class="marka-logo">🔮</div>
+        <div><b>Soru Fabrikası</b><span>Yapay zeka destekli sınav modülü</span></div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # --- GÜNLÜK KOTA ---
+    bugunku_toplam = bugunku_soru_sayisini_getir()
+    st.markdown(kota_karti_html(bugunku_toplam, GUNLUK_LIMIT), unsafe_allow_html=True)
+
     st.markdown("<div class='yan-baslik'>Sınav ayarları</div>", unsafe_allow_html=True)
 
     if not anahtar_gecerli():
