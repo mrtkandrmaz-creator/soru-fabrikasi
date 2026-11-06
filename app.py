@@ -320,6 +320,15 @@ st.markdown("""
     .ogr-bilgi { min-width: 0; line-height: 1.35; }
     .ogr-bilgi b { display: block; color: var(--ink); font-size: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .ogr-bilgi span { color: var(--muted); font-size: 12.5px; }
+    section[data-testid="stSidebar"] .st-key-btn_oturum_kapat div.stButton > button {
+        min-height: 44px; font-size: 14px !important; font-weight: 600;
+        background: #fff !important; color: #b42318 !important; border: 1.5px solid #f3c4c0 !important;
+        box-shadow: none !important;
+    }
+    section[data-testid="stSidebar"] .st-key-btn_oturum_kapat div.stButton > button p { color: #b42318 !important; }
+    section[data-testid="stSidebar"] .st-key-btn_oturum_kapat div.stButton > button:hover {
+        background: #fff4f3 !important; filter: none; box-shadow: none !important;
+    }
     .benzer-kutu { background: var(--pen-soft); border: 1.5px solid var(--pen); border-radius: 16px; padding: 14px 18px; margin: 14px 0 8px; }
     section[data-testid="stSidebar"] [data-testid="stExpander"] {
         margin-bottom: 0; border: 1.5px solid var(--line) !important; border-radius: 14px !important;
@@ -551,6 +560,15 @@ def profil_kaydet():
             for k in sorted(p, key=lambda x: p[x].get("guncelleme", ""))[:len(p) - 300]:
                 p.pop(k, None)
         _json_yaz(PROFIL_DOSYASI, p)
+
+
+def oturumu_kapat():
+    """Öğrenci oturumunu kapatır: sınav ekranını sıfırlar, misafir moduna döner (kayıtlı profil dosyada kalır)."""
+    yeni_sinav()
+    st.session_state.profil_adi = ""
+    st.session_state.performance_history = []
+    st.session_state.yanlis_sorular_arsivi = []
+    st.session_state.pop("ogrenci_adi_girdi", None)
 
 
 def profil_degistir():
@@ -2464,6 +2482,25 @@ def onerilen_zorluk():
     return _ZORLUK_SIRA[i], f"son {len(son)} sınav ort. %{ort}, seviye aynı kalsın"
 
 
+_TUR_DONGU = ["Genel Tarama Sınavı", "Konu Tarama Sınavı", "Yeni Nesil Sorular", "MEB Maarif Modeli"]
+
+
+def onerilen_tur(sinif):
+    """Geçmişe göre sınav türü önerir -> (tür, açıklama). Yanlış arşivi doluysa araya 'Yanlışlardan' girer."""
+    gecmis = st.session_state.performance_history
+    if not gecmis:
+        return "Genel Tarama Sınavı", "ilk sınav, genel tarama"
+    arsiv = len(st.session_state.yanlis_sorular_arsivi)
+    son_tur = gecmis[-1].get("tur", "")
+    if arsiv >= 5 and son_tur != "Yanlışlardan Üretilen Sorular":
+        return "Yanlışlardan Üretilen Sorular", f"arşivde {arsiv} yanlış soru var"
+    dongu = list(_TUR_DONGU)
+    if sinif in ("8. Sınıf", "LGS Hazırlık"):
+        dongu.insert(2, "LGS Geçmiş Yıllar Çıkmış Sorular")
+    tur = dongu[(dongu.index(son_tur) + 1) % len(dongu)] if son_tur in dongu else dongu[0]
+    return tur, "son sınavdan farklı tür"
+
+
 def benzer_soru_uret(q, sinif, zorluk):
     """Yanlış/boş bırakılan soruyla aynı kazanımı farklı sayı-bağlamla ölçen tek bir yeni soru üretir."""
     ders = q.get("ders") or ""
@@ -2763,10 +2800,12 @@ with st.sidebar:
         <div class="ogr-bilgi"><b>{html.escape(_ad) if _ad else "Misafir"}</b><span>{_alt}</span></div>
     </div>
     """, unsafe_allow_html=True)
-    st.text_input("Öğrenci adı", value=st.session_state.profil_adi, key="ogrenci_adi_girdi",
-                  on_change=profil_degistir, placeholder="Adını yaz ve Enter'a bas",
-                  label_visibility="collapsed")
-    if not st.session_state.profil_adi:
+    if st.session_state.profil_adi:
+        st.button("🚪 Oturumu kapat", key="btn_oturum_kapat", use_container_width=True, on_click=oturumu_kapat)
+    else:
+        st.text_input("Öğrenci adı", value="", key="ogrenci_adi_girdi",
+                      on_change=profil_degistir, placeholder="Adını yaz ve Enter'a bas",
+                      label_visibility="collapsed")
         st.caption("Adını yazarsan sınav geçmişin ve yanlış arşivin bir sonraki girişte de saklanır.")
     st.markdown("<div class='yan-baslik'>Sınav ayarları</div>", unsafe_allow_html=True)
 
@@ -2776,18 +2815,7 @@ with st.sidebar:
     trg = st.session_state.secim_sifirla_tetikleyici
     secili_sinif = st.selectbox("Eğitim Seviyesi / Kategori:", list(MUGREDAT.keys()), key=f"sinif_secim_{trg}")
 
-    sinav_turu = st.selectbox("Sınav Türü:", [
-        "Genel Tarama Sınavı",
-        "Konu Tarama Sınavı",
-        "Yanlışlardan Üretilen Sorular",
-        "LGS Geçmiş Yıllar Çıkmış Sorular",
-        "Hazır Bulunuşluk Sınavı",
-        "MEB Maarif Modeli",
-        "Yeni Nesil Sorular"
-    ], key=f"tur_secim_{trg}")
-    if sinav_turu == "Yanlışlardan Üretilen Sorular":
-        st.caption(f"🧠 Arşivde {len(st.session_state.yanlis_sorular_arsivi)} yanlış soru var; yeni sorular bunlardan üretilir.")
-
+    sinav_turu, _ = onerilen_tur(secili_sinif)    # sınav türü her zaman geçmişe göre otomatik belirlenir
     zorluk_seviyesi, _ = onerilen_zorluk()      # zorluk her zaman geçmiş performansa göre otomatik belirlenir
 
     st.markdown("<div class='yan-baslik'>Dersler ve üniteler</div>", unsafe_allow_html=True)
@@ -3185,7 +3213,7 @@ else:
     st.markdown(f"""
     <div class="hero">
         <h1>Soru Fabrikası'na hoş geldin</h1>
-        <p>Sol menüden sınıf seviyesini, sınav türünü, ders ve üniteleri seç. Yapay zeka sana <mark>özgün, görselli</mark> sorularla dolu, süreli bir sınav hazırlasın.</p>
+        <p>Sol menüden sınıf seviyesini, ders ve üniteleri seç; sınav türü ve zorluk sana göre otomatik belirlenir. Yapay zeka sana <mark>özgün, görselli</mark> sorularla dolu, süreli bir sınav hazırlasın.</p>
     </div>
     {gecmis_html}
     <div class="ozellik-izgara">
