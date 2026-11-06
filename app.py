@@ -304,6 +304,22 @@ st.markdown("""
         box-shadow: 0 2px 8px rgba(19,32,63,.04);
     }
     section[data-testid="stSidebar"] div[data-baseweb="input"] > div:focus-within { border-color: var(--pen); box-shadow: 0 0 0 3px var(--pen-soft); }
+    section[data-testid="stSidebar"] div[data-baseweb="input"] input {
+        padding: 0 16px !important; height: 50px; font-size: 15px; color: var(--ink);
+    }
+    section[data-testid="stSidebar"] div[data-baseweb="input"] input::placeholder { color: var(--muted); opacity: .8; }
+    .ogr-kart {
+        display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: 16px;
+        background: #fff; border: 1px solid var(--line); box-shadow: 0 4px 14px rgba(19,32,63,.05);
+    }
+    .ogr-avatar {
+        width: 46px; height: 46px; flex: none; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        background: linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%); color: #fff; font-weight: 700; font-size: 20px;
+        box-shadow: 0 6px 14px rgba(124,58,237,.30);
+    }
+    .ogr-bilgi { min-width: 0; line-height: 1.35; }
+    .ogr-bilgi b { display: block; color: var(--ink); font-size: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .ogr-bilgi span { color: var(--muted); font-size: 12.5px; }
     .benzer-kutu { background: var(--pen-soft); border: 1.5px solid var(--pen); border-radius: 16px; padding: 14px 18px; margin: 14px 0 8px; }
     section[data-testid="stSidebar"] [data-testid="stExpander"] {
         margin-bottom: 0; border: 1.5px solid var(--line) !important; border-radius: 14px !important;
@@ -2431,7 +2447,6 @@ def yeni_sinav():
 # ÜRETİM AKIŞI (sidebar'daki butondan çağrılır)
 # =====================================================================
 _ZORLUK_SIRA = ["Kolay", "Orta", "Zor", "Olimpik"]
-ZORLUK_OTOMATIK = "🤖 Otomatik (performansa göre)"
 
 
 def onerilen_zorluk():
@@ -2491,7 +2506,7 @@ def otomatik_sure_soru(sorular, zorluk):
     return int(min(150, max(45, round(ort / 5) * 5)))
 
 
-def sorulari_uret(sinif, tur, zorluk, adet, haritasi, banka_kullan=False):
+def sorulari_uret(sinif, tur, zorluk, adet, haritasi, banka_kullan=True):
     ders_unite_detay = "".join(
         f"- Ders/Kategori: {d}, Alt Başlıklar/Üniteler: {', '.join(u)}\n" for d, u in haritasi.items())
     ek_baglam = EK_BAGLAM.get(tur, "")
@@ -2735,14 +2750,24 @@ with st.sidebar:
     else:
         st.metric(label="📅 Bugün Üretilen Toplam Soru", value=bugunku_toplam)
     st.markdown("<div class='yan-baslik'>Öğrenci</div>", unsafe_allow_html=True)
-    st.text_input("👤 Öğrenci adı", value=st.session_state.profil_adi, key="ogrenci_adi_girdi",
-                  on_change=profil_degistir, max_chars=30, placeholder="Adını yaz, ilerlemen kaydedilsin",
-                  label_visibility="collapsed")
-    if st.session_state.profil_adi:
-        st.caption(f"📈 {len(st.session_state.performance_history)} sınav kayıtlı · "
-                   f"yanlış arşivinde {len(st.session_state.yanlis_sorular_arsivi)} soru")
+    _ad = st.session_state.profil_adi
+    if _ad:
+        _avatar = html.escape(_ad[:1].upper())
+        _alt = (f"{len(st.session_state.performance_history)} sınav · "
+                f"{len(st.session_state.yanlis_sorular_arsivi)} yanlış soru kayıtlı")
     else:
-        st.caption("Ad yazarsan sınav geçmişin ve yanlış arşivin sonraki girişlerde de saklanır.")
+        _avatar, _alt = "👤", "Geçmiş kaydedilmiyor"
+    st.markdown(f"""
+    <div class="ogr-kart">
+        <div class="ogr-avatar">{_avatar}</div>
+        <div class="ogr-bilgi"><b>{html.escape(_ad) if _ad else "Misafir"}</b><span>{_alt}</span></div>
+    </div>
+    """, unsafe_allow_html=True)
+    st.text_input("Öğrenci adı", value=st.session_state.profil_adi, key="ogrenci_adi_girdi",
+                  on_change=profil_degistir, placeholder="Adını yaz ve Enter'a bas",
+                  label_visibility="collapsed")
+    if not st.session_state.profil_adi:
+        st.caption("Adını yazarsan sınav geçmişin ve yanlış arşivin bir sonraki girişte de saklanır.")
     st.markdown("<div class='yan-baslik'>Sınav ayarları</div>", unsafe_allow_html=True)
 
     if not anahtar_gecerli():
@@ -2763,15 +2788,7 @@ with st.sidebar:
     if sinav_turu == "Yanlışlardan Üretilen Sorular":
         st.caption(f"🧠 Arşivde {len(st.session_state.yanlis_sorular_arsivi)} yanlış soru var; yeni sorular bunlardan üretilir.")
 
-    zorluk_secimi = st.selectbox("🎯 Soru Zorluk Seviyesi:",
-                                 ["Kolay", "Orta", "Zor", "Olimpik", "Karma / Dengeli", ZORLUK_OTOMATIK],
-                                 key=f"zorluk_secim_{trg}")
-    oner_zorluk, oner_neden = onerilen_zorluk()
-    zorluk_seviyesi = oner_zorluk if zorluk_secimi == ZORLUK_OTOMATIK else zorluk_secimi
-    if zorluk_secimi == ZORLUK_OTOMATIK:
-        st.caption(f"🤖 Seçilen zorluk: **{oner_zorluk}** ({oner_neden})")
-    elif st.session_state.performance_history:
-        st.caption(f"💡 Önerilen zorluk: {oner_zorluk} ({oner_neden})")
+    zorluk_seviyesi, _ = onerilen_zorluk()      # zorluk her zaman geçmiş performansa göre otomatik belirlenir
 
     st.markdown("<div class='yan-baslik'>Dersler ve üniteler</div>", unsafe_allow_html=True)
 
@@ -2794,9 +2811,7 @@ with st.sidebar:
     st.markdown("<div class='yan-baslik'>Üretim</div>", unsafe_allow_html=True)
     soru_sayisi = st.slider("🔢 Soru Sayısı:", 5, 10, 8, key=f"slider_soru_{trg}")
 
-    banka_kullan = st.checkbox("♻️ Kayıtlı soru bankasından da kullan", key=f"banka_{trg}",
-                               help="Daha önce üretilmiş uygun sorular varsa yapay zeka çağrısı azalır, günlük limit korunur.")
-    st.caption(f"🗄️ Bankada {banka_say()} soru kayıtlı")
+    st.caption(f"🗄️ Soru bankasında {banka_say()} soru kayıtlı; uygun olanlar otomatik kullanılır.")
 
     secili_toplam = sum(len(u) for u in secili_ders_unite_haritasi.values())
     if st.button("🚀 Soruları Üret", use_container_width=True, type="primary"):
@@ -2808,7 +2823,7 @@ with st.sidebar:
             st.error(f"Günlük soru limiti doldu ({bugunku_toplam}/{GUNLUK_LIMIT}). Yarın tekrar dene.")
         else:
             ok, hata_detay = sorulari_uret(secili_sinif, sinav_turu, zorluk_seviyesi, soru_sayisi,
-                                           secili_ders_unite_haritasi, banka_kullan)
+                                           secili_ders_unite_haritasi)
             if ok:
                 st.rerun()
             else:
