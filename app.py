@@ -51,7 +51,7 @@ st.set_page_config(
 # =====================================================================
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@500;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&display=swap');
 
     :root {
         --paper: #f2f5fb;
@@ -549,155 +549,140 @@ st.markdown("""
     .an-bar { background: #e3e7fb; }
 
     /* =====================================================================
-       KENAR ÇUBUĞU v4: futuristik koyu panel (vurgu rengi tek yerden değişir: --a1 / --a2)
+       KENAR ÇUBUĞU v5: pastel turuncu geçişli, çocuk dostu açık panel
+       Renkler tek yerden: --tn (ana turuncu), --tn-d (koyu turuncu), --kenar, --yazi*
        ===================================================================== */
     section[data-testid="stSidebar"] {
-        --a1: #19e3ff; --a1-glow: rgba(25,227,255,.38); --a2: #8b7bff;
-        --kutu: linear-gradient(180deg, rgba(255,255,255,.075) 0%, rgba(255,255,255,.026) 100%);
-        --kenar: rgba(255,255,255,.10);
-        --yazi: #e9edff; --yazi2: #a8b2d4; --yazi3: #7886ad;
+        --tn: #ff8a3d; --tn-d: #e8590c; --tn-soft: #fff1e3;
+        --kenar: #ffd9bf; --yazi: #3d2b1f; --yazi2: #6b5444; --yazi3: #96796a;
+        --kutu-golge: 0 4px 0 rgba(255,170,110,.32), 0 12px 26px rgba(255,138,61,.10);
         background:
-            linear-gradient(rgba(255,255,255,.028) 1px, transparent 1px) 0 0 / 26px 26px,
-            linear-gradient(90deg, rgba(255,255,255,.028) 1px, transparent 1px) 0 0 / 26px 26px,
-            radial-gradient(360px 260px at 50% -8%, rgba(25,227,255,.17), transparent 70%),
-            radial-gradient(320px 260px at 100% 100%, rgba(139,123,255,.13), transparent 70%),
-            #05060a;
-        border-right: 1px solid rgba(255,255,255,.07); box-shadow: 12px 0 48px rgba(0,0,0,.35); color: var(--yazi);
+            radial-gradient(340px 260px at 0% 0%, rgba(255,205,150,.85), transparent 70%),
+            radial-gradient(300px 280px at 100% 38%, rgba(255,214,228,.85), transparent 70%),
+            radial-gradient(340px 280px at 0% 100%, rgba(255,238,184,.95), transparent 70%),
+            linear-gradient(180deg, #fff5ec 0%, #ffe9d8 52%, #fff1e6 100%);
+        border-right: 1px solid #ffd9bf; box-shadow: 6px 0 30px rgba(255,138,61,.10); color: var(--yazi);
     }
     section[data-testid="stSidebar"] > div, section[data-testid="stSidebar"] [data-testid="stSidebarContent"] { background: transparent; }
-    section[data-testid="stSidebar"] [data-testid="stSidebarCollapseButton"] *, section[data-testid="stSidebar"] [data-testid="stSidebarHeader"] * { color: #c3cbf5 !important; }
-    section[data-testid="stSidebar"] hr { border-color: rgba(255,255,255,.10); }
-    section[data-testid="stSidebar"] *::-webkit-scrollbar-thumb { background: rgba(25,227,255,.25); }
+    section[data-testid="stSidebar"] [data-testid="stSidebarCollapseButton"] *, section[data-testid="stSidebar"] [data-testid="stSidebarHeader"] * { color: #b45a26 !important; }
+    section[data-testid="stSidebar"] hr { border-color: var(--kenar); }
+    section[data-testid="stSidebar"] *::-webkit-scrollbar-thumb { background: #ffcfa8; }
     section[data-testid="stSidebar"] label[data-testid="stWidgetLabel"] p,
-    section[data-testid="stSidebar"] [data-testid="stWidgetLabel"] p { color: #cdd5f5; font-size: 12.5px; font-weight: 600; letter-spacing: .01em; }
+    section[data-testid="stSidebar"] [data-testid="stWidgetLabel"] p { color: #5b4636; font-size: 13px; font-weight: 600; }
     section[data-testid="stSidebar"] [data-testid="stCaptionContainer"] { color: var(--yazi3); }
-    section[data-testid="stSidebar"] [data-testid="stAlert"] { background: rgba(251,191,36,.10); border: 1px solid rgba(251,191,36,.35); }
-    section[data-testid="stSidebar"] [data-testid="stAlert"] * { color: #fde68a !important; }
 
-    /* Teknik etiketler: mono yazı tipi */
-    .yan-baslik, .marka span, .ogr-bilgi span, .kullanim small, .kota-alt, .kota-alt em, .kullanim .kota-yuzde {
-        font-family: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+    /* Bölüm başlıkları: yumuşak turuncu hap etiket */
+    .yan-baslik {
+        font-size: 11.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #c2540f;
+        margin: 18px 2px -2px; gap: 10px;
     }
-    .yan-baslik { font-size: 10.5px; letter-spacing: .18em; color: var(--yazi3); margin: 18px 2px -2px; text-transform: uppercase; }
-    .yan-baslik::before { width: 6px; height: 6px; border-radius: 1px; transform: rotate(45deg); background: var(--a1); box-shadow: 0 0 10px var(--a1); }
-    .yan-baslik::after { background: linear-gradient(90deg, rgba(255,255,255,.16), transparent); }
+    .yan-baslik::before {
+        content: ""; width: 10px; height: 10px; border-radius: 50%; transform: none; flex: none;
+        background: linear-gradient(135deg, #ffb066, #ff8fa3); box-shadow: 0 2px 6px rgba(255,138,92,.45);
+    }
+    .yan-baslik::after { background: linear-gradient(90deg, #ffcfa8, transparent); }
 
     /* Marka kartı */
     .marka {
-        background: var(--kutu); border: 1px solid var(--kenar); border-radius: 18px; padding: 14px 16px;
-        box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 14px 34px rgba(0,0,0,.45);
+        background: linear-gradient(120deg, #ffd6a8 0%, #ffe9a8 52%, #ffd0e0 100%);
+        border: 2px solid #fff; border-radius: 22px; padding: 14px 16px;
+        box-shadow: 0 5px 0 rgba(255,160,100,.38), 0 14px 30px rgba(255,138,61,.18);
     }
-    .marka::after {
-        content: ""; position: absolute; left: 0; right: 0; top: 0; width: auto; height: 2px; border-radius: 0;
-        background: linear-gradient(90deg, transparent, var(--a1), var(--a2), transparent);
-    }
+    .marka::after { content: none; }
     .marka-logo {
-        background: rgba(25,227,255,.10); color: var(--a1); border: 1px solid rgba(25,227,255,.45); border-radius: 14px;
-        box-shadow: 0 0 22px var(--a1-glow), inset 0 0 14px rgba(25,227,255,.18); text-shadow: 0 0 12px var(--a1); backdrop-filter: none;
+        background: #fff; color: inherit; border: none; border-radius: 16px; box-shadow: 0 6px 14px rgba(255,138,61,.25);
+        text-shadow: none; font-size: 24px; backdrop-filter: none;
     }
-    .marka b { font-family: 'Space Grotesk', 'Lexend', sans-serif; font-size: 18px; letter-spacing: -.01em; color: #fff; }
-    .marka span { color: var(--yazi3); font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; }
-    .marka-nokta { margin-left: auto; width: 8px; height: 8px; border-radius: 50%; background: var(--a1); animation: nokta 2s infinite; }
-    @keyframes nokta {
-        0% { box-shadow: 0 0 0 0 rgba(25,227,255,.55); } 70% { box-shadow: 0 0 0 10px rgba(25,227,255,0); } 100% { box-shadow: 0 0 0 0 rgba(25,227,255,0); }
-    }
+    .marka b { font-family: 'Lexend', sans-serif; color: #3d2b1f; font-size: 17px; }
+    .marka span { color: #7a5a45; font-size: 12px; letter-spacing: 0; text-transform: none; font-family: 'Lexend', sans-serif; }
 
-    /* Kutu kartları: öğrenci + kota */
+    /* Öğrenci ve kota kutuları */
     .ogr-kart, .kullanim {
-        background: var(--kutu); border: 1px solid var(--kenar); border-radius: 16px;
-        box-shadow: inset 0 1px 0 rgba(255,255,255,.07), 0 10px 28px rgba(0,0,0,.35); backdrop-filter: blur(12px);
+        background: rgba(255,255,255,.82); border: 1.5px solid var(--kenar); border-radius: 20px;
+        box-shadow: var(--kutu-golge); backdrop-filter: blur(8px);
     }
-    .ogr-avatar { border-radius: 14px; background: linear-gradient(135deg, var(--a1), var(--a2)); color: #04121a; box-shadow: 0 0 20px var(--a1-glow); }
-    .ogr-bilgi b { color: #fff; }
-    .ogr-bilgi span { color: var(--yazi3); font-size: 11px; }
-    .kullanim small { font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--yazi3); }
-    .kullanim b, .kota-alt b { color: #fff; }
-    .kullanim .kota-yuzde { font-size: 30px; font-weight: 700; letter-spacing: -.03em; text-shadow: 0 0 18px currentColor; }
-    .kullanim .cubuk {
-        height: 12px; border-radius: 3px; overflow: hidden;
-        background: repeating-linear-gradient(90deg, rgba(255,255,255,.10) 0 7px, transparent 7px 10px);
-    }
-    .kullanim .cubuk > div {
-        border-radius: 3px;
-        -webkit-mask-image: repeating-linear-gradient(90deg, #000 0 7px, transparent 7px 10px);
-        mask-image: repeating-linear-gradient(90deg, #000 0 7px, transparent 7px 10px);
-    }
-    .kota-alt { font-size: 11.5px; color: var(--yazi2); }
-    .kota-alt em { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; border: 1px solid currentColor; border-radius: 6px; padding: 2px 8px; }
+    .ogr-avatar { border-radius: 50%; background: linear-gradient(135deg, #ffb066, #ff8fa3); color: #fff; box-shadow: 0 6px 14px rgba(255,138,92,.40); }
+    .ogr-bilgi b { color: var(--yazi); }
+    .ogr-bilgi span { color: var(--yazi3); font-size: 12.5px; }
+    .kullanim small { font-size: 12.5px; letter-spacing: 0; text-transform: none; color: var(--yazi2); font-weight: 600; }
+    .kullanim b, .kota-alt b { color: var(--yazi); }
+    .kullanim .kota-yuzde { font-size: 28px; font-weight: 800; letter-spacing: -.02em; text-shadow: none; }
+    .kullanim .cubuk { height: 12px; border-radius: 99px; background: #ffe6d2; overflow: hidden; }
+    .kullanim .cubuk > div { border-radius: 99px; -webkit-mask-image: none; mask-image: none; }
+    .kota-alt { font-size: 12.5px; color: var(--yazi2); }
+    .kota-alt em { font-size: 11.5px; letter-spacing: 0; text-transform: none; border: none; border-radius: 99px; padding: 3px 11px; }
 
     /* Seçim ve metin kutuları */
     section[data-testid="stSidebar"] div[data-baseweb="select"] > div,
     section[data-testid="stSidebar"] div[data-baseweb="input"] > div {
-        background: var(--kutu); border: 1px solid var(--kenar); border-radius: 12px; box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+        background: #fff; border: 1.5px solid var(--kenar); border-radius: 16px; box-shadow: 0 3px 0 rgba(255,170,110,.22);
     }
     section[data-testid="stSidebar"] div[data-baseweb="select"] > div:hover,
     section[data-testid="stSidebar"] div[data-baseweb="select"] > div:focus-within,
     section[data-testid="stSidebar"] div[data-baseweb="input"] > div:focus-within {
-        border-color: var(--a1); box-shadow: 0 0 0 1px var(--a1), 0 0 22px var(--a1-glow);
+        border-color: var(--tn); box-shadow: 0 0 0 3px rgba(255,138,61,.22);
     }
-    section[data-testid="stSidebar"] div[data-baseweb="select"] * { color: #eef0ff !important; }
-    section[data-testid="stSidebar"] div[data-baseweb="select"] svg { fill: var(--a1) !important; }
+    section[data-testid="stSidebar"] div[data-baseweb="select"] * { color: var(--yazi) !important; }
+    section[data-testid="stSidebar"] div[data-baseweb="select"] svg { fill: var(--tn) !important; }
     section[data-testid="stSidebar"] div[data-baseweb="base-input"] { background: transparent !important; }
-    section[data-testid="stSidebar"] div[data-baseweb="input"] input { background: transparent !important; color: #fff !important; }
-    section[data-testid="stSidebar"] div[data-baseweb="input"] input::placeholder { color: var(--yazi3); opacity: 1; }
+    section[data-testid="stSidebar"] div[data-baseweb="input"] input { background: transparent !important; color: var(--yazi) !important; }
+    section[data-testid="stSidebar"] div[data-baseweb="input"] input::placeholder { color: #b49886; opacity: 1; }
 
     /* Ders kartları */
     section[data-testid="stSidebar"] [data-testid="stExpander"] {
-        background: var(--kutu) !important; border: 1px solid var(--kenar) !important; border-radius: 14px !important;
-        box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 8px 22px rgba(0,0,0,.30);
+        background: rgba(255,255,255,.85) !important; border: 1.5px solid var(--kenar) !important; border-radius: 18px !important;
+        box-shadow: var(--kutu-golge);
     }
-    section[data-testid="stSidebar"] [data-testid="stExpander"]:hover { border-color: rgba(25,227,255,.38) !important; box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 0 24px rgba(25,227,255,.10); }
+    section[data-testid="stSidebar"] [data-testid="stExpander"]:hover { border-color: #ffb98a !important; box-shadow: 0 4px 0 rgba(255,170,110,.40), 0 14px 28px rgba(255,138,61,.16); }
     section[data-testid="stSidebar"] [data-testid="stExpander"] summary, section[data-testid="stSidebar"] [data-testid="stExpander"] summary * { color: var(--yazi) !important; }
-    section[data-testid="stSidebar"] [data-testid="stExpander"] summary:hover { background: rgba(255,255,255,.05); }
-    section[data-testid="stSidebar"] [data-testid="stExpander"] details[open] > summary { background: linear-gradient(90deg, rgba(25,227,255,.18), transparent); }
-    section[data-testid="stSidebar"] [data-testid="stExpander"] details[open] > summary * { color: #fff !important; }
+    section[data-testid="stSidebar"] [data-testid="stExpander"] summary:hover { background: var(--tn-soft); }
+    section[data-testid="stSidebar"] [data-testid="stExpander"] details[open] > summary { background: linear-gradient(90deg, #ffe3c7, #fff1c9); }
+    section[data-testid="stSidebar"] [data-testid="stExpander"] details[open] > summary * { color: #7a3a0c !important; }
     @supports selector(:has(*)) {
-        section[data-testid="stSidebar"] [data-testid="stExpander"]:has(details[open]) { border-color: rgba(25,227,255,.50) !important; }
+        section[data-testid="stSidebar"] [data-testid="stExpander"]:has(details[open]) { border-color: #ffa96b !important; }
     }
 
     /* Ünite kutuları */
-    section[data-testid="stSidebar"] div[data-testid="stCheckbox"] { background: rgba(255,255,255,.035); border: 1px solid rgba(255,255,255,.08); border-radius: 10px; }
-    section[data-testid="stSidebar"] div[data-testid="stCheckbox"]:hover { background: rgba(25,227,255,.07); border-color: rgba(25,227,255,.45); }
+    section[data-testid="stSidebar"] div[data-testid="stCheckbox"] { background: #fffaf5; border: 1.5px solid #ffe3cf; border-radius: 14px; }
+    section[data-testid="stSidebar"] div[data-testid="stCheckbox"]:hover { background: var(--tn-soft); border-color: #ffb98a; }
     section[data-testid="stSidebar"] div[data-testid="stCheckbox"] label p,
-    section[data-testid="stSidebar"] div[data-testid="stCheckbox"] label span { color: #dfe5ff !important; }
-    section[data-testid="stSidebar"] label[data-baseweb="checkbox"] > span:first-child { border-color: rgba(255,255,255,.35) !important; background-color: transparent; }
+    section[data-testid="stSidebar"] div[data-testid="stCheckbox"] label span { color: #4a3426 !important; }
+    section[data-testid="stSidebar"] label[data-baseweb="checkbox"] > span:first-child { border-color: #e7b999 !important; background-color: #fff; }
     @supports selector(:has(*)) {
         section[data-testid="stSidebar"] div[data-testid="stCheckbox"]:has(input:checked) {
-            background: linear-gradient(90deg, rgba(25,227,255,.18), rgba(25,227,255,.03)); border-color: rgba(25,227,255,.50);
-            box-shadow: inset 3px 0 0 var(--a1), 0 0 18px rgba(25,227,255,.10);
+            background: linear-gradient(90deg, #ffe6cf, #fff3cf); border-color: #ffa96b; box-shadow: inset 4px 0 0 var(--tn);
         }
         section[data-testid="stSidebar"] div[data-testid="stCheckbox"] label[data-baseweb="checkbox"]:has(input:checked) > span:first-child {
-            background: #0aa8c9 !important; border-color: var(--a1) !important; box-shadow: 0 0 10px var(--a1-glow);
+            background: var(--tn) !important; border-color: var(--tn-d) !important;
         }
     }
 
     /* Kaydırıcı */
     section[data-testid="stSidebar"] div[data-baseweb="slider"] [role="slider"] {
-        background: var(--a1) !important; border: 3px solid #05060a !important; box-shadow: 0 0 0 2px var(--a1), 0 0 18px var(--a1-glow) !important;
+        background: var(--tn) !important; border: 3px solid #fff !important; box-shadow: 0 0 0 2px #ffb98a, 0 4px 12px rgba(255,138,61,.5) !important;
     }
-    section[data-testid="stSidebar"] [data-testid="stSliderThumbValue"] { color: var(--a1); font-family: 'JetBrains Mono', monospace; font-weight: 700; }
-    section[data-testid="stSidebar"] [data-testid="stTickBarMin"], section[data-testid="stSidebar"] [data-testid="stTickBarMax"] { color: var(--yazi3); font-family: 'JetBrains Mono', monospace; }
+    section[data-testid="stSidebar"] [data-testid="stSliderThumbValue"] { color: var(--tn-d); font-weight: 700; }
+    section[data-testid="stSidebar"] [data-testid="stTickBarMin"], section[data-testid="stSidebar"] [data-testid="stTickBarMax"] { color: var(--yazi3); }
 
-    /* Düğmeler: neon çerçeveli, içi koyu */
+    /* Düğmeler: pastel gradyan + koyu yazı (okunaklı), hafif "basılır" kenar */
     section[data-testid="stSidebar"] div.stButton > button,
     section[data-testid="stSidebar"] div.stButton > button[kind="primary"],
     section[data-testid="stSidebar"] button[data-testid="stBaseButton-primary"] {
-        border: 1.5px solid transparent !important; color: #fff !important; letter-spacing: .02em;
-        background:
-            linear-gradient(120deg, rgba(25,227,255,.20), rgba(139,123,255,.20)) padding-box,
-            linear-gradient(#05060a, #05060a) padding-box,
-            linear-gradient(120deg, var(--a1), var(--a2)) border-box !important;
-        box-shadow: 0 0 28px rgba(25,227,255,.26), inset 0 0 18px rgba(25,227,255,.08) !important;
+        background: linear-gradient(120deg, #ffcb8e 0%, #ffa970 55%, #ff9fa8 100%) !important;
+        color: #4a2410 !important; border: 2px solid #fff !important; font-weight: 700; letter-spacing: 0;
+        box-shadow: 0 5px 0 #f0955c, 0 14px 26px rgba(255,138,61,.28) !important;
     }
+    section[data-testid="stSidebar"] div.stButton > button p, section[data-testid="stSidebar"] button[data-testid="stBaseButton-primary"] p { color: #4a2410 !important; }
     section[data-testid="stSidebar"] div.stButton > button:hover {
-        filter: brightness(1.15); box-shadow: 0 0 42px rgba(25,227,255,.50), inset 0 0 26px rgba(25,227,255,.18) !important;
+        filter: brightness(1.04); transform: translateY(-1px); box-shadow: 0 6px 0 #f0955c, 0 18px 30px rgba(255,138,61,.36) !important;
     }
+    section[data-testid="stSidebar"] div.stButton > button:active { transform: translateY(3px); box-shadow: 0 2px 0 #f0955c, 0 6px 12px rgba(255,138,61,.25) !important; }
     section[data-testid="stSidebar"] .st-key-btn_oturum_kapat div.stButton > button {
-        background: rgba(248,113,113,.07) !important; color: #fca5a5 !important; border: 1px solid rgba(248,113,113,.35) !important; box-shadow: none !important; filter: none;
+        background: #fff0ef !important; color: #b42318 !important; border: 1.5px solid #ffd0cc !important; box-shadow: 0 3px 0 rgba(255,150,140,.35) !important; filter: none;
     }
-    section[data-testid="stSidebar"] .st-key-btn_oturum_kapat div.stButton > button p { color: #fca5a5 !important; }
-    section[data-testid="stSidebar"] .st-key-btn_oturum_kapat div.stButton > button:hover { background: rgba(248,113,113,.15) !important; box-shadow: 0 0 20px rgba(248,113,113,.18) !important; }
-    section[data-testid="stSidebar"] .st-key-btn_uret { background: linear-gradient(180deg, rgba(5,6,10,0) 0%, #05060a 42%); }
+    section[data-testid="stSidebar"] .st-key-btn_oturum_kapat div.stButton > button p { color: #b42318 !important; }
+    section[data-testid="stSidebar"] .st-key-btn_oturum_kapat div.stButton > button:hover { background: #ffe3e1 !important; box-shadow: 0 4px 0 rgba(255,150,140,.45) !important; }
+    section[data-testid="stSidebar"] .st-key-btn_uret { background: linear-gradient(180deg, rgba(255,236,224,0) 0%, rgba(255,236,224,.97) 45%); }
 </style>
 """, unsafe_allow_html=True)
 
@@ -3148,9 +3133,8 @@ with st.sidebar:
     # --- MARKA ---
     st.markdown("""
     <div class="marka">
-        <div class="marka-logo">◈</div>
-        <div><b>Soru Fabrikası</b><span>AI sınav modülü</span></div>
-        <i class="marka-nokta"></i>
+        <div class="marka-logo">🚀</div>
+        <div><b>Soru Fabrikası</b><span>Yapay zeka destekli sınav modülü</span></div>
     </div>
     """, unsafe_allow_html=True)
 
