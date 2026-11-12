@@ -51,7 +51,7 @@ st.set_page_config(
 # =====================================================================
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@500;700&display=swap');
 
     :root {
         --paper: #f2f5fb;
@@ -549,101 +549,155 @@ st.markdown("""
     .an-bar { background: #e3e7fb; }
 
     /* =====================================================================
-       KENAR ÇUBUĞU: siyah / koyu tema
+       KENAR ÇUBUĞU v4: futuristik koyu panel (vurgu rengi tek yerden değişir: --a1 / --a2)
        ===================================================================== */
     section[data-testid="stSidebar"] {
+        --a1: #19e3ff; --a1-glow: rgba(25,227,255,.38); --a2: #8b7bff;
+        --kutu: linear-gradient(180deg, rgba(255,255,255,.075) 0%, rgba(255,255,255,.026) 100%);
+        --kenar: rgba(255,255,255,.10);
+        --yazi: #e9edff; --yazi2: #a8b2d4; --yazi3: #7886ad;
         background:
-            radial-gradient(420px 320px at -10% -4%, rgba(124,58,237,.26), transparent 62%),
-            radial-gradient(380px 320px at 112% 106%, rgba(6,182,212,.18), transparent 62%),
-            linear-gradient(180deg, #0c0d14 0%, #07080c 100%);
-        border-right: 1px solid rgba(255,255,255,.06); box-shadow: 10px 0 40px rgba(10,10,30,.28); color: #e6e9ff;
+            linear-gradient(rgba(255,255,255,.028) 1px, transparent 1px) 0 0 / 26px 26px,
+            linear-gradient(90deg, rgba(255,255,255,.028) 1px, transparent 1px) 0 0 / 26px 26px,
+            radial-gradient(360px 260px at 50% -8%, rgba(25,227,255,.17), transparent 70%),
+            radial-gradient(320px 260px at 100% 100%, rgba(139,123,255,.13), transparent 70%),
+            #05060a;
+        border-right: 1px solid rgba(255,255,255,.07); box-shadow: 12px 0 48px rgba(0,0,0,.35); color: var(--yazi);
     }
     section[data-testid="stSidebar"] > div, section[data-testid="stSidebar"] [data-testid="stSidebarContent"] { background: transparent; }
     section[data-testid="stSidebar"] [data-testid="stSidebarCollapseButton"] *, section[data-testid="stSidebar"] [data-testid="stSidebarHeader"] * { color: #c3cbf5 !important; }
     section[data-testid="stSidebar"] hr { border-color: rgba(255,255,255,.10); }
-    section[data-testid="stSidebar"] *::-webkit-scrollbar-thumb { background: rgba(255,255,255,.18); }
+    section[data-testid="stSidebar"] *::-webkit-scrollbar-thumb { background: rgba(25,227,255,.25); }
     section[data-testid="stSidebar"] label[data-testid="stWidgetLabel"] p,
-    section[data-testid="stSidebar"] [data-testid="stWidgetLabel"] p { color: #cdd3f5; }
-    section[data-testid="stSidebar"] [data-testid="stCaptionContainer"] { color: #8f9bd0; }
-    .yan-baslik { color: #9aa6dc; }
-    .yan-baslik::after { background: rgba(255,255,255,.10); }
+    section[data-testid="stSidebar"] [data-testid="stWidgetLabel"] p { color: #cdd5f5; font-size: 12.5px; font-weight: 600; letter-spacing: .01em; }
+    section[data-testid="stSidebar"] [data-testid="stCaptionContainer"] { color: var(--yazi3); }
+    section[data-testid="stSidebar"] [data-testid="stAlert"] { background: rgba(251,191,36,.10); border: 1px solid rgba(251,191,36,.35); }
+    section[data-testid="stSidebar"] [data-testid="stAlert"] * { color: #fde68a !important; }
 
-    .marka { background: linear-gradient(135deg, #7c3aed 0%, #2563eb 55%, #06b6d4 100%); box-shadow: 0 14px 34px rgba(99,102,241,.38); }
-    .ogr-kart { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.11); box-shadow: none; backdrop-filter: blur(10px); }
-    .ogr-avatar { background: linear-gradient(135deg, #7c3aed 0%, #06b6d4 100%); box-shadow: 0 8px 20px rgba(124,58,237,.40); }
+    /* Teknik etiketler: mono yazı tipi */
+    .yan-baslik, .marka span, .ogr-bilgi span, .kullanim small, .kota-alt, .kota-alt em, .kullanim .kota-yuzde {
+        font-family: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+    }
+    .yan-baslik { font-size: 10.5px; letter-spacing: .18em; color: var(--yazi3); margin: 18px 2px -2px; text-transform: uppercase; }
+    .yan-baslik::before { width: 6px; height: 6px; border-radius: 1px; transform: rotate(45deg); background: var(--a1); box-shadow: 0 0 10px var(--a1); }
+    .yan-baslik::after { background: linear-gradient(90deg, rgba(255,255,255,.16), transparent); }
+
+    /* Marka kartı */
+    .marka {
+        background: var(--kutu); border: 1px solid var(--kenar); border-radius: 18px; padding: 14px 16px;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 14px 34px rgba(0,0,0,.45);
+    }
+    .marka::after {
+        content: ""; position: absolute; left: 0; right: 0; top: 0; width: auto; height: 2px; border-radius: 0;
+        background: linear-gradient(90deg, transparent, var(--a1), var(--a2), transparent);
+    }
+    .marka-logo {
+        background: rgba(25,227,255,.10); color: var(--a1); border: 1px solid rgba(25,227,255,.45); border-radius: 14px;
+        box-shadow: 0 0 22px var(--a1-glow), inset 0 0 14px rgba(25,227,255,.18); text-shadow: 0 0 12px var(--a1); backdrop-filter: none;
+    }
+    .marka b { font-family: 'Space Grotesk', 'Lexend', sans-serif; font-size: 18px; letter-spacing: -.01em; color: #fff; }
+    .marka span { color: var(--yazi3); font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; }
+    .marka-nokta { margin-left: auto; width: 8px; height: 8px; border-radius: 50%; background: var(--a1); animation: nokta 2s infinite; }
+    @keyframes nokta {
+        0% { box-shadow: 0 0 0 0 rgba(25,227,255,.55); } 70% { box-shadow: 0 0 0 10px rgba(25,227,255,0); } 100% { box-shadow: 0 0 0 0 rgba(25,227,255,0); }
+    }
+
+    /* Kutu kartları: öğrenci + kota */
+    .ogr-kart, .kullanim {
+        background: var(--kutu); border: 1px solid var(--kenar); border-radius: 16px;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.07), 0 10px 28px rgba(0,0,0,.35); backdrop-filter: blur(12px);
+    }
+    .ogr-avatar { border-radius: 14px; background: linear-gradient(135deg, var(--a1), var(--a2)); color: #04121a; box-shadow: 0 0 20px var(--a1-glow); }
     .ogr-bilgi b { color: #fff; }
-    .ogr-bilgi span { color: #9aa6dc; }
-    .kullanim { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.11); box-shadow: none; backdrop-filter: blur(10px); }
-    .kullanim small, .kota-alt { color: #9aa6dc; }
+    .ogr-bilgi span { color: var(--yazi3); font-size: 11px; }
+    .kullanim small { font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--yazi3); }
     .kullanim b, .kota-alt b { color: #fff; }
-    .kullanim .cubuk { background: rgba(255,255,255,.10); }
+    .kullanim .kota-yuzde { font-size: 30px; font-weight: 700; letter-spacing: -.03em; text-shadow: 0 0 18px currentColor; }
+    .kullanim .cubuk {
+        height: 12px; border-radius: 3px; overflow: hidden;
+        background: repeating-linear-gradient(90deg, rgba(255,255,255,.10) 0 7px, transparent 7px 10px);
+    }
+    .kullanim .cubuk > div {
+        border-radius: 3px;
+        -webkit-mask-image: repeating-linear-gradient(90deg, #000 0 7px, transparent 7px 10px);
+        mask-image: repeating-linear-gradient(90deg, #000 0 7px, transparent 7px 10px);
+    }
+    .kota-alt { font-size: 11.5px; color: var(--yazi2); }
+    .kota-alt em { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; border: 1px solid currentColor; border-radius: 6px; padding: 2px 8px; }
 
     /* Seçim ve metin kutuları */
     section[data-testid="stSidebar"] div[data-baseweb="select"] > div,
     section[data-testid="stSidebar"] div[data-baseweb="input"] > div {
-        background: rgba(255,255,255,.06); border: 1.5px solid rgba(255,255,255,.12); box-shadow: none;
+        background: var(--kutu); border: 1px solid var(--kenar); border-radius: 12px; box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
     }
     section[data-testid="stSidebar"] div[data-baseweb="select"] > div:hover,
     section[data-testid="stSidebar"] div[data-baseweb="select"] > div:focus-within,
     section[data-testid="stSidebar"] div[data-baseweb="input"] > div:focus-within {
-        border-color: #8b5cf6; box-shadow: 0 0 0 3px rgba(139,92,246,.28);
+        border-color: var(--a1); box-shadow: 0 0 0 1px var(--a1), 0 0 22px var(--a1-glow);
     }
     section[data-testid="stSidebar"] div[data-baseweb="select"] * { color: #eef0ff !important; }
-    section[data-testid="stSidebar"] div[data-baseweb="select"] svg { fill: #aab4e8 !important; }
+    section[data-testid="stSidebar"] div[data-baseweb="select"] svg { fill: var(--a1) !important; }
     section[data-testid="stSidebar"] div[data-baseweb="base-input"] { background: transparent !important; }
     section[data-testid="stSidebar"] div[data-baseweb="input"] input { background: transparent !important; color: #fff !important; }
-    section[data-testid="stSidebar"] div[data-baseweb="input"] input::placeholder { color: #7f89b5; opacity: 1; }
+    section[data-testid="stSidebar"] div[data-baseweb="input"] input::placeholder { color: var(--yazi3); opacity: 1; }
 
     /* Ders kartları */
     section[data-testid="stSidebar"] [data-testid="stExpander"] {
-        background: rgba(255,255,255,.05) !important; border: 1px solid rgba(255,255,255,.10) !important; box-shadow: none;
+        background: var(--kutu) !important; border: 1px solid var(--kenar) !important; border-radius: 14px !important;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 8px 22px rgba(0,0,0,.30);
     }
-    section[data-testid="stSidebar"] [data-testid="stExpander"]:hover { box-shadow: 0 10px 26px rgba(0,0,0,.35); }
-    section[data-testid="stSidebar"] [data-testid="stExpander"] summary, section[data-testid="stSidebar"] [data-testid="stExpander"] summary * { color: #e6e9ff !important; }
-    section[data-testid="stSidebar"] [data-testid="stExpander"] summary:hover { background: rgba(255,255,255,.06); }
-    section[data-testid="stSidebar"] [data-testid="stExpander"] details[open] > summary { background: rgba(139,92,246,.20); }
+    section[data-testid="stSidebar"] [data-testid="stExpander"]:hover { border-color: rgba(25,227,255,.38) !important; box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 0 24px rgba(25,227,255,.10); }
+    section[data-testid="stSidebar"] [data-testid="stExpander"] summary, section[data-testid="stSidebar"] [data-testid="stExpander"] summary * { color: var(--yazi) !important; }
+    section[data-testid="stSidebar"] [data-testid="stExpander"] summary:hover { background: rgba(255,255,255,.05); }
+    section[data-testid="stSidebar"] [data-testid="stExpander"] details[open] > summary { background: linear-gradient(90deg, rgba(25,227,255,.18), transparent); }
     section[data-testid="stSidebar"] [data-testid="stExpander"] details[open] > summary * { color: #fff !important; }
     @supports selector(:has(*)) {
-        section[data-testid="stSidebar"] [data-testid="stExpander"]:has(details[open]) { border-color: rgba(139,92,246,.65) !important; }
+        section[data-testid="stSidebar"] [data-testid="stExpander"]:has(details[open]) { border-color: rgba(25,227,255,.50) !important; }
     }
 
     /* Ünite kutuları */
-    section[data-testid="stSidebar"] div[data-testid="stCheckbox"] { background: rgba(255,255,255,.04); border-color: rgba(255,255,255,.10); }
-    section[data-testid="stSidebar"] div[data-testid="stCheckbox"]:hover { background: rgba(139,92,246,.14); border-color: #8b5cf6; }
+    section[data-testid="stSidebar"] div[data-testid="stCheckbox"] { background: rgba(255,255,255,.035); border: 1px solid rgba(255,255,255,.08); border-radius: 10px; }
+    section[data-testid="stSidebar"] div[data-testid="stCheckbox"]:hover { background: rgba(25,227,255,.07); border-color: rgba(25,227,255,.45); }
     section[data-testid="stSidebar"] div[data-testid="stCheckbox"] label p,
-    section[data-testid="stSidebar"] div[data-testid="stCheckbox"] label span { color: #dfe3ff !important; }
+    section[data-testid="stSidebar"] div[data-testid="stCheckbox"] label span { color: #dfe5ff !important; }
     section[data-testid="stSidebar"] label[data-baseweb="checkbox"] > span:first-child { border-color: rgba(255,255,255,.35) !important; background-color: transparent; }
     @supports selector(:has(*)) {
         section[data-testid="stSidebar"] div[data-testid="stCheckbox"]:has(input:checked) {
-            background: linear-gradient(90deg, rgba(124,58,237,.30), rgba(6,182,212,.10)); border-color: rgba(167,139,250,.55);
-            box-shadow: inset 4px 0 0 #22d3ee;
+            background: linear-gradient(90deg, rgba(25,227,255,.18), rgba(25,227,255,.03)); border-color: rgba(25,227,255,.50);
+            box-shadow: inset 3px 0 0 var(--a1), 0 0 18px rgba(25,227,255,.10);
         }
         section[data-testid="stSidebar"] div[data-testid="stCheckbox"] label[data-baseweb="checkbox"]:has(input:checked) > span:first-child {
-            background: #7c3aed !important; border-color: #a78bfa !important;
+            background: #0aa8c9 !important; border-color: var(--a1) !important; box-shadow: 0 0 10px var(--a1-glow);
         }
     }
 
     /* Kaydırıcı */
     section[data-testid="stSidebar"] div[data-baseweb="slider"] [role="slider"] {
-        background: #7c3aed !important; border: 3px solid #0c0d14 !important; box-shadow: 0 0 0 2px #a78bfa, 0 4px 14px rgba(124,58,237,.6) !important;
+        background: var(--a1) !important; border: 3px solid #05060a !important; box-shadow: 0 0 0 2px var(--a1), 0 0 18px var(--a1-glow) !important;
     }
-    section[data-testid="stSidebar"] [data-testid="stSliderThumbValue"] { color: #5eead4; }
-    section[data-testid="stSidebar"] [data-testid="stTickBarMin"], section[data-testid="stSidebar"] [data-testid="stTickBarMax"] { color: #8f9bd0; }
+    section[data-testid="stSidebar"] [data-testid="stSliderThumbValue"] { color: var(--a1); font-family: 'JetBrains Mono', monospace; font-weight: 700; }
+    section[data-testid="stSidebar"] [data-testid="stTickBarMin"], section[data-testid="stSidebar"] [data-testid="stTickBarMax"] { color: var(--yazi3); font-family: 'JetBrains Mono', monospace; }
 
-    /* Düğmeler */
+    /* Düğmeler: neon çerçeveli, içi koyu */
     section[data-testid="stSidebar"] div.stButton > button,
     section[data-testid="stSidebar"] div.stButton > button[kind="primary"],
     section[data-testid="stSidebar"] button[data-testid="stBaseButton-primary"] {
-        background: linear-gradient(120deg, #7c3aed 0%, #2563eb 58%, #06b6d4 100%) !important;
-        box-shadow: 0 12px 30px rgba(99,102,241,.45) !important;
+        border: 1.5px solid transparent !important; color: #fff !important; letter-spacing: .02em;
+        background:
+            linear-gradient(120deg, rgba(25,227,255,.20), rgba(139,123,255,.20)) padding-box,
+            linear-gradient(#05060a, #05060a) padding-box,
+            linear-gradient(120deg, var(--a1), var(--a2)) border-box !important;
+        box-shadow: 0 0 28px rgba(25,227,255,.26), inset 0 0 18px rgba(25,227,255,.08) !important;
     }
-    section[data-testid="stSidebar"] div.stButton > button:hover { box-shadow: 0 16px 38px rgba(99,102,241,.60) !important; }
+    section[data-testid="stSidebar"] div.stButton > button:hover {
+        filter: brightness(1.15); box-shadow: 0 0 42px rgba(25,227,255,.50), inset 0 0 26px rgba(25,227,255,.18) !important;
+    }
     section[data-testid="stSidebar"] .st-key-btn_oturum_kapat div.stButton > button {
-        background: rgba(248,113,113,.08) !important; color: #fca5a5 !important; border: 1px solid rgba(248,113,113,.35) !important; box-shadow: none !important;
+        background: rgba(248,113,113,.07) !important; color: #fca5a5 !important; border: 1px solid rgba(248,113,113,.35) !important; box-shadow: none !important; filter: none;
     }
     section[data-testid="stSidebar"] .st-key-btn_oturum_kapat div.stButton > button p { color: #fca5a5 !important; }
-    section[data-testid="stSidebar"] .st-key-btn_oturum_kapat div.stButton > button:hover { background: rgba(248,113,113,.16) !important; box-shadow: none !important; }
-    section[data-testid="stSidebar"] .st-key-btn_uret { background: linear-gradient(180deg, rgba(7,8,12,0) 0%, #07080c 42%); }
+    section[data-testid="stSidebar"] .st-key-btn_oturum_kapat div.stButton > button:hover { background: rgba(248,113,113,.15) !important; box-shadow: 0 0 20px rgba(248,113,113,.18) !important; }
+    section[data-testid="stSidebar"] .st-key-btn_uret { background: linear-gradient(180deg, rgba(5,6,10,0) 0%, #05060a 42%); }
 </style>
 """, unsafe_allow_html=True)
 
@@ -3052,10 +3106,10 @@ def kota_karti_html(bugunku, limit):
     kalan = max(0, ref - bugunku)
     durum = "Rahat" if y < 50 else "Dikkat" if y < 80 else "Kota dolmak üzere" if y < 100 else "Kota doldu"
     boyut = 10000 / max(y, 1)       # dolgu, tam yeşil→kırmızı şeridin yalnızca dolu kısmını gösterir
-    etiket = "Günlük kota (tahmini)" if tahmini else "Günlük kota"
+    etiket = "Günlük kota · tahmini" if tahmini else "Günlük kota"
     return f"""
     <div class="kullanim">
-        <div class="ust"><small>📅 {etiket}</small><b class="kota-yuzde" style="color:{renk}">%{y}</b></div>
+        <div class="ust"><small>{etiket}</small><b class="kota-yuzde" style="color:{renk}">%{y}</b></div>
         <div class="cubuk"><div style="width:{y}%;background:linear-gradient(90deg,#12a064 0%,#f59e0b 60%,#e5383b 100%) 0 0 / {boyut:.0f}% 100%"></div></div>
         <div class="kota-alt">
             <span><b>{bugunku}</b> / {ref} soru · kalan {kalan}</span>
@@ -3094,8 +3148,9 @@ with st.sidebar:
     # --- MARKA ---
     st.markdown("""
     <div class="marka">
-        <div class="marka-logo">🔮</div>
-        <div><b>Soru Fabrikası</b><span>Yapay zeka destekli sınav modülü</span></div>
+        <div class="marka-logo">◈</div>
+        <div><b>Soru Fabrikası</b><span>AI sınav modülü</span></div>
+        <i class="marka-nokta"></i>
     </div>
     """, unsafe_allow_html=True)
 
