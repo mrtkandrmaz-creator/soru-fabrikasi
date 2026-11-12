@@ -459,6 +459,191 @@ st.markdown("""
     .kota-alt b { color: var(--ink); }
     .kota-alt em { font-style: normal; font-weight: 700; font-size: 11.5px; padding: 3px 10px; border-radius: 99px; white-space: nowrap; }
     section[data-testid="stSidebar"] .marka { margin-top: 4px; }
+
+    /* =====================================================================
+       TEMA v3: ana alan mor-turkuaz-mavi geçişli, kenar çubuğu siyah (koyu)
+       ===================================================================== */
+    :root {
+        --paper: #eef0ff; --grid: #e4e8fb; --ink: #14172e; --ink2: #3a4170; --muted: #5d6793; --line: #dcdff5;
+        --pen: #5b4bff; --pen-d: #4338ca; --pen-soft: #ecebff;
+        --grad: linear-gradient(120deg, #7c3aed 0%, #2563eb 52%, #06b6d4 100%);
+    }
+    .stApp {
+        background-color: #eef0ff;
+        background-image:
+            radial-gradient(900px 620px at 92% -6%, rgba(124,58,237,.40), transparent 62%),
+            radial-gradient(780px 620px at 102% 48%, rgba(6,182,212,.36), transparent 62%),
+            radial-gradient(900px 700px at 60% 108%, rgba(37,99,235,.32), transparent 62%),
+            radial-gradient(640px 480px at 18% 18%, rgba(20,184,166,.14), transparent 62%);
+        background-size: auto; background-attachment: fixed;
+    }
+    @keyframes yuksel { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+    /* Karşılama / sonuç afişleri */
+    .hero, .skor-banner {
+        background-color: #4f46e5; border-radius: 30px;
+        background-image:
+            radial-gradient(circle at 88% 10%, rgba(255,255,255,.26), transparent 38%),
+            radial-gradient(circle at 8% 110%, rgba(34,211,238,.45), transparent 45%),
+            linear-gradient(120deg, #7c3aed 0%, #2f5bf0 52%, #06b6d4 100%);
+        background-size: auto; box-shadow: 0 26px 60px rgba(76,29,149,.30), inset 0 1px 0 rgba(255,255,255,.25);
+        animation: yuksel .5s ease both;
+    }
+    .hero-chip, .chip { box-shadow: 0 10px 24px rgba(15,23,80,.18); border-radius: 18px; }
+    .hero mark { background: linear-gradient(90deg, #fde047, #fef08a); }
+
+    /* Cam efektli kartlar */
+    .ozellik, .gecmis-kutu, .analiz-kart, .uretim-karti, .soru-karti {
+        background: rgba(255,255,255,.86); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+        border: 1px solid rgba(255,255,255,.95); box-shadow: 0 16px 44px rgba(76,29,149,.12);
+    }
+    .ozellik { border-radius: 24px; transition: transform .2s ease, box-shadow .2s ease; }
+    .ozellik:hover { transform: translateY(-3px); box-shadow: 0 22px 50px rgba(76,29,149,.18); }
+    .gecmis-kutu { border-radius: 20px; }
+    .analiz-kart { border-radius: 24px; animation: yuksel .45s ease both; }
+    .uretim-karti { border-radius: 24px; }
+    .soru-karti { border-radius: 28px; padding: 28px 32px 26px 32px; }
+    .rozet { background: linear-gradient(135deg, #ede9fe, #cffafe); color: #3b2a8f; border-radius: 999px; padding: 4px 16px; }
+
+    /* Süre, ilerleme */
+    .sure { background: linear-gradient(135deg, #1b1f3b, #0b0d1a); box-shadow: 0 10px 22px rgba(19,23,60,.28); border-radius: 14px; }
+    .ilerleme-cubuk { height: 12px; border: none; background: rgba(255,255,255,.75); box-shadow: inset 0 1px 3px rgba(19,23,60,.15); }
+    .ilerleme-cubuk > div { background: linear-gradient(90deg, #7c3aed, #2563eb 55%, #06b6d4); }
+    .onay-kutu { border: 1.5px solid #f1d84a; border-radius: 18px; }
+    .gorsel-sema-kutusu { border: 1.5px dashed #c7cdf3; border-radius: 18px; }
+
+    /* Şıklar */
+    div[data-testid="stRadio"] label[data-baseweb="radio"] { border: 1.5px solid var(--line); border-radius: 16px; box-shadow: 0 2px 8px rgba(30,41,120,.05); }
+    div[data-testid="stRadio"] label[data-baseweb="radio"]:hover { border-color: #8b5cf6; background: #f5f1ff; }
+    @supports selector(:has(*)) {
+        div[data-testid="stRadio"] label[data-baseweb="radio"]:has(input:checked) {
+            border-color: #7c3aed; background: linear-gradient(135deg, #f1ebff, #e3fbff); box-shadow: 0 8px 22px rgba(124,58,237,.20);
+        }
+        div[data-testid="stRadio"] label[data-baseweb="radio"]:has(input:checked) > div:first-child {
+            background-color: #7c3aed !important; border-color: #7c3aed !important;
+        }
+    }
+
+    /* Düğmeler: yumuşak gölge, birincil düğme mor-mavi-turkuaz gradyan */
+    div.stButton > button, div.stDownloadButton > button {
+        border: 1.5px solid #cfd5f5; box-shadow: 0 2px 8px rgba(30,41,120,.08); border-radius: 14px; transition: all .15s ease;
+    }
+    div.stButton > button:hover, div.stDownloadButton > button:hover {
+        border-color: #a5b4fc; box-shadow: 0 10px 24px rgba(30,41,120,.14); transform: translateY(-1px); color: var(--ink);
+    }
+    div.stButton > button:active, div.stDownloadButton > button:active { transform: translateY(0); box-shadow: 0 2px 8px rgba(30,41,120,.10); }
+    div.stButton > button[kind="primary"], button[data-testid="stBaseButton-primary"] {
+        background: linear-gradient(120deg, #7c3aed 0%, #2563eb 58%, #06b6d4 100%) !important; border: none !important;
+        box-shadow: 0 12px 28px rgba(79,70,229,.38);
+    }
+    div.stButton > button[kind="primary"]:hover, button[data-testid="stBaseButton-primary"]:hover {
+        filter: brightness(1.06); box-shadow: 0 16px 34px rgba(79,70,229,.48); transform: translateY(-1px);
+    }
+    div.stButton > button[kind="primary"]:active, button[data-testid="stBaseButton-primary"]:active { transform: translateY(0); box-shadow: 0 6px 14px rgba(79,70,229,.35); }
+
+    /* Genel açılır kutular (ana alan) */
+    [data-testid="stExpander"] {
+        border: 1px solid rgba(255,255,255,.95) !important; border-radius: 20px !important;
+        background: rgba(255,255,255,.84) !important; box-shadow: 0 10px 28px rgba(76,29,149,.10);
+    }
+    .an-bar { background: #e3e7fb; }
+
+    /* =====================================================================
+       KENAR ÇUBUĞU: siyah / koyu tema
+       ===================================================================== */
+    section[data-testid="stSidebar"] {
+        background:
+            radial-gradient(420px 320px at -10% -4%, rgba(124,58,237,.26), transparent 62%),
+            radial-gradient(380px 320px at 112% 106%, rgba(6,182,212,.18), transparent 62%),
+            linear-gradient(180deg, #0c0d14 0%, #07080c 100%);
+        border-right: 1px solid rgba(255,255,255,.06); box-shadow: 10px 0 40px rgba(10,10,30,.28); color: #e6e9ff;
+    }
+    section[data-testid="stSidebar"] > div, section[data-testid="stSidebar"] [data-testid="stSidebarContent"] { background: transparent; }
+    section[data-testid="stSidebar"] [data-testid="stSidebarCollapseButton"] *, section[data-testid="stSidebar"] [data-testid="stSidebarHeader"] * { color: #c3cbf5 !important; }
+    section[data-testid="stSidebar"] hr { border-color: rgba(255,255,255,.10); }
+    section[data-testid="stSidebar"] *::-webkit-scrollbar-thumb { background: rgba(255,255,255,.18); }
+    section[data-testid="stSidebar"] label[data-testid="stWidgetLabel"] p,
+    section[data-testid="stSidebar"] [data-testid="stWidgetLabel"] p { color: #cdd3f5; }
+    section[data-testid="stSidebar"] [data-testid="stCaptionContainer"] { color: #8f9bd0; }
+    .yan-baslik { color: #9aa6dc; }
+    .yan-baslik::after { background: rgba(255,255,255,.10); }
+
+    .marka { background: linear-gradient(135deg, #7c3aed 0%, #2563eb 55%, #06b6d4 100%); box-shadow: 0 14px 34px rgba(99,102,241,.38); }
+    .ogr-kart { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.11); box-shadow: none; backdrop-filter: blur(10px); }
+    .ogr-avatar { background: linear-gradient(135deg, #7c3aed 0%, #06b6d4 100%); box-shadow: 0 8px 20px rgba(124,58,237,.40); }
+    .ogr-bilgi b { color: #fff; }
+    .ogr-bilgi span { color: #9aa6dc; }
+    .kullanim { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.11); box-shadow: none; backdrop-filter: blur(10px); }
+    .kullanim small, .kota-alt { color: #9aa6dc; }
+    .kullanim b, .kota-alt b { color: #fff; }
+    .kullanim .cubuk { background: rgba(255,255,255,.10); }
+
+    /* Seçim ve metin kutuları */
+    section[data-testid="stSidebar"] div[data-baseweb="select"] > div,
+    section[data-testid="stSidebar"] div[data-baseweb="input"] > div {
+        background: rgba(255,255,255,.06); border: 1.5px solid rgba(255,255,255,.12); box-shadow: none;
+    }
+    section[data-testid="stSidebar"] div[data-baseweb="select"] > div:hover,
+    section[data-testid="stSidebar"] div[data-baseweb="select"] > div:focus-within,
+    section[data-testid="stSidebar"] div[data-baseweb="input"] > div:focus-within {
+        border-color: #8b5cf6; box-shadow: 0 0 0 3px rgba(139,92,246,.28);
+    }
+    section[data-testid="stSidebar"] div[data-baseweb="select"] * { color: #eef0ff !important; }
+    section[data-testid="stSidebar"] div[data-baseweb="select"] svg { fill: #aab4e8 !important; }
+    section[data-testid="stSidebar"] div[data-baseweb="base-input"] { background: transparent !important; }
+    section[data-testid="stSidebar"] div[data-baseweb="input"] input { background: transparent !important; color: #fff !important; }
+    section[data-testid="stSidebar"] div[data-baseweb="input"] input::placeholder { color: #7f89b5; opacity: 1; }
+
+    /* Ders kartları */
+    section[data-testid="stSidebar"] [data-testid="stExpander"] {
+        background: rgba(255,255,255,.05) !important; border: 1px solid rgba(255,255,255,.10) !important; box-shadow: none;
+    }
+    section[data-testid="stSidebar"] [data-testid="stExpander"]:hover { box-shadow: 0 10px 26px rgba(0,0,0,.35); }
+    section[data-testid="stSidebar"] [data-testid="stExpander"] summary, section[data-testid="stSidebar"] [data-testid="stExpander"] summary * { color: #e6e9ff !important; }
+    section[data-testid="stSidebar"] [data-testid="stExpander"] summary:hover { background: rgba(255,255,255,.06); }
+    section[data-testid="stSidebar"] [data-testid="stExpander"] details[open] > summary { background: rgba(139,92,246,.20); }
+    section[data-testid="stSidebar"] [data-testid="stExpander"] details[open] > summary * { color: #fff !important; }
+    @supports selector(:has(*)) {
+        section[data-testid="stSidebar"] [data-testid="stExpander"]:has(details[open]) { border-color: rgba(139,92,246,.65) !important; }
+    }
+
+    /* Ünite kutuları */
+    section[data-testid="stSidebar"] div[data-testid="stCheckbox"] { background: rgba(255,255,255,.04); border-color: rgba(255,255,255,.10); }
+    section[data-testid="stSidebar"] div[data-testid="stCheckbox"]:hover { background: rgba(139,92,246,.14); border-color: #8b5cf6; }
+    section[data-testid="stSidebar"] div[data-testid="stCheckbox"] label p,
+    section[data-testid="stSidebar"] div[data-testid="stCheckbox"] label span { color: #dfe3ff !important; }
+    section[data-testid="stSidebar"] label[data-baseweb="checkbox"] > span:first-child { border-color: rgba(255,255,255,.35) !important; background-color: transparent; }
+    @supports selector(:has(*)) {
+        section[data-testid="stSidebar"] div[data-testid="stCheckbox"]:has(input:checked) {
+            background: linear-gradient(90deg, rgba(124,58,237,.30), rgba(6,182,212,.10)); border-color: rgba(167,139,250,.55);
+            box-shadow: inset 4px 0 0 #22d3ee;
+        }
+        section[data-testid="stSidebar"] div[data-testid="stCheckbox"] label[data-baseweb="checkbox"]:has(input:checked) > span:first-child {
+            background: #7c3aed !important; border-color: #a78bfa !important;
+        }
+    }
+
+    /* Kaydırıcı */
+    section[data-testid="stSidebar"] div[data-baseweb="slider"] [role="slider"] {
+        background: #7c3aed !important; border: 3px solid #0c0d14 !important; box-shadow: 0 0 0 2px #a78bfa, 0 4px 14px rgba(124,58,237,.6) !important;
+    }
+    section[data-testid="stSidebar"] [data-testid="stSliderThumbValue"] { color: #5eead4; }
+    section[data-testid="stSidebar"] [data-testid="stTickBarMin"], section[data-testid="stSidebar"] [data-testid="stTickBarMax"] { color: #8f9bd0; }
+
+    /* Düğmeler */
+    section[data-testid="stSidebar"] div.stButton > button,
+    section[data-testid="stSidebar"] div.stButton > button[kind="primary"],
+    section[data-testid="stSidebar"] button[data-testid="stBaseButton-primary"] {
+        background: linear-gradient(120deg, #7c3aed 0%, #2563eb 58%, #06b6d4 100%) !important;
+        box-shadow: 0 12px 30px rgba(99,102,241,.45) !important;
+    }
+    section[data-testid="stSidebar"] div.stButton > button:hover { box-shadow: 0 16px 38px rgba(99,102,241,.60) !important; }
+    section[data-testid="stSidebar"] .st-key-btn_oturum_kapat div.stButton > button {
+        background: rgba(248,113,113,.08) !important; color: #fca5a5 !important; border: 1px solid rgba(248,113,113,.35) !important; box-shadow: none !important;
+    }
+    section[data-testid="stSidebar"] .st-key-btn_oturum_kapat div.stButton > button p { color: #fca5a5 !important; }
+    section[data-testid="stSidebar"] .st-key-btn_oturum_kapat div.stButton > button:hover { background: rgba(248,113,113,.16) !important; box-shadow: none !important; }
+    section[data-testid="stSidebar"] .st-key-btn_uret { background: linear-gradient(180deg, rgba(7,8,12,0) 0%, #07080c 42%); }
 </style>
 """, unsafe_allow_html=True)
 
@@ -3047,14 +3232,14 @@ elif st.session_state.exam_started and st.session_state.quiz_data and not st.ses
     # Tıklanabilir soru paleti: cevaplı = mor dolu kutu, boş = beyaz, 🚩 işaretli, turuncu = şu anki soru
     cevapli_idx = [i for i in range(toplam_soru) if st.session_state.user_answers.get(i)]
     kurallar = "".join(
-        f".stApp .st-key-pal_{i} button {{ background: #7c3aed !important; border-color: #5b21b6 !important; color: #fff !important; }}"
-        f".stApp .st-key-pal_{i} button p {{ color: #fff !important; }}"
+        f".stApp .st-key-pal_{i} div.stButton > button {{ background: #7c3aed !important; border-color: #5b21b6 !important; color: #fff !important; }}"
+        f".stApp .st-key-pal_{i} div.stButton > button p {{ color: #fff !important; }}"
         for i in cevapli_idx)
     # şu anki soru her zaman turuncu (cevaplıysa mor halkayla cevaplı olduğu belli olur)
-    kurallar += (f".stApp .st-key-pal_{q_idx} button {{ background: #f97316 !important; border-color: #c2410c !important; color: #fff !important; }}"
-                 f".stApp .st-key-pal_{q_idx} button p {{ color: #fff !important; }}")
+    kurallar += (f".stApp .st-key-pal_{q_idx} div.stButton > button {{ background: #f97316 !important; border-color: #c2410c !important; color: #fff !important; }}"
+                 f".stApp .st-key-pal_{q_idx} div.stButton > button p {{ color: #fff !important; }}")
     if q_idx in cevapli_idx:
-        kurallar += f".stApp .st-key-pal_{q_idx} button {{ outline: 3px solid #7c3aed; outline-offset: 2px; }}"
+        kurallar += f".stApp .st-key-pal_{q_idx} div.stButton > button {{ outline: 3px solid #7c3aed; outline-offset: 2px; }}"
     st.markdown(f"<style>{kurallar}</style>", unsafe_allow_html=True)
     st.markdown("<div class='pal-marker'></div>", unsafe_allow_html=True)
     pal = st.columns(toplam_soru)
