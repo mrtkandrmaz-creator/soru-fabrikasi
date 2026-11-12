@@ -716,35 +716,50 @@ st.markdown("""
             border-color: var(--c3); box-shadow: 0 4px 0 var(--c3), 0 14px 28px rgba(120,80,40,.12);
         }
     }
-    .ders-bas { display: flex; align-items: center; gap: 12px; }
+    .ders-bas { display: flex; align-items: center; gap: 12px; height: 52px; }
     .ders-ikon {
         width: 46px; height: 46px; flex: none; border-radius: 15px; display: flex; align-items: center; justify-content: center;
         font-size: 23px; background: var(--c1); border: 1.5px solid var(--c2); box-shadow: 0 3px 0 var(--c2);
     }
     .ders-ad { min-width: 0; line-height: 1.3; }
-    .ders-ad b { display: block; color: var(--yazi); font-size: 15px; font-weight: 700; }
+    .ders-ad b {
+        display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+        color: var(--yazi); font-size: 14px; font-weight: 700; line-height: 1.25;
+    }
     .ders-ad span { color: var(--yazi3); font-size: 12px; }
     .ders-rozet {
         margin-left: auto; flex: none; padding: 4px 12px; border-radius: 999px; font-size: 13px; font-weight: 800;
         background: var(--c1); color: var(--c3); border: 1.5px solid var(--c2);
     }
     .ders-rozet.dolu { background: var(--c3); color: #fff; border-color: var(--c3); }
+    .ders-ok {
+        flex: none; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        background: var(--c1); color: var(--c3); font-size: 14px; font-weight: 700; transition: transform .25s ease;
+    }
     .ders-cubuk { height: 8px; border-radius: 99px; background: var(--c1); overflow: hidden; margin-top: 2px; }
     .ders-cubuk > div { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--c2), var(--c3)); transition: width .3s ease; }
 
-    /* Kartın içindeki "Üniteleri seç" açılır alanı: sade, kartın parçası gibi */
+    /* Kartın kendisi tıklanabilir: açılır alanın başlığı görünmez ve kart başlığının üstüne biner */
+    section[data-testid="stSidebar"] [data-testid="stVerticalBlock"][class*="st-key-dersk_"] { position: relative; cursor: pointer; }
+    section[data-testid="stSidebar"] [data-testid="stVerticalBlock"][class*="st-key-dersk_"]:hover {
+        box-shadow: 0 5px 0 var(--c2), 0 16px 30px rgba(120,80,40,.14);
+    }
+    section[data-testid="stSidebar"] [class*="st-key-dersk_"] [data-testid="stElementContainer"],
+    section[data-testid="stSidebar"] [class*="st-key-dersk_"] .element-container,
+    section[data-testid="stSidebar"] [class*="st-key-dersk_"] [data-testid="stExpander"],
+    section[data-testid="stSidebar"] [class*="st-key-dersk_"] [data-testid="stExpander"] details { position: static !important; }
     section[data-testid="stSidebar"] [class*="st-key-dersk_"] [data-testid="stExpander"] {
-        background: transparent !important; border: none !important; box-shadow: none !important; border-radius: 14px !important;
+        background: transparent !important; border: none !important; box-shadow: none !important; border-radius: 0 !important;
+        overflow: visible !important; margin-top: -.55rem;
     }
     section[data-testid="stSidebar"] [class*="st-key-dersk_"] [data-testid="stExpander"]:hover { box-shadow: none !important; border: none !important; }
     section[data-testid="stSidebar"] [class*="st-key-dersk_"] [data-testid="stExpander"] summary {
-        min-height: 42px; border-radius: 12px; background: var(--c1); padding: 0 14px; font-size: 13.5px; font-weight: 700;
+        position: absolute; top: 0; left: 0; right: 0; height: 90px; min-height: 0; padding: 0; opacity: 0; z-index: 3; cursor: pointer;
     }
-    section[data-testid="stSidebar"] [class*="st-key-dersk_"] [data-testid="stExpander"] summary,
-    section[data-testid="stSidebar"] [class*="st-key-dersk_"] [data-testid="stExpander"] summary * { color: var(--c3) !important; }
-    section[data-testid="stSidebar"] [class*="st-key-dersk_"] [data-testid="stExpander"] summary:hover { background: var(--c2); }
-    section[data-testid="stSidebar"] [class*="st-key-dersk_"] [data-testid="stExpander"] details[open] > summary { background: var(--c2); }
-    section[data-testid="stSidebar"] [class*="st-key-dersk_"] [data-testid="stExpander"] details[open] > summary * { color: var(--c3) !important; }
+    section[data-testid="stSidebar"] [class*="st-key-dersk_"] [data-testid="stExpander"] details[open] [data-testid="stExpanderDetails"] { padding-top: 14px; }
+    @supports selector(:has(*)) {
+        section[data-testid="stSidebar"] [data-testid="stVerticalBlock"][class*="st-key-dersk_"]:has(details[open]) .ders-ok { transform: rotate(180deg); background: var(--c2); }
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -3241,10 +3256,11 @@ with st.sidebar:
                 <div class="ders-ikon">{ders_ikon(ders_adi)}</div>
                 <div class="ders-ad"><b>{html.escape(str(ders_adi))}</b><span>{len(unite_keys)} ünite</span></div>
                 <div class="ders-rozet{' dolu' if _sec else ''}">{_sec}/{len(unite_keys)}</div>
+                <div class="ders-ok">▾</div>
             </div>
             <div class="ders-cubuk"><div style="width:{round(_sec / _top * 100)}%"></div></div>
             """, unsafe_allow_html=True)
-            with st.expander("📚 Üniteleri seç"):
+            with st.expander(f"{ders_adi} üniteleri"):      # düğme görünmez; kartın başlığına tıklayınca açılır
                 st.checkbox(f"Tüm {ders_adi} kategorisini dahil et", key=ders_key,
                             on_change=_tumunu_sec, args=(ders_key, unite_keys))
                 secili_alt_uniteler = []
