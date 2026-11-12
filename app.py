@@ -461,92 +461,94 @@ st.markdown("""
     section[data-testid="stSidebar"] .marka { margin-top: 4px; }
 
     /* =====================================================================
-       TEMA v3: ana alan mor-turkuaz-mavi geçişli, kenar çubuğu siyah (koyu)
+       TEMA v6: ana alan pastel sıcak geçişler (sol panelle uyumlu)
        ===================================================================== */
     :root {
-        --paper: #eef0ff; --grid: #e4e8fb; --ink: #14172e; --ink2: #3a4170; --muted: #5d6793; --line: #dcdff5;
-        --pen: #5b4bff; --pen-d: #4338ca; --pen-soft: #ecebff;
-        --grad: linear-gradient(120deg, #7c3aed 0%, #2563eb 52%, #06b6d4 100%);
+        --paper: #fff6ee; --grid: #ffe9d8; --ink: #3b2a20; --ink2: #6b5444; --muted: #8a7060; --line: #ffe0cc;
+        --pen: #ff8a3d; --pen-d: #e8590c; --pen-soft: #fff1e3;
+        --sicak-golge: 0 4px 0 rgba(255,170,110,.28), 0 16px 40px rgba(255,138,61,.10);
     }
     .stApp {
-        background-color: #eef0ff;
+        background-color: #fff6ee;
         background-image:
-            radial-gradient(900px 620px at 92% -6%, rgba(124,58,237,.40), transparent 62%),
-            radial-gradient(780px 620px at 102% 48%, rgba(6,182,212,.36), transparent 62%),
-            radial-gradient(900px 700px at 60% 108%, rgba(37,99,235,.32), transparent 62%),
-            radial-gradient(640px 480px at 18% 18%, rgba(20,184,166,.14), transparent 62%);
+            radial-gradient(900px 620px at 95% -6%, rgba(255,190,140,.60), transparent 62%),
+            radial-gradient(780px 620px at 104% 46%, rgba(255,205,225,.55), transparent 62%),
+            radial-gradient(900px 700px at 62% 108%, rgba(255,236,170,.60), transparent 62%),
+            radial-gradient(640px 480px at 15% 15%, rgba(255,225,200,.38), transparent 62%);
         background-size: auto; background-attachment: fixed;
     }
     @keyframes yuksel { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 
-    /* Karşılama / sonuç afişleri */
+    /* Karşılama / sonuç afişleri: pastel geçiş, koyu yazı */
     .hero, .skor-banner {
-        background-color: #4f46e5; border-radius: 30px;
+        background-color: #ffcf9e; color: var(--ink); border-radius: 30px;
         background-image:
-            radial-gradient(circle at 88% 10%, rgba(255,255,255,.26), transparent 38%),
-            radial-gradient(circle at 8% 110%, rgba(34,211,238,.45), transparent 45%),
-            linear-gradient(120deg, #7c3aed 0%, #2f5bf0 52%, #06b6d4 100%);
-        background-size: auto; box-shadow: 0 26px 60px rgba(76,29,149,.30), inset 0 1px 0 rgba(255,255,255,.25);
+            radial-gradient(circle at 90% 8%, rgba(255,255,255,.60), transparent 40%),
+            radial-gradient(circle at 4% 112%, rgba(255,214,230,.95), transparent 48%),
+            linear-gradient(120deg, #ffc98f 0%, #ffdcae 46%, #ffd0e2 100%);
+        background-size: auto; box-shadow: 0 6px 0 rgba(255,160,100,.42), 0 26px 56px rgba(255,138,61,.22);
         animation: yuksel .5s ease both;
     }
-    .hero-chip, .chip { box-shadow: 0 10px 24px rgba(15,23,80,.18); border-radius: 18px; }
-    .hero mark { background: linear-gradient(90deg, #fde047, #fef08a); }
+    .hero h1 { color: var(--ink) !important; }
+    .hero p { color: var(--ink2); }
+    .hero mark { background: #fff; color: var(--ink); }
+    .hero-chip, .chip { box-shadow: 0 4px 0 rgba(255,160,100,.35), 0 10px 22px rgba(255,138,61,.14); border-radius: 18px; }
 
-    /* Cam efektli kartlar */
+    /* Kartlar: beyaza yakın, sıcak çerçeve, hafif "basılmış" kenar */
     .ozellik, .gecmis-kutu, .analiz-kart, .uretim-karti, .soru-karti {
-        background: rgba(255,255,255,.86); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-        border: 1px solid rgba(255,255,255,.95); box-shadow: 0 16px 44px rgba(76,29,149,.12);
+        background: rgba(255,255,255,.90); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+        border: 1.5px solid #ffe0c8; box-shadow: var(--sicak-golge);
     }
     .ozellik { border-radius: 24px; transition: transform .2s ease, box-shadow .2s ease; }
-    .ozellik:hover { transform: translateY(-3px); box-shadow: 0 22px 50px rgba(76,29,149,.18); }
+    .ozellik:hover { transform: translateY(-3px); box-shadow: 0 6px 0 rgba(255,170,110,.35), 0 22px 46px rgba(255,138,61,.16); }
     .gecmis-kutu { border-radius: 20px; }
     .analiz-kart { border-radius: 24px; animation: yuksel .45s ease both; }
     .uretim-karti { border-radius: 24px; }
     .soru-karti { border-radius: 28px; padding: 28px 32px 26px 32px; }
-    .rozet { background: linear-gradient(135deg, #ede9fe, #cffafe); color: #3b2a8f; border-radius: 999px; padding: 4px 16px; }
+    .rozet { background: linear-gradient(135deg, #ffe8d2, #fff0b8); color: #8a3d0a; border-radius: 999px; padding: 4px 16px; }
 
     /* Süre, ilerleme */
-    .sure { background: linear-gradient(135deg, #1b1f3b, #0b0d1a); box-shadow: 0 10px 22px rgba(19,23,60,.28); border-radius: 14px; }
-    .ilerleme-cubuk { height: 12px; border: none; background: rgba(255,255,255,.75); box-shadow: inset 0 1px 3px rgba(19,23,60,.15); }
-    .ilerleme-cubuk > div { background: linear-gradient(90deg, #7c3aed, #2563eb 55%, #06b6d4); }
+    .sure { background: linear-gradient(135deg, #5a3a28, #3b2a20); box-shadow: 0 5px 0 rgba(59,42,32,.22); border-radius: 14px; }
+    .ilerleme-cubuk { height: 12px; border: none; background: rgba(255,255,255,.85); box-shadow: inset 0 1px 3px rgba(120,80,40,.15); }
+    .ilerleme-cubuk > div { background: linear-gradient(90deg, #ffb066, #ff8fa3); }
     .onay-kutu { border: 1.5px solid #f1d84a; border-radius: 18px; }
-    .gorsel-sema-kutusu { border: 1.5px dashed #c7cdf3; border-radius: 18px; }
+    .gorsel-sema-kutusu { border: 1.5px dashed #ffcfae; border-radius: 18px; }
+    .an-bar { background: #ffe9d8; }
 
     /* Şıklar */
-    div[data-testid="stRadio"] label[data-baseweb="radio"] { border: 1.5px solid var(--line); border-radius: 16px; box-shadow: 0 2px 8px rgba(30,41,120,.05); }
-    div[data-testid="stRadio"] label[data-baseweb="radio"]:hover { border-color: #8b5cf6; background: #f5f1ff; }
+    div[data-testid="stRadio"] label[data-baseweb="radio"] { border: 1.5px solid var(--line); border-radius: 16px; box-shadow: 0 3px 0 rgba(255,170,110,.18); }
+    div[data-testid="stRadio"] label[data-baseweb="radio"]:hover { border-color: #ffb98a; background: #fff4e8; }
     @supports selector(:has(*)) {
         div[data-testid="stRadio"] label[data-baseweb="radio"]:has(input:checked) {
-            border-color: #7c3aed; background: linear-gradient(135deg, #f1ebff, #e3fbff); box-shadow: 0 8px 22px rgba(124,58,237,.20);
+            border-color: #ff9a56; background: linear-gradient(135deg, #fff0e0, #fff7d6); box-shadow: 0 5px 0 rgba(255,150,90,.35);
         }
         div[data-testid="stRadio"] label[data-baseweb="radio"]:has(input:checked) > div:first-child {
-            background-color: #7c3aed !important; border-color: #7c3aed !important;
+            background-color: #ff8a3d !important; border-color: #e8590c !important;
         }
     }
 
-    /* Düğmeler: yumuşak gölge, birincil düğme mor-mavi-turkuaz gradyan */
+    /* Düğmeler: sol panelle aynı pastel turuncu gradyan, koyu yazı */
     div.stButton > button, div.stDownloadButton > button {
-        border: 1.5px solid #cfd5f5; box-shadow: 0 2px 8px rgba(30,41,120,.08); border-radius: 14px; transition: all .15s ease;
+        border: 1.5px solid #ffd9bf; box-shadow: 0 3px 0 rgba(255,170,110,.30); border-radius: 14px; transition: all .15s ease;
     }
     div.stButton > button:hover, div.stDownloadButton > button:hover {
-        border-color: #a5b4fc; box-shadow: 0 10px 24px rgba(30,41,120,.14); transform: translateY(-1px); color: var(--ink);
+        border-color: #ffb98a; box-shadow: 0 5px 0 rgba(255,170,110,.40), 0 12px 24px rgba(255,138,61,.14); transform: translateY(-1px); color: var(--ink);
     }
-    div.stButton > button:active, div.stDownloadButton > button:active { transform: translateY(0); box-shadow: 0 2px 8px rgba(30,41,120,.10); }
+    div.stButton > button:active, div.stDownloadButton > button:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(255,170,110,.35); }
     div.stButton > button[kind="primary"], button[data-testid="stBaseButton-primary"] {
-        background: linear-gradient(120deg, #7c3aed 0%, #2563eb 58%, #06b6d4 100%) !important; border: none !important;
-        box-shadow: 0 12px 28px rgba(79,70,229,.38);
+        background: linear-gradient(120deg, #ffcb8e 0%, #ffa970 55%, #ff9fa8 100%) !important; color: #4a2410 !important;
+        border: 2px solid #fff !important; box-shadow: 0 5px 0 #f0955c, 0 14px 26px rgba(255,138,61,.28);
     }
+    div.stButton > button[kind="primary"] p, button[data-testid="stBaseButton-primary"] p { color: #4a2410 !important; }
     div.stButton > button[kind="primary"]:hover, button[data-testid="stBaseButton-primary"]:hover {
-        filter: brightness(1.06); box-shadow: 0 16px 34px rgba(79,70,229,.48); transform: translateY(-1px);
+        filter: brightness(1.04); box-shadow: 0 6px 0 #f0955c, 0 18px 30px rgba(255,138,61,.36); transform: translateY(-1px);
     }
-    div.stButton > button[kind="primary"]:active, button[data-testid="stBaseButton-primary"]:active { transform: translateY(0); box-shadow: 0 6px 14px rgba(79,70,229,.35); }
+    div.stButton > button[kind="primary"]:active, button[data-testid="stBaseButton-primary"]:active { transform: translateY(3px); box-shadow: 0 2px 0 #f0955c; }
 
     /* Genel açılır kutular (ana alan) */
     [data-testid="stExpander"] {
-        border: 1px solid rgba(255,255,255,.95) !important; border-radius: 20px !important;
-        background: rgba(255,255,255,.84) !important; box-shadow: 0 10px 28px rgba(76,29,149,.10);
+        border: 1.5px solid #ffe0c8 !important; border-radius: 20px !important; background: rgba(255,255,255,.88) !important; box-shadow: var(--sicak-golge);
     }
-    .an-bar { background: #e3e7fb; }
 
     /* =====================================================================
        KENAR ÇUBUĞU v5: pastel turuncu geçişli, çocuk dostu açık panel
@@ -683,6 +685,66 @@ st.markdown("""
     section[data-testid="stSidebar"] .st-key-btn_oturum_kapat div.stButton > button p { color: #b42318 !important; }
     section[data-testid="stSidebar"] .st-key-btn_oturum_kapat div.stButton > button:hover { background: #ffe3e1 !important; box-shadow: 0 4px 0 rgba(255,150,140,.45) !important; }
     section[data-testid="stSidebar"] .st-key-btn_uret { background: linear-gradient(180deg, rgba(255,236,224,0) 0%, rgba(255,236,224,.97) 45%); }
+
+    /* ---------- DERS KARTLARI: renkli, ikonlu, seçili sayısı gösteren kartlar ---------- */
+    section[data-testid="stSidebar"] [data-testid="stVerticalBlock"].st-key-dersk_0,
+    section[data-testid="stSidebar"] [data-testid="stVerticalBlock"].st-key-dersk_6,
+    section[data-testid="stSidebar"] [data-testid="stVerticalBlock"].st-key-dersk_12 { --c1: #ffe8d2; --c2: #ffc196; --c3: #b4540f; }
+    section[data-testid="stSidebar"] [data-testid="stVerticalBlock"].st-key-dersk_1,
+    section[data-testid="stSidebar"] [data-testid="stVerticalBlock"].st-key-dersk_7,
+    section[data-testid="stSidebar"] [data-testid="stVerticalBlock"].st-key-dersk_13 { --c1: #fff3bf; --c2: #ffdd70; --c3: #8a6a00; }
+    section[data-testid="stSidebar"] [data-testid="stVerticalBlock"].st-key-dersk_2,
+    section[data-testid="stSidebar"] [data-testid="stVerticalBlock"].st-key-dersk_8,
+    section[data-testid="stSidebar"] [data-testid="stVerticalBlock"].st-key-dersk_14 { --c1: #ffe0ea; --c2: #ffb0c8; --c3: #a3295a; }
+    section[data-testid="stSidebar"] [data-testid="stVerticalBlock"].st-key-dersk_3,
+    section[data-testid="stSidebar"] [data-testid="stVerticalBlock"].st-key-dersk_9,
+    section[data-testid="stSidebar"] [data-testid="stVerticalBlock"].st-key-dersk_15 { --c1: #dcf6e8; --c2: #9bdfbc; --c3: #167a50; }
+    section[data-testid="stSidebar"] [data-testid="stVerticalBlock"].st-key-dersk_4,
+    section[data-testid="stSidebar"] [data-testid="stVerticalBlock"].st-key-dersk_10,
+    section[data-testid="stSidebar"] [data-testid="stVerticalBlock"].st-key-dersk_16 { --c1: #def0ff; --c2: #a0d2f5; --c3: #1d5f99; }
+    section[data-testid="stSidebar"] [data-testid="stVerticalBlock"].st-key-dersk_5,
+    section[data-testid="stSidebar"] [data-testid="stVerticalBlock"].st-key-dersk_11,
+    section[data-testid="stSidebar"] [data-testid="stVerticalBlock"].st-key-dersk_17 { --c1: #ece6ff; --c2: #c6b6ff; --c3: #5a3cb0; }
+    section[data-testid="stSidebar"] [data-testid="stVerticalBlock"][class*="st-key-dersk_"] {
+        background-color: rgba(255,255,255,.93);
+        background-image: linear-gradient(90deg, var(--c2), var(--c1)); background-size: 100% 6px; background-repeat: no-repeat; background-position: top;
+        border: 1.5px solid var(--c2); border-radius: 22px; padding: 20px 14px 12px; gap: .55rem;
+        box-shadow: 0 4px 0 var(--c2), 0 12px 24px rgba(120,80,40,.08); transition: box-shadow .2s ease;
+    }
+    @supports selector(:has(*)) {
+        section[data-testid="stSidebar"] [data-testid="stVerticalBlock"][class*="st-key-dersk_"]:has(.ders-rozet.dolu) {
+            border-color: var(--c3); box-shadow: 0 4px 0 var(--c3), 0 14px 28px rgba(120,80,40,.12);
+        }
+    }
+    .ders-bas { display: flex; align-items: center; gap: 12px; }
+    .ders-ikon {
+        width: 46px; height: 46px; flex: none; border-radius: 15px; display: flex; align-items: center; justify-content: center;
+        font-size: 23px; background: var(--c1); border: 1.5px solid var(--c2); box-shadow: 0 3px 0 var(--c2);
+    }
+    .ders-ad { min-width: 0; line-height: 1.3; }
+    .ders-ad b { display: block; color: var(--yazi); font-size: 15px; font-weight: 700; }
+    .ders-ad span { color: var(--yazi3); font-size: 12px; }
+    .ders-rozet {
+        margin-left: auto; flex: none; padding: 4px 12px; border-radius: 999px; font-size: 13px; font-weight: 800;
+        background: var(--c1); color: var(--c3); border: 1.5px solid var(--c2);
+    }
+    .ders-rozet.dolu { background: var(--c3); color: #fff; border-color: var(--c3); }
+    .ders-cubuk { height: 8px; border-radius: 99px; background: var(--c1); overflow: hidden; margin-top: 2px; }
+    .ders-cubuk > div { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--c2), var(--c3)); transition: width .3s ease; }
+
+    /* Kartın içindeki "Üniteleri seç" açılır alanı: sade, kartın parçası gibi */
+    section[data-testid="stSidebar"] [class*="st-key-dersk_"] [data-testid="stExpander"] {
+        background: transparent !important; border: none !important; box-shadow: none !important; border-radius: 14px !important;
+    }
+    section[data-testid="stSidebar"] [class*="st-key-dersk_"] [data-testid="stExpander"]:hover { box-shadow: none !important; border: none !important; }
+    section[data-testid="stSidebar"] [class*="st-key-dersk_"] [data-testid="stExpander"] summary {
+        min-height: 42px; border-radius: 12px; background: var(--c1); padding: 0 14px; font-size: 13.5px; font-weight: 700;
+    }
+    section[data-testid="stSidebar"] [class*="st-key-dersk_"] [data-testid="stExpander"] summary,
+    section[data-testid="stSidebar"] [class*="st-key-dersk_"] [data-testid="stExpander"] summary * { color: var(--c3) !important; }
+    section[data-testid="stSidebar"] [class*="st-key-dersk_"] [data-testid="stExpander"] summary:hover { background: var(--c2); }
+    section[data-testid="stSidebar"] [class*="st-key-dersk_"] [data-testid="stExpander"] details[open] > summary { background: var(--c2); }
+    section[data-testid="stSidebar"] [class*="st-key-dersk_"] [data-testid="stExpander"] details[open] > summary * { color: var(--c3) !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -3068,6 +3130,17 @@ if sinav_suruyor:
 # Üretim sırasındaki ilerleme kartı ana alanın en üstünde görünür
 uretim_alani = st.empty()
 
+def ders_ikon(ad):
+    """Ders adına göre kart ikonu."""
+    t = str(ad).replace("İ", "i").replace("I", "ı").lower()
+    for anahtar, ikon in (("geometri", "📐"), ("problem", "🧩"), ("lgs", "🎯"), ("bilgi yarış", "🏆"), ("işlem", "🧮"),
+                          ("mat", "🔢"), ("analiz", "🔢"), ("sayı", "🔢"), ("türkçe", "📖"), ("fen", "🔬"),
+                          ("sosyal", "🌍"), ("ingiliz", "🗣️"), ("alman", "🗣️")):
+        if anahtar in t:
+            return ikon
+    return "🕌" if t.startswith("din") else "📘"
+
+
 KOTA_TAHMINI = 300      # GUNLUK_LIMIT tanımlı değilse yalnızca gösterim için kullanılan tahmini günlük kota
 
 
@@ -3157,19 +3230,29 @@ with st.sidebar:
 
     mevcut_dersler = MUGREDAT.get(secili_sinif, {})
     secili_ders_unite_haritasi = {}
-    for ders_adi, uniteler_listesi in mevcut_dersler.items():
+    for ders_sira, (ders_adi, uniteler_listesi) in enumerate(mevcut_dersler.items()):
         ders_key = f"chk_ders_{trg}_{secili_sinif}_{ders_adi}"
         unite_keys = [f"chk_unite_{trg}_{secili_sinif}_{ders_adi}_{u}" for u in uniteler_listesi]
-        with st.expander(f"📘 {ders_adi}"):
-            st.checkbox(f"Tüm {ders_adi} kategorisini dahil et", key=ders_key,
-                        on_change=_tumunu_sec, args=(ders_key, unite_keys))
-            secili_alt_uniteler = []
-            for unite, uk in zip(uniteler_listesi, unite_keys):
-                if st.checkbox(unite, key=uk, on_change=_ders_durumunu_guncelle, args=(ders_key, unite_keys)):
-                    secili_alt_uniteler.append(unite)
-            st.caption(f"{len(secili_alt_uniteler)} / {len(uniteler_listesi)} ünite seçili")
-            if secili_alt_uniteler:
-                secili_ders_unite_haritasi[ders_adi] = secili_alt_uniteler
+        _sec = sum(1 for uk in unite_keys if st.session_state.get(uk))     # kart başlığında canlı sayaç
+        _top = max(len(unite_keys), 1)
+        with st.container(key=f"dersk_{ders_sira}"):
+            st.markdown(f"""
+            <div class="ders-bas">
+                <div class="ders-ikon">{ders_ikon(ders_adi)}</div>
+                <div class="ders-ad"><b>{html.escape(str(ders_adi))}</b><span>{len(unite_keys)} ünite</span></div>
+                <div class="ders-rozet{' dolu' if _sec else ''}">{_sec}/{len(unite_keys)}</div>
+            </div>
+            <div class="ders-cubuk"><div style="width:{round(_sec / _top * 100)}%"></div></div>
+            """, unsafe_allow_html=True)
+            with st.expander("📚 Üniteleri seç"):
+                st.checkbox(f"Tüm {ders_adi} kategorisini dahil et", key=ders_key,
+                            on_change=_tumunu_sec, args=(ders_key, unite_keys))
+                secili_alt_uniteler = []
+                for unite, uk in zip(uniteler_listesi, unite_keys):
+                    if st.checkbox(unite, key=uk, on_change=_ders_durumunu_guncelle, args=(ders_key, unite_keys)):
+                        secili_alt_uniteler.append(unite)
+                if secili_alt_uniteler:
+                    secili_ders_unite_haritasi[ders_adi] = secili_alt_uniteler
 
     st.markdown("<div class='yan-baslik'>Üretim</div>", unsafe_allow_html=True)
     soru_sayisi = st.slider("🔢 Soru Sayısı:", 5, 10, 8, key=f"slider_soru_{trg}")
