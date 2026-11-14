@@ -2214,7 +2214,7 @@ MUGREDAT = {
         "Matematik": ["Sayılar ve Nicelikler", "Altıdan çok basamaklı doğal sayılar", "Kesirler ve kesir çeşitleri", "Ondalık Gösterimler", "Yüzdeler", "İşlem Önceliği"],
         "Fen Bilimleri": ["Canlılar Dünyası", "Mikroskobik Canlılar", "Mantarlar", "Bitkiler", "Hayvanlar", "Sürtünme kuvveti", "Hava ve Su direnci"],
         "Sosyal Bilgiler": ["Birlikte Yaşamak", "Birey ve Toplum", "Kültür ve Ortak Mirasımız", "Evimiz Dünya", "Yaşayan Demokrasimiz", "Hayatımızda Ekonomi", "Teknoloji ve Sosyal Bilimler", "Üretim, Dağıtım ve Tüketim"],
-        "Din Kültürü": ["Allah İnancı ve İnsan", "Allahın İsimleri", "Hz. Muhammed ve Aile Hayatı", "İslam'ın Temel İbadetleri", "Namaz", "Kuran Kerim", "Peygamber Kıssaları", "Mimarimizde dini Motifler", "Ahlaki Değerler"],
+        "Din Kültürü": ["Allah İnancı ve İnsan", "Allahın İsimleri", "Namaz", "Kur'an-ı Kerim", "Peygamber Kıssaları", "Mimarimizde dini Motifler"],
         "İngilizce": ["Hello!", "My Town", "Games and Hobbies", "My Daily Routine", "Health", "Movies"],
         "Almanca": ["Guten Tag!", "Hobbys", "Tagesablauf", "Essen und Trinken", "Wohnen"]
     },
